@@ -1,9 +1,9 @@
 name: Publish to TestPyPI
 
 on:
-  label:
-    types:
-      - created
+  push:
+    tags:
+      - '*'
     
 jobs:
   deploy:
