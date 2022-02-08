@@ -14,7 +14,11 @@
 
 from setuptools import find_packages, setup
 
-VERSION = "0.1.0-3"
+_dct = {}
+with open('evojax/version.py') as f:
+    exec(f.read(), _dct)
+__version__ = _dct['__version__']
+
 JAX_URL = "https://storage.googleapis.com/jax-releases/jax_releases.html"
 
 with open("README.md", "r", encoding="utf-8") as fh:
@@ -22,7 +26,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="evojax",
-    version=VERSION,
+    version=__version__,
     author="Google",
     author_email="evojax-dev@google.com",
     description="EvoJAX: Hardware-accelerated Neuroevolution.",
