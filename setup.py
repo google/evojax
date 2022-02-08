@@ -14,7 +14,7 @@
 
 from setuptools import find_packages, setup
 
-VERSION = "0.1.0-1"
+VERSION = "0.1.0-2"
 JAX_URL = "https://storage.googleapis.com/jax-releases/jax_releases.html"
 
 with open("README.md", "r", encoding="utf-8") as fh:
