@@ -26,7 +26,7 @@ from evojax.task.base import TaskState
 
 try:
     from torchvision import datasets
-except ModuleNotFoundError as e:
+except ModuleNotFoundError:
     print('You need to install torchvision for this task.')
     print('  pip install torchvision')
     sys.exit()
