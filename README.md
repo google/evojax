@@ -4,11 +4,15 @@ This repository contains the implementation of EvoJAX, a toolkit for accelerated
 
 ## Installation
 
-EvoJAX is implemented in [JAX](https://github.com/google/jax) which needs to be installed.
+EvoJAX is implemented in [JAX](https://github.com/google/jax) which needs to be installed first.
+
+**Install JAX**: 
 Please first follow JAX's [installation instruction](https://github.com/google/jax#installation) with optional GPU/TPU backend support.
 In case JAX is not set up, EvoJAX installation will still try pulling a CPU-only version of JAX.
 Note that Colab runtimes come with JAX pre-installed.
 
+
+**Install EvoJAX**:
 ```shell
 # Install from PyPI.
 pip install evojax
