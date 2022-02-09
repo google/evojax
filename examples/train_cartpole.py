@@ -163,7 +163,7 @@ def main(config):
     done = False
     step = 0
     while not done:
-        act, policy_s = act_fn(task_s.obs, best_params, policy_s)
+        act, policy_s = act_fn(task_s, best_params, policy_s)
         task_s, r, d = step_fn(task_s, act)
         step += 1
         done = bool(d[0])

@@ -47,15 +47,15 @@ class PolicyNetwork(ABC):
 
     @abstractmethod
     def get_actions(self,
-                    vec_obs: jnp.ndarray,
+                    t_states: TaskState,
                     params: jnp.ndarray,
-                    states: PolicyState) -> Tuple[jnp.ndarray, PolicyState]:
-        """Get vectorized actions for the corresponding (obs, params) pair.
+                    p_states: PolicyState) -> Tuple[jnp.ndarray, PolicyState]:
+        """Get vectorized actions.
 
         Args:
-            vec_obs - Vectorized observations of shape (num_envs, *obs_shape).
+            t_states - Task states.
             params - A batch of parameters, shape is (num_envs, param_size).
-            states - Policy internal states.
+            p_states - Policy internal states.
         Returns:
             jnp.ndarray. Vectorized actions.
             PolicyState. Internal states.

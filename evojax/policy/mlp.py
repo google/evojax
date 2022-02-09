@@ -23,6 +23,7 @@ from flax import linen as nn
 
 from evojax.policy.base import PolicyNetwork
 from evojax.policy.base import PolicyState
+from evojax.task.base import TaskState
 from evojax.util import create_logger
 from evojax.util import get_params_format_fn
 
@@ -70,8 +71,8 @@ class MLPPolicy(PolicyNetwork):
         self._forward_fn = jax.vmap(model.apply)
 
     def get_actions(self,
-                    vec_obs: jnp.ndarray,
+                    t_states: TaskState,
                     params: jnp.ndarray,
-                    states: PolicyState) -> Tuple[jnp.ndarray, PolicyState]:
+                    p_states: PolicyState) -> Tuple[jnp.ndarray, PolicyState]:
         params = self._format_params_fn(params)
-        return self._forward_fn(params, vec_obs), states
+        return self._forward_fn(params, t_states.obs), p_states

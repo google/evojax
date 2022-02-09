@@ -20,7 +20,8 @@ multiple agents in a single task in EvoJAX.
 This task is based on:
 https://cs.stanford.edu/people/karpathy/reinforcejs/waterworld.html
 
-Example command to run this script: `python train_waterworld_ma.py --gpu-id=0`
+Example command to run this script:
+`python train_waterworld_ma.py --gpu-id=0 --max-iter=3000`
 """
 
 import argparse
@@ -137,10 +138,14 @@ def main(config):
     policy_state = policy_reset_fn(task_state)
     screens = []
     for _ in range(max_steps):
-        obs = task_state.obs.reshape((-1, *task_state.obs.shape[2:]))
-        action, policy_state = action_fn(obs, best_params, policy_state)
-        action = action.reshape(
-            task_state.obs.shape[0], task_state.obs.shape[1], *action.shape[1:])
+        num_tasks, num_agents = task_state.obs.shape[:2]
+        task_state = task_state.replace(
+            obs=task_state.obs.reshape((-1, *task_state.obs.shape[2:])))
+        action, policy_state = action_fn(task_state, best_params, policy_state)
+        action = action.reshape(num_tasks, num_agents, *action.shape[1:])
+        task_state = task_state.replace(
+            obs=task_state.obs.reshape(
+                num_tasks, num_agents, *task_state.obs.shape[1:]))
         task_state, reward, done = step_fn(task_state, action)
         screens.append(MultiAgentWaterWorld.render(task_state))
 

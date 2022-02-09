@@ -142,13 +142,17 @@ class SimManager(object):
              accumulated_reward, valid_mask) = carry
             if task.multi_agent_training:
                 num_tasks, num_agents = task_state.obs.shape[:2]
-                obs = task_state.obs.reshape((-1, *task_state.obs.shape[2:]))
-            else:
-                obs = task_state.obs
-            normed_obs = self.obs_normalizer.normalize_obs(obs, obs_params)
+                task_state = task_state.replace(
+                    obs=task_state.obs.reshape((-1, *task_state.obs.shape[2:])))
+            org_obs = task_state.obs
+            normed_obs = self.obs_normalizer.normalize_obs(org_obs, obs_params)
+            task_state = task_state.replace(obs=normed_obs)
             actions, policy_state = policy_net.get_actions(
-                normed_obs, params, policy_state)
+                task_state, params, policy_state)
             if task.multi_agent_training:
+                task_state = task_state.replace(
+                    obs=task_state.obs.reshape(
+                        (num_tasks, num_agents, *task_state.obs.shape[1:])))
                 actions = actions.reshape(
                     (num_tasks, num_agents, *actions.shape[1:]))
             task_state, reward, done = task.step(task_state, actions)
@@ -159,7 +163,7 @@ class SimManager(object):
             valid_mask = valid_mask * (1 - done.ravel())
             return ((task_state, policy_state, params, obs_params,
                      accumulated_reward, valid_mask),
-                    (task_state.obs, valid_mask))
+                    (org_obs, valid_mask))
 
         def rollout(task_states, policy_states, params, obs_params,
                     step_once_fn, max_steps):

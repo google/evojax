@@ -131,8 +131,7 @@ def main(config):
     policy_state = policy_reset_fn(task_state)
     screens = []
     for _ in range(max_steps):
-        action, policy_state = action_fn(
-            task_state.obs, best_params, policy_state)
+        action, policy_state = action_fn(task_state, best_params, policy_state)
         task_state, reward, done = step_fn(task_state, action)
         screens.append(WaterWorld.render(task_state))
 

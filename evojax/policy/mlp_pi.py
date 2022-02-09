@@ -139,13 +139,13 @@ class PermutationInvariantPolicy(PolicyNetwork):
         return State(keys=keys, prev_actions=prev_act, lstm_states=lstm_h)
 
     def get_actions(self,
-                    vec_obs: jnp.ndarray,
+                    t_tasks: TaskState,
                     params: jnp.ndarray,
-                    states: State) -> Tuple[jnp.ndarray, State]:
+                    p_states: State) -> Tuple[jnp.ndarray, State]:
         params = self._format_params_fn(params)
         act, lstm_h = self._forward_fn(
             params,
-            obs=vec_obs,
-            prev_act=states.prev_actions,
-            lstm_h=states.lstm_states)
-        return act, State(states.keys, act, lstm_h)
+            obs=t_tasks.obs,
+            prev_act=p_states.prev_actions,
+            lstm_h=p_states.lstm_states)
+        return act, State(p_states.keys, act, lstm_h)
