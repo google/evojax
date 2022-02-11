@@ -61,7 +61,7 @@ We illustrate how the classic control task can be implemented in JAX and be inte
 <table width="60%">
   <tr>
     <td width="50%">
-      <img width="100%" src="https://media3.giphy.com/media/wNoSOydcU7xUL8Gveo/giphy.gif?cid=790b7611a5deb75eb6692957a8080c1e571a0524b8c22d29&rid=giphy.gif&ct=g"></img>
+      <img width="100%" src="https://otoro.net/img/evojax_waterworld.gif"></img>
     </td>
     <td width="50%">
       <img width="100%" src="https://media.giphy.com/media/zxSBpuaXdaxIIFbDI4/giphy.gif"></img>
