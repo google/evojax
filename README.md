@@ -57,6 +57,26 @@ We wrap it as a task and train with EvoJAX on GPUs/TPUs. It takes EvoJAX tens of
 We illustrate how the classic control task can be implemented in JAX and be integrated into EvoJAX's pipeline for significant speed up training.
 
 *Novel Tasks*
+
+<table width="60%">
+  <tr>
+    <td>
+      <img width="100%" src="https://media.giphy.com/media/wNoSOydcU7xUL8Gveo/giphy.gif"></img>
+    </td>
+    <td>
+      <img width="100%" src="https://media.giphy.com/media/zxSBpuaXdaxIIFbDI4/giphy.gif"></img>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <i>Multi-agent Waterworld</i>
+    </td>
+    <td>
+      <i>“A drawing of a cat”</i>
+    </td>
+  </tr>
+</table>
+
 * [WaterWorld](https://github.com/google/evojax/blob/main/examples/train_waterworld.py) -
 In this [task](https://cs.stanford.edu/people/karpathy/reinforcejs/waterworld.html), an agent tries to get as much food as possible while avoiding poisons.
 EvoJAX is able to learn the agent in tens of minutes on a single GPU.
@@ -65,10 +85,6 @@ Moreover, we demonstrate that [multi-agents training](https://github.com/google/
 We reproduce the results from this [computational creativity work](https://es-clip.github.io/) and show how the original work, whose implementation requires multiple CPUs and GPUs, could be accelerated on a single GPU efficiently using EvoJAX, which was not possible before.
 Moreover, with multiple GPUs/TPUs, EvoJAX can further speed up the mentioned work almost linearly.
 We also show that the modular design of EvoJAX allows its components to be used independently -- in this case it is possible to use only the ES algorithms from EvoJAX while leveraging one's own training loops and environment implantation.
-
-<img width="30%" src="https://media.giphy.com/media/zxSBpuaXdaxIIFbDI4/giphy.gif"></img>
-
-<i>“A drawing of a cat”</i>
 
 ## Disclaimer
 This is not an official Google product.
