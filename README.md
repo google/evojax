@@ -66,7 +66,8 @@ We reproduce the results from this [computational creativity work](https://es-cl
 Moreover, with multiple GPUs/TPUs, EvoJAX can further speed up the mentioned work almost linearly.
 We also show that the modular design of EvoJAX allows its components to be used independently -- in this case it is possible to use only the ES algorithms from EvoJAX while leveraging one's own training loops and environment implantation.
 
-<img width="50%" src="https://media.giphy.com/media/zxSBpuaXdaxIIFbDI4/giphy.gif"></img>
+<img width="30%" src="https://media.giphy.com/media/zxSBpuaXdaxIIFbDI4/giphy.gif"></img>
+
 <i>“A drawing of a cat”</i>
 
 ## Disclaimer
