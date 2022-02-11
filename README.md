@@ -60,10 +60,10 @@ We illustrate how the classic control task can be implemented in JAX and be inte
 
 <table width="60%">
   <tr>
-    <td>
-      <img width="100%" src="https://media.giphy.com/media/wNoSOydcU7xUL8Gveo/giphy-downsized.gif"></img>
+    <td width="50%">
+      <img width="100%" src="https://media.giphy.com/media/wNoSOydcU7xUL8Gveo/giphy.gif"></img>
     </td>
-    <td>
+    <td width="50%">
       <img width="100%" src="https://media.giphy.com/media/zxSBpuaXdaxIIFbDI4/giphy.gif"></img>
     </td>
   </tr>
