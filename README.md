@@ -44,12 +44,18 @@ We provide example commands to start the training process at the top of each scr
 These scripts and notebooks are run with TPUs and/or NVIDIA V100 GPU(s):
 
 *Supervised Learning Tasks*
+
+<img width="80%" src="img/evojax_supervised.png"></img>
+
 * [MNIST Classification](https://github.com/google/evojax/blob/main/examples/train_mnist.py) -
 We show that EvoJAX trains a ConvNet policy to achieve >98% test accuracy within 5 min on a single GPU.
 * [Seq2Seq Learning](https://github.com/google/evojax/blob/main/examples/train_seq2seq.py) -
 We demonstrate that EvoJAX is capable of learning a large network with hundreds of thousands parameters to accomplish a seq2seq task.
 
 *Classic Control Tasks*
+
+<img width="80%" src="img/evojax_control.png"></img>
+
 * [Locomotion](https://github.com/google/evojax/blob/main/examples/notebooks/BraxTasks.ipynb) -
 [Brax](https://github.com/google/brax) is a differentiable physics engine implemented in JAX.
 We wrap it as a task and train with EvoJAX on GPUs/TPUs. It takes EvoJAX tens of minutes to solve a locomotion task in Brax.
