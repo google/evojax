@@ -69,7 +69,7 @@ We illustrate how the classic control task can be implemented in JAX and be inte
   </tr>
   <tr>
     <td>
-      <i>Multi-agent Waterworld</i>
+      <i>Multi-agent WaterWorld</i>
     </td>
     <td>
       <i>“A drawing of a cat”</i>
