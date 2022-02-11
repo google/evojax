@@ -43,7 +43,9 @@ As a quickstart, we provide non-trivial examples (scripts in `examples/` and not
 We provide example commands to start the training process at the top of each script.
 These scripts and notebooks are run with TPUs and/or NVIDIA V100 GPU(s):
 
-**Supervised Learning Tasks**
+### Supervised Learning Tasks
+
+*While one would obviously use gradient-descent for such tasks in practice, the point is to show that neuroevolution can also solve them to some degree of accuracy within a short amount of time, which will be useful when these models are adapted within a more complicated task where gradient-based approaches may not work.*
 
 <img width="100%" src="img/evojax_supervised.png"></img>
 
@@ -52,9 +54,9 @@ We show that EvoJAX trains a ConvNet policy to achieve >98% test accuracy within
 * [Seq2Seq Learning](https://github.com/google/evojax/blob/main/examples/train_seq2seq.py) -
 We demonstrate that EvoJAX is capable of learning a large network with hundreds of thousands parameters to accomplish a seq2seq task.
 
-*While one would obviously use gradient-descent for such tasks in practice, the point is to show that neuroevolution can also solve them to some degree of accuracy within a short amount of time, which will be useful when these models are adapted within a more complicated task where gradient-based approaches may not work.*
+### Classic Control Tasks
 
-**Classic Control Tasks**
+*The purpose of including control tasks are two-fold: 1) Unlike supervised learning tasks, control tasks in EvoJAX have undetermined number of steps, we thus use these examples to demonstrate the efficiency of our task roll-out loops. 2) We wish to show the speed-up benefit of implementing tasks in JAX and illustrate how to implement one from scratch.*
 
 <img width="100%" src="img/evojax_control.png"></img>
 
@@ -64,9 +66,9 @@ We wrap it as a task and train with EvoJAX on GPUs/TPUs. It takes EvoJAX tens of
 * [Cart-Pole Swing Up](https://github.com/google/evojax/blob/main/examples/train_cartpole.py) -
 We illustrate how the classic control task can be implemented in JAX and be integrated into EvoJAX's pipeline for significant speed up training.
 
-*The purpose of including control tasks are two-fold: 1) Unlike supervised learning tasks, control tasks in EvoJAX have undetermined number of steps, we thus use these examples to demonstrate the efficiency of our task roll-out loops. 2) We wish to show the speed-up benefit of implementing tasks in JAX and illustrate how to implement one from scratch.*
+### Novel Tasks
 
-**Novel Tasks**
+*In this last category, we go beyond simple illustrations and show examples of novel tasks that are more practical and attractive to researchers in the genetic and evolutionary computation area, with the goal of helping them try out ideas in EvoJAX.*
 
 <table width="100%">
   <tr>
@@ -96,8 +98,5 @@ We reproduce the results from this [computational creativity work](https://es-cl
 Moreover, with multiple GPUs/TPUs, EvoJAX can further speed up the mentioned work almost linearly.
 We also show that the modular design of EvoJAX allows its components to be used independently -- in this case it is possible to use only the ES algorithms from EvoJAX while leveraging one's own training loops and environment implantation.
 
-*In this last category, we go beyond simple illustrations and show examples of novel tasks that are more practical and attractive to researchers in the genetic and evolutionary computation area, with the goal of helping them try out ideas in EvoJAX.*
-
 ## Disclaimer
 This is not an official Google product.
-
