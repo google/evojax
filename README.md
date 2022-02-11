@@ -1,6 +1,10 @@
 # EvoJAX: Hardware-Accelerated Neuroevolution
 
-This repository contains the implementation of EvoJAX, a toolkit for accelerated Neuroevolution experiments.
+EvoJAX is a scalable, general purpose, hardware-accelerated neuroevolution toolkit. Built on top of the JAX library, this toolkit enables neuroevolution algorithms to work with neural networks running in parallel across multiple TPU/GPUs. EvoJAX achieves very high performance by implementing the evolution algorithm, neural network and task all in NumPy, which is compiled just-in-time to run on accelerators.
+
+This repo also includes several extensible examples of EvoJAX for a wide range of tasks, including supervised learning, reinforcement learning and generative art, demonstrating how EvoJAX can run your evolution experiments within minutes on a single accelerator, compared to hours or days when using CPUs.
+
+EvoJAX paper: https://arxiv.org/abs/2202.05008
 
 ## Installation
 
