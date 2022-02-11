@@ -64,7 +64,7 @@ We illustrate how the classic control task can be implemented in JAX and be inte
 
 *Novel Tasks*
 
-<table width="80%">
+<table width="100%">
   <tr>
     <td width="50%">
       <img width="100%" src="https://media.giphy.com/media/TG05TWWrDAxPoqKG1s/giphy.gif"></img>
