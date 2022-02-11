@@ -58,10 +58,10 @@ We illustrate how the classic control task can be implemented in JAX and be inte
 
 *Novel Tasks*
 
-<table width="60%">
+<table width="80%">
   <tr>
     <td width="50%">
-      <img width="100%" src="https://otoro.net/img/evojax_waterworld.gif"></img>
+      <img width="100%" src="https://media.giphy.com/media/TG05TWWrDAxPoqKG1s/giphy.gif"></img>
     </td>
     <td width="50%">
       <img width="100%" src="https://media.giphy.com/media/zxSBpuaXdaxIIFbDI4/giphy.gif"></img>
