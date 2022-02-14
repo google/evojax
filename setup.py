@@ -40,7 +40,6 @@ setup(
         "flax",
         "jax>=0.2.17",
         "jaxlib>=0.1.65",
-        "opencv-python",
         "Pillow",
         "cma",
     ],
