@@ -18,7 +18,7 @@ Please use this BibTeX if you wish to cite this project in your publications:
 
 List of publications using EvoJAX (please open a PR to add missing entries):
 
-- [Modern Evolution Strategies for Creativity: Fitting Concrete Images and Abstract Concepts](https://es-clip.github.io/) (NeurIPS 2021 Creativity Workshop, EvoMUSART 2022)
+- [Modern Evolution Strategies for Creativity: Fitting Concrete Images and Abstract Concepts](https://es-clip.github.io/) (NeurIPS Creativity Workshop 2021, EvoMUSART 2022)
 
 ## Installation
 
