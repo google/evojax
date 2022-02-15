@@ -139,7 +139,7 @@ We also welcome new tasks and examples. Some suggestions:
 - Train a [Neural Turing Machine](https://en.wikipedia.org/wiki/Neural_Turing_machine) using evolution to come up with a sorting algorithm.
 - Soccer via self-play ([Example](https://mobile.aau.at/~welmenre/papers/fehervari-2010-Evolving_Neural_Network_Controllers_for_a_Team_of_Self-organizing_Robots.pdf))
 - Evolving Hebbian Learning-capable plastic networks that can remember the map of a maze from the agent’s recent experience.
-- [Adaptive Computation Time for RNNs](https://arxiv.org/abs/1603.08983) performing a task that requires an un-determined number of steps.
+- [Adaptive Computation Time for RNNs](https://arxiv.org/abs/1603.08983) performing a task that requires an unknown number of steps.
 - Tasks that make use of hard attention.
 
 ## Sister Projects
