@@ -6,6 +6,20 @@ This repo also includes several extensible examples of EvoJAX for a wide range o
 
 EvoJAX paper: https://arxiv.org/abs/2202.05008
 
+Please use this BibTeX if you wish to cite this project in your publications:
+
+```
+@article{evojax2022,
+  title={EvoJAX: Hardware-Accelerated Neuroevolution},
+  author={Tang, Yujin and Tian, Yingtao and Ha, David},
+  journal={arXiv preprint arXiv:2202.05008},
+  year={2022}
+```
+
+List of publications using EvoJAX (please open a PR to add missing entries):
+
+- [Modern Evolution Strategies for Creativity: Fitting Concrete Images and Abstract Concepts](https://es-clip.github.io/) (NeurIPS 2021 Creativity Workshop, EvoMUSART 2022)
+
 ## Installation
 
 EvoJAX is implemented in [JAX](https://github.com/google/jax) which needs to be installed first.
@@ -97,6 +111,12 @@ Moreover, we demonstrate that [multi-agents training](https://github.com/google/
 We reproduce the results from this [computational creativity work](https://es-clip.github.io/) and show how the original work, whose implementation requires multiple CPUs and GPUs, could be accelerated on a single GPU efficiently using EvoJAX, which was not possible before.
 Moreover, with multiple GPUs/TPUs, EvoJAX can further speed up the mentioned work almost linearly.
 We also show that the modular design of EvoJAX allows its components to be used independently -- in this case it is possible to use only the ES algorithms from EvoJAX while leveraging one's own training loops and environment implantation.
+
+## Sister Projects
+
+There is a growing number of researchers working with evolutionary computation who are using JAX. A list of related efforts:
+
+QDax: Accelerated Quality-Diversity. A tool that uses JAX to help accelerate Quality-Diveristy (QD) algorithms through hardware accelerators and massive parallelism. ([GitHub](https://github.com/adaptive-intelligent-robotics/QDax) | [paper](https://arxiv.org/abs/2202.01258))
 
 ## Disclaimer
 This is not an official Google product.
