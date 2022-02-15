@@ -113,11 +113,26 @@ We reproduce the results from this [computational creativity work](https://es-cl
 Moreover, with multiple GPUs/TPUs, EvoJAX can further speed up the mentioned work almost linearly.
 We also show that the modular design of EvoJAX allows its components to be used independently -- in this case it is possible to use only the ES algorithms from EvoJAX while leveraging one's own training loops and environment implantation.
 
+## Call for Contributions
+
+The goal of EvoJAX is to get evolutionary computation to able to work on a vast array of tasks using accelerators. A problems before was that many evolution algorithms are only optimized for one particular for some paper. This is the reason we focused only on one single algorithm (PGPE) in the first release of EvoJAX, while creating 6+ different tasks in diverse domains, ensuring that one single algorithm works for all of the tasks without any issues.
+
+### Evolutionary Algorithms
+
+We welcome new evolution algorithms to be added to this library. It would be great if you can show that your implementation can perform: cartpole (hardmode), BRAX, waterworld, MNIST first, before submitting a pull request.
+
+Ideas for evolutionary algorithm candidates:
+
+- Your favorite Genetic Algorithm.
+- CMA-ES (with the option to make full covariance optional, making it O(N) from O(N²))
+
+Feel free to reach out to evojax-dev@google.com if you wish to discuss further.
+
 ## Sister Projects
 
-There is a growing number of researchers working with evolutionary computation who are using JAX. A list of related efforts:
+There is a growing number of researchers working with evolutionary computation who are using JAX. Here is a list of related efforts:
 
-QDax: Accelerated Quality-Diversity. A tool that uses JAX to help accelerate Quality-Diveristy (QD) algorithms through hardware accelerators and massive parallelism. ([GitHub](https://github.com/adaptive-intelligent-robotics/QDax) | [paper](https://arxiv.org/abs/2202.01258))
+- QDax: Accelerated Quality-Diversity. A tool that uses JAX to help accelerate Quality-Diveristy (QD) algorithms through hardware accelerators and massive parallelism. ([GitHub](https://github.com/adaptive-intelligent-robotics/QDax) | [paper](https://arxiv.org/abs/2202.01258))
 
 ## Disclaimer
 This is not an official Google product.
