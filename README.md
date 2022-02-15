@@ -121,7 +121,7 @@ One issue before was that many evolution algorithms are only optimized for one p
 
 ### Evolutionary Algorithms
 
-We welcome new evolution algorithms to be added to this library. It would be great if you can show that your implementation can perform on cart-pole swing-up (hardmode), BRAX, waterworld, and MNIST, before submitting a pull request.
+We welcome new evolution algorithms to be added to this toolkit. It would be great if you can show that your implementation can perform on cart-pole swing-up (hardmode), BRAX, waterworld, and MNIST, before submitting a pull request.
 
 Ideas for evolutionary algorithm candidates:
 
