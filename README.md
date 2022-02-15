@@ -115,7 +115,9 @@ We also show that the modular design of EvoJAX allows its components to be used 
 
 ## Call for Contributions
 
-The goal of EvoJAX is to get evolutionary computation to able to work on a vast array of tasks using accelerators. A problems before was that many evolution algorithms are only optimized for one particular for some paper. This is the reason we focused only on one single algorithm (PGPE) in the first release of EvoJAX, while creating 6+ different tasks in diverse domains, ensuring that one single algorithm works for all of the tasks without any issues.
+The goal of EvoJAX is to get evolutionary computation to able to work on a vast array of tasks using accelerators.
+
+One issue before was that many evolution algorithms are only optimized for one particular for some paper. This is the reason we focused only on one single algorithm (PGPE) in the first release of EvoJAX, while creating 6+ different tasks in diverse domains, ensuring that one single algorithm works for all of the tasks without any issues.
 
 ### Evolutionary Algorithms
 
