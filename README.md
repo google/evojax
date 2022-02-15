@@ -119,7 +119,7 @@ The goal of EvoJAX is to get evolutionary computation to able to work on a vast 
 
 ### Evolutionary Algorithms
 
-We welcome new evolution algorithms to be added to this library. It would be great if you can show that your implementation can perform: cart-pole swing-up (hardmode), BRAX, waterworld, and MNIST, before submitting a pull request.
+We welcome new evolution algorithms to be added to this library. It would be great if you can show that your implementation can perform on cart-pole swing-up (hardmode), BRAX, waterworld, and MNIST, before submitting a pull request.
 
 Ideas for evolutionary algorithm candidates:
 
@@ -130,7 +130,7 @@ Ideas for evolutionary algorithm candidates:
 
 Feel free to reach out to evojax-dev@google.com if you wish to discuss further.
 
-### Tasks
+### New Tasks
 
 We also welcome new tasks and examples. Some suggestions:
 
