@@ -119,14 +119,26 @@ The goal of EvoJAX is to get evolutionary computation to able to work on a vast 
 
 ### Evolutionary Algorithms
 
-We welcome new evolution algorithms to be added to this library. It would be great if you can show that your implementation can perform: cartpole (hardmode), BRAX, waterworld, MNIST first, before submitting a pull request.
+We welcome new evolution algorithms to be added to this library. It would be great if you can show that your implementation can perform: cart-pole swing-up (hardmode), BRAX, waterworld, and MNIST, before submitting a pull request.
 
 Ideas for evolutionary algorithm candidates:
 
 - Your favorite Genetic Algorithm.
-- CMA-ES (with the option to make full covariance optional, making it O(N) from O(N²))
+- [CMA-ES](https://en.wikipedia.org/wiki/CMA-ES) (bare version, and improved versions such as [BIPOP-CMA-ES](https://hal.inria.fr/hal-00818596v1/document))
+- Augmented Random Search ([paper](https://arxiv.org/abs/1803.07055))
+- AMaLGaM-IDEA ([paper](https://homepages.cwi.nl/~bosman/publications/2013_benchmarkingparameterfree.pdf))
 
 Feel free to reach out to evojax-dev@google.com if you wish to discuss further.
+
+### Tasks
+
+We also welcome new tasks and examples. Some suggestions:
+
+- Train a [Neural Turing Machine](https://en.wikipedia.org/wiki/Neural_Turing_machine) using evolution to come up with a sorting algorithm.
+- Soccer via self-play ([Example](https://mobile.aau.at/~welmenre/papers/fehervari-2010-Evolving_Neural_Network_Controllers_for_a_Team_of_Self-organizing_Robots.pdf))
+- Evolving Hebbian Learning-capable plastic networks that can remember the map of a maze from the agent’s recent experience.
+- [Adaptive Computation Time for RNNs](https://arxiv.org/abs/1603.08983) performing a task that requires an un-determined number of steps.
+- Tasks that make use of hard attention.
 
 ## Sister Projects
 
