@@ -14,6 +14,7 @@ Please use this BibTeX if you wish to cite this project in your publications:
   author={Tang, Yujin and Tian, Yingtao and Ha, David},
   journal={arXiv preprint arXiv:2202.05008},
   year={2022}
+}
 ```
 
 List of publications using EvoJAX (please open a PR to add missing entries):
