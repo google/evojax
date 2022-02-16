@@ -32,22 +32,8 @@ try:
 except ModuleNotFoundError:
     from jax.experimental import optimizers
 
-from evojax.algo.base import NEAlgorithm
+from evojax.algo.base import NEAlgorithm, process_scores
 from evojax.util import create_logger
-
-
-@partial(jax.jit, static_argnums=(1,))
-def process_scores(x: Union[np.ndarray, jnp.ndarray],
-                   use_ranking: bool) -> jnp.ndarray:
-    """Convert fitness scores to rank if necessary."""
-
-    x = jnp.array(x)
-    if use_ranking:
-        ranks = jnp.zeros(x.size, dtype=int)
-        ranks = ranks.at[x.argsort()].set(jnp.arange(x.size)).reshape(x.shape)
-        return ranks / ranks.max() - 0.5
-    else:
-        return x
 
 
 @jax.jit

@@ -15,6 +15,7 @@
 from .base import NEAlgorithm
 from .cma_wrapper import CMA
 from .pgpe import PGPE
+from .cmaes import CMAES
 
 
-__all__ = ['NEAlgorithm', 'CMA', 'PGPE']
+__all__ = ['NEAlgorithm', 'CMA', 'PGPE', 'CMAES']
