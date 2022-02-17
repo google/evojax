@@ -20,7 +20,7 @@ EPS = 1e-8
 MAX = 1e32
 
 
-class CMAES(NEAlgorithm):
+class CMAES_CyberAgent(NEAlgorithm):
     """CMA-ES
 
     Ref: https://arxiv.org/abs/1604.00772

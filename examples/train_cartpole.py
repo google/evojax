@@ -38,7 +38,7 @@ from evojax.task.cartpole import CartPoleSwingUp
 from evojax.policy import MLPPolicy
 from evojax.policy import PermutationInvariantPolicy
 from evojax.algo import PGPE
-from evojax.algo import CMA
+from evojax.algo import CMAES_OriginalCPU
 from evojax import util
 
 
@@ -105,7 +105,7 @@ def main(config):
             output_dim=train_task.act_shape[0],
         )
     if config.cma:
-        solver = CMA(
+        solver = CMAES_OriginalCPU(
             pop_size=config.pop_size,
             param_size=policy.num_params,
             init_stdev=config.init_std,

@@ -13,9 +13,9 @@
 # limitations under the License.
 
 from .base import NEAlgorithm
-from .cma_wrapper import CMA
+from .cma_wrapper import CMAES_OriginalCPU
 from .pgpe import PGPE
-from .cmaes import CMAES
+from .cmaes import CMAES_CyberAgent
 
 
-__all__ = ['NEAlgorithm', 'CMA', 'PGPE', 'CMAES']
+__all__ = ['NEAlgorithm', 'CMAES_OriginalCPU', 'PGPE', 'CMAES_CyberAgent']

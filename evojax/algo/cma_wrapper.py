@@ -31,7 +31,7 @@ from evojax.algo.base import NEAlgorithm
 from evojax.util import create_logger
 
 
-class CMA(NEAlgorithm):
+class CMAES_OriginalCPU(NEAlgorithm):
     """A wrapper of CMA-ES."""
 
     def __init__(self,
