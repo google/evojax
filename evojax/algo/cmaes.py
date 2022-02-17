@@ -11,10 +11,9 @@ import math
 
 import jax
 import numpy as np
-from jax import numpy as jnp
-
 from evojax.algo.base import NEAlgorithm, process_scores
 from evojax.util import create_logger
+from jax import numpy as jnp
 
 EPS = 1e-8
 MAX = 1e32
@@ -32,7 +31,7 @@ class CMAES_CyberAgent(NEAlgorithm):
         pop_size: int = None,
         param_size: int = None,
         init_params: np.ndarray | jnp.ndarray = None,
-        init_sigma: float = 0.1,
+        init_stdev: float = 0.1,
         init_cov: np.ndarray | jnp.ndarray = None,
         solution_ranking: bool = True,
         seed: int = 0,
@@ -44,13 +43,13 @@ class CMAES_CyberAgent(NEAlgorithm):
             pop_size - Population size, recommended population size if not given.
             param_size - Parameter size.
             init_params - Initial parameters, all zeros if not given.
-            init_sigma - Initial sigma value.
+            init_stdev - Initial sigma value.
             init_cov - Intial covariance matrix, identity if not given.
             solution_ranking - Should we treat the fitness as rankings or not.
             seed - Random seed for parameters sampling.
         """
 
-        assert init_sigma > 0
+        assert init_stdev > 0
         if logger is None:
             self._logger = create_logger("cmaes")
         else:
@@ -136,7 +135,7 @@ class CMAES_CyberAgent(NEAlgorithm):
         self._pc = jnp.zeros(param_size)
 
         self._mean = mean
-        self._sigma = init_sigma
+        self._sigma = init_stdev
         self._D = None
         self._B = None
         self._solutions = None
