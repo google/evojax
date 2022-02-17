@@ -148,5 +148,7 @@ There is a growing number of researchers working with evolutionary computation w
 
 - QDax: Accelerated Quality-Diversity. A tool that uses JAX to help accelerate Quality-Diveristy (QD) algorithms through hardware accelerators and massive parallelism. ([GitHub](https://github.com/adaptive-intelligent-robotics/QDax) | [paper](https://arxiv.org/abs/2202.01258))
 
+- evosax: A JAX-based library of evolution strategies focusing on JAX-composable ask-tell functionality and strategy diversity. More than 10 ES algorithms implemented. ([GitHub](https://github.com/RobertTLange/evosax))
+
 ## Disclaimer
 This is not an official Google product.
