@@ -12,11 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABC
-from abc import abstractmethod
+from abc import ABC, abstractmethod
+from functools import partial
 from typing import Union
-import numpy as np
+
+import jax
 import jax.numpy as jnp
+import numpy as np
+
+
+@partial(jax.jit, static_argnums=(1,))
+def process_scores(x: Union[np.ndarray, jnp.ndarray], use_ranking: bool) -> jnp.ndarray:
+    """Convert fitness scores to rank if necessary."""
+
+    x = jnp.array(x)
+    if use_ranking:
+        ranks = jnp.zeros(x.size, dtype=int)
+        ranks = ranks.at[x.argsort()].set(jnp.arange(x.size)).reshape(x.shape)
+        return ranks / ranks.max() - 0.5
+    else:
+        return x
 
 
 class NEAlgorithm(ABC):
