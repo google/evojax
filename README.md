@@ -130,6 +130,8 @@ Ideas for evolutionary algorithm candidates:
 - Augmented Random Search ([paper](https://arxiv.org/abs/1803.07055))
 - AMaLGaM-IDEA ([paper](https://homepages.cwi.nl/~bosman/publications/2013_benchmarkingparameterfree.pdf))
 
+See this [example](https://github.com/google/evojax/pull/5#issuecomment-1043879609) pull request thread of a Genetic Algorithm that has been merged into EvoJAX to see how it should be done.
+
 Feel free to reach out to evojax-dev@google.com if you wish to discuss further.
 
 ### New Tasks
