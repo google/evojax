@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.6", "3.7", "3.8", "3.9"]
 
     steps:
       - uses: actions/checkout@v2
@@ -22,6 +22,7 @@ jobs:
           pip install flake8 pytest
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip install -e .
+          pip install torchvision # optional dependency
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
@@ -30,4 +31,4 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=100 --max-line-length=127 --statistics
       - name: Test with pytest
         run: |
-          pytest
+          pytest -W ignore::DeprecationWarning

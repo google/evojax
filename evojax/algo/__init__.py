@@ -16,7 +16,8 @@ from .base import NEAlgorithm
 from .cma_wrapper import CMA
 from .pgpe import PGPE
 from .ars import ARS
+from .simple_ga import SimpleGA
 
-Strategies = {"CMA": CMA, "PGPE": PGPE, "ARS": ARS}
+Strategies = {"CMA": CMA, "PGPE": PGPE, "SimpleGA": SimpleGA, "ARS": ARS}
 
-__all__ = ["NEAlgorithm", "CMA", "PGPE", "ARS", "Strategies"]
+__all__ = ["NEAlgorithm", "CMA", "PGPE", "ARS", "SimpleGA", "Strategies"]
