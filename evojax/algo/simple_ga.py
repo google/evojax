@@ -107,5 +107,5 @@ class SimpleGA(NEAlgorithm):
 
     @best_params.setter
     def best_params(self, params: Union[np.ndarray, jnp.ndarray]) -> None:
-        self.params = jnp.array(params, copy=True)
+        self.params = jnp.repeat(params[None,:], self.pop_size, axis=0)
         self._best_params = jnp.array(params, copy=True)
