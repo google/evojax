@@ -7,7 +7,7 @@ import jax.numpy as jnp
 from evojax.algo.base import NEAlgorithm
 from evojax.util import create_logger
 
-from evosax import Augmented_RS
+from evosax import Augmented_RS, FitnessShaper
 
 
 class ARS(NEAlgorithm):
@@ -23,7 +23,7 @@ class ARS(NEAlgorithm):
         self,
         param_size: int,
         pop_size: int,
-        elite_ratio: float,
+        elite_ratio: float = 0.2,
         optimizer: str = "clipup",
         optimizer_config: dict = {
             "lrate_init": 0.15,  # Initial learning rate
@@ -78,10 +78,16 @@ class ARS(NEAlgorithm):
         self.es_params["sigma_init"] = init_stdev
         self.es_params["sigma_decay"] = decay_stdev
         self.es_params["sigma_limit"] = limit_stdev
+        self.es_params["init_min"] = 0.0
+        self.es_params["init_max"] = 0.0
 
         # Initialize the evolution strategy state
         self.rand_key, init_key = jax.random.split(self.rand_key)
         self.es_state = self.es.initialize(init_key, self.es_params)
+
+        # By default evojax assumes maximization of fitness score!
+        # Evosax, on the other hand, minimizes!
+        self.fit_shaper = FitnessShaper(maximize=True)
 
     def ask(self) -> jnp.ndarray:
         self.rand_key, ask_key = jax.random.split(self.rand_key)
@@ -91,8 +97,10 @@ class ARS(NEAlgorithm):
         return self.params
 
     def tell(self, fitness: Union[np.ndarray, jnp.ndarray]) -> None:
+        # Reshape
+        fit_re = self.fit_shaper.apply(self.params, fitness)
         self.es_state = self.es.tell(
-            self.params, fitness, self.es_state, self.es_params
+            self.params, fit_re, self.es_state, self.es_params
         )
 
     @property
