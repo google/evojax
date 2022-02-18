@@ -36,7 +36,7 @@ class CMA(NEAlgorithm):
 
     def __init__(self,
                  param_size: int,
-                 pop_size: int = 256,
+                 pop_size: int,
                  init_stdev: float = 0.1,
                  seed: int = 0,
                  logger: logging.Logger = None):
