@@ -130,6 +130,15 @@ Ideas for evolutionary algorithm candidates:
 - Augmented Random Search ([paper](https://arxiv.org/abs/1803.07055))
 - AMaLGaM-IDEA ([paper](https://homepages.cwi.nl/~bosman/publications/2013_benchmarkingparameterfree.pdf))
 
+We suggest the below performance guidelines for new algorithms:
+
+1. MNIST: 90%+
+2. Cartpole: 900+ (easy), 600+ (hard)
+3. Waterworld: 6+ (single-agent), 2+ (multiiagent)
+4. Brax ant: 3000+
+
+Note that these are not hard requirements, but just rough guidelines.
+
 See this [example](https://github.com/google/evojax/pull/5#issuecomment-1043879609) pull request thread of a Genetic Algorithm that has been merged into EvoJAX to see how it should be done.
 
 Feel free to reach out to evojax-dev@google.com if you wish to discuss further.
