@@ -12,7 +12,7 @@ from evojax.util import create_logger
 
 class SimpleGA(NEAlgorithm):
     """A simple genetic algorithm implementing truncation selection."""
-    
+
     def __init__(self,
                  param_size: int,
                  pop_size: int,
@@ -26,7 +26,7 @@ class SimpleGA(NEAlgorithm):
             param_size - Parameter size.
             pop_size - Population size.
             truncation_divisor - Number by which the population is truncated
-                                 every iteration. 
+                                 every iteration.
             sigma - Variance of normal distribution for parameter perturbation
             seed - Random seed for parameters sampling.
             logger - Logger
@@ -63,7 +63,7 @@ class SimpleGA(NEAlgorithm):
         self.rand_key = jax.random.PRNGKey(seed=seed)
 
         self.jnp_array = jax.jit(jnp.array)
-        
+
         def ask_fn(key: jnp.ndarray,
                    params: Union[np.ndarray,
                                  jnp.ndarray]) -> Tuple[jnp.ndarray,
@@ -107,5 +107,5 @@ class SimpleGA(NEAlgorithm):
 
     @best_params.setter
     def best_params(self, params: Union[np.ndarray, jnp.ndarray]) -> None:
-        self.params = jnp.repeat(params[None,:], self.pop_size, axis=0)
+        self.params = jnp.repeat(params[None, :], self.pop_size, axis=0)
         self._best_params = jnp.array(params, copy=True)
