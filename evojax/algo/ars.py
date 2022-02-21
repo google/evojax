@@ -114,9 +114,9 @@ class ARS(NEAlgorithm):
 
     @property
     def best_params(self) -> jnp.ndarray:
-        return jnp.array(self.es_state["best_member"], copy=True)
+        return jnp.array(self.es_state["mean"], copy=True)
 
     @best_params.setter
     def best_params(self, params: Union[np.ndarray, jnp.ndarray]) -> None:
         self.es_state["best_member"] = jnp.array(params, copy=True)
-        self.es_state["m"] = jnp.array(params, copy=True)
+        self.es_state["mean"] = jnp.array(params, copy=True)
