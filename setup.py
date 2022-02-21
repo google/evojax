@@ -44,8 +44,10 @@ setup(
         "jaxlib>=0.1.65",
         "Pillow",
         "cma",
-        "evosax",
     ],
+    extras_require={
+        "extra": ['evosax', 'torchvision'],
+    },
     dependency_links=[JAX_URL],
     python_requires=">=3.6",
     classifiers=[

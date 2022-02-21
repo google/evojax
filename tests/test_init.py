@@ -77,3 +77,8 @@ class TestAlgo:
         from evojax.algo import SimpleGA
         _ = SimpleGA(pop_size=16, param_size=16)
         assert True
+
+    def test_ars(self):
+        from evojax.algo import ARS
+        _ = ARS(pop_size=16, param_size=16)
+        assert True

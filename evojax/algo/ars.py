@@ -1,3 +1,5 @@
+import sys
+
 import logging
 from typing import Union
 import numpy as np
@@ -7,7 +9,12 @@ import jax.numpy as jnp
 from evojax.algo.base import NEAlgorithm
 from evojax.util import create_logger
 
-from evosax import Augmented_RS, FitnessShaper
+try:
+    from evosax import Augmented_RS, FitnessShaper
+except ModuleNotFoundError:
+    print('You need to install evosax for its Augmented Random Search:')
+    print('  pip install evosax')
+    sys.exit()
 
 
 class ARS(NEAlgorithm):
