@@ -17,7 +17,22 @@ from .cma_wrapper import CMA
 from .pgpe import PGPE
 from .ars import ARS
 from .simple_ga import SimpleGA
+from .open_es import OpenES
 
-Strategies = {"CMA": CMA, "PGPE": PGPE, "SimpleGA": SimpleGA, "ARS": ARS}
+Strategies = {
+    "CMA": CMA,
+    "PGPE": PGPE,
+    "SimpleGA": SimpleGA,
+    "ARS": ARS,
+    "OpenES": OpenES,
+}
 
-__all__ = ["NEAlgorithm", "CMA", "PGPE", "ARS", "SimpleGA", "Strategies"]
+__all__ = [
+    "NEAlgorithm",
+    "CMA",
+    "PGPE",
+    "ARS",
+    "SimpleGA",
+    "OpenES",
+    "Strategies",
+]

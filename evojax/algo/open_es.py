@@ -10,17 +10,18 @@ from evojax.algo.base import NEAlgorithm
 from evojax.util import create_logger
 
 try:
-    from evosax import Augmented_RS, FitnessShaper
+    from evosax import Open_ES, FitnessShaper
 except ModuleNotFoundError:
-    print("You need to install evosax for its Augmented Random Search:")
+    print("You need to install evosax for its OpenES implementation:")
     print("  pip install evosax")
     sys.exit()
 
 
-class ARS(NEAlgorithm):
-    """A wrapper around evosax's Augmented Random Search.
-    Implementation: https://github.com/RobertTLange/evosax/blob/main/evosax/strategies/ars.py
-    Reference: Mania et al. (2018) - https://arxiv.org/pdf/1803.07055.pdf
+class OpenES(NEAlgorithm):
+    """A wrapper around evosax's OpenAI Evolution Strategies.
+    Implementation:
+    https://github.com/RobertTLange/evosax/blob/main/evosax/strategies/open_es.py
+    Reference: Salimans et al. (2017) - https://arxiv.org/pdf/1703.03864.pdf
 
     NOTE: More details on the optimizer configuration can be found here
     https://github.com/RobertTLange/evosax/blob/main/evosax/utils/optimizer.py
@@ -30,14 +31,14 @@ class ARS(NEAlgorithm):
         self,
         param_size: int,
         pop_size: int,
-        elite_ratio: float = 0.2,
-        optimizer: str = "clipup",
+        optimizer: str = "adam",
         optimizer_config: dict = {
-            "lrate_init": 0.15,  # Initial learning rate
+            "lrate_init": 0.01,  # Initial learning rate
             "lrate_decay": 0.999,  # Multiplicative decay factor
-            "lrate_limit": 0.05,  # Smallest possible lrate
-            "max_speed": 0.3,  # Max. clipping velocity
-            "momentum": 0.9,  # Momentum coefficient
+            "lrate_limit": 0.001,  # Smallest possible lrate
+            "beta_1": 0.99,  # beta_1 Adam
+            "beta_2": 0.999,  # beta_2 Adam
+            "eps": 1e-8,  # eps constant Adam denominator
         },
         init_stdev: float = 0.01,
         decay_stdev: float = 0.999,
@@ -63,20 +64,18 @@ class ARS(NEAlgorithm):
         """
 
         if logger is None:
-            self.logger = create_logger(name="ARS")
+            self.logger = create_logger(name="OpenES")
         else:
             self.logger = logger
 
         self.param_size = param_size
         self.pop_size = abs(pop_size)
-        self.elite_ratio = elite_ratio
         self.rand_key = jax.random.PRNGKey(seed=seed)
 
         # Instantiate evosax's ARS strategy
-        self.es = Augmented_RS(
+        self.es = Open_ES(
             popsize=pop_size,
             num_dims=param_size,
-            elite_ratio=elite_ratio,
             opt_name=optimizer,
         )
 
@@ -96,7 +95,9 @@ class ARS(NEAlgorithm):
 
         # By default evojax assumes maximization of fitness score!
         # Evosax, on the other hand, minimizes!
-        self.fit_shaper = FitnessShaper(w_decay=w_decay, maximize=True)
+        self.fit_shaper = FitnessShaper(
+            centered_rank=True, z_score=True, w_decay=w_decay, maximize=True
+        )
 
     def ask(self) -> jnp.ndarray:
         self.rand_key, ask_key = jax.random.split(self.rand_key)
