@@ -15,9 +15,9 @@
 from setuptools import find_packages, setup
 
 _dct = {}
-with open('evojax/version.py') as f:
+with open("evojax/version.py") as f:
     exec(f.read(), _dct)
-__version__ = _dct['__version__']
+__version__ = _dct["__version__"]
 
 JAX_URL = "https://storage.googleapis.com/jax-releases/jax_releases.html"
 
@@ -34,7 +34,9 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/google/evojax",
     license="Apache 2.0",
-    packages=[package for package in find_packages() if package.startswith("evojax")],
+    packages=[
+        package for package in find_packages() if package.startswith("evojax")
+    ],
     zip_safe=False,
     install_requires=[
         "flax",
@@ -43,6 +45,9 @@ setup(
         "Pillow",
         "cma",
     ],
+    extras_require={
+        "extra": ['evosax', 'torchvision'],
+    },
     dependency_links=[JAX_URL],
     python_requires=">=3.6",
     classifiers=[
