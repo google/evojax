@@ -9,14 +9,6 @@ import jax.numpy as jnp
 from evojax.algo.base import NEAlgorithm
 from evojax.util import create_logger
 
-try:
-    from evosax import Augmented_RS, FitnessShaper
-except ModuleNotFoundError:
-    print('You need to install evosax for its Augmented Random Search:')
-    print('  pip install evosax')
-    sys.exit()
-
-
 class ARS(NEAlgorithm):
     """A wrapper around evosax's Augmented Random Search.
     Implementation: https://github.com/RobertTLange/evosax/blob/main/evosax/strategies/ars.py
@@ -59,6 +51,22 @@ class ARS(NEAlgorithm):
             seed - Random seed for parameters sampling.
             logger - Logger.
         """
+
+        # Delayed importing of evosax
+
+        if sys.version_info.minor < 7:
+            print('evosax, which is needed by Augmented Random Search, requires python>=3.7')
+            print('  please consider upgrading your Python version.')
+            sys.exit(1)
+
+        try:
+            from evosax import Augmented_RS, FitnessShaper
+        except ModuleNotFoundError:
+            print('You need to install evosax for its Augmented Random Search:')
+            print('  pip install evosax')
+            sys.exit(1)
+
+        # Set up object variables.
 
         if logger is None:
             self.logger = create_logger(name="ARS")

@@ -40,6 +40,13 @@ pip install evojax
 pip install git+https://github.com/google/evojax.git@main
 ```
 
+If you also want to install the extra dependencies which is required for certain optional functionalities, use
+```shell
+pip install evojax[extra]
+# Or
+pip install git+https://github.com/google/evojax.git@main#egg=evojax[extra]
+```
+
 ## Code Overview
 
 EvoJAX is a framework with three major components, which we expect the users to extend.

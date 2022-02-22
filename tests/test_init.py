@@ -79,6 +79,8 @@ class TestAlgo:
         assert True
 
     def test_ars(self):
-        from evojax.algo import ARS
-        _ = ARS(pop_size=16, param_size=16)
-        assert True
+        import sys
+        if sys.version_info.minor >= 7:  # python>=3.7, required by evosax behind ARS
+            from evojax.algo import ARS
+            _ = ARS(pop_size=16, param_size=16)
+            assert True
