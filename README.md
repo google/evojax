@@ -40,7 +40,7 @@ pip install evojax
 pip install git+https://github.com/google/evojax.git@main
 ```
 
-If you also want to install the extra dependencies which is required for certain optional functionalities, use
+If you also want to install the extra dependencies required for certain optional functionalities, use
 ```shell
 pip install evojax[extra]
 # Or
