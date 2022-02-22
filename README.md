@@ -51,7 +51,7 @@ pip install git+https://github.com/google/evojax.git@main#egg=evojax[extra]
 
 EvoJAX is a framework with three major components, which we expect the users to extend.
 1. **Neuroevolution Algorithms** All neuroevolution algorithms should implement the `evojax.algo.base.NEAlgorithm` interface and reside in `evojax/algo/`.
-We currently provide [PGPE](https://people.idsia.ch/~juergen/nn2010.pdf), with more coming soon.
+See [here](https://github.com/google/evojax/blob/main/evojax/algo/README.md) for the available algorithms in EvoJAX.
 2. **Policy Networks** All neural networks should implement the `evojax.policy.base.PolicyNetwork` interface and be saved in `evojax/policy/`.
 In this repo, we give example implementations of the MLP, ConvNet, Seq2Seq and [PermutationInvariant](https://attentionneuron.github.io/) models.
 3. **Tasks** All tasks should implement `evojax.task.base.VectorizedTask` and be in `evojax/task/`.
