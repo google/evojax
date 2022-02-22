@@ -28,7 +28,7 @@ try:
 except ModuleNotFoundError:
     print('You need to install brax for Brax tasks:')
     print('  pip install git+https://github.com/google/brax.git@main')
-    sys.exit()
+    sys.exit(1)
 
 
 @dataclass

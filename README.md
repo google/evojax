@@ -1,6 +1,6 @@
 # EvoJAX: Hardware-Accelerated Neuroevolution
 
-EvoJAX is a scalable, general purpose, hardware-accelerated neuroevolution toolkit. Built on top of the JAX library, this toolkit enables neuroevolution algorithms to work with neural networks running in parallel across multiple TPU/GPUs. EvoJAX achieves very high performance by implementing the evolution algorithm, neural network and task all in NumPy, which is compiled just-in-time to run on accelerators.
+EvoJAX is a scalable, general purpose, hardware-accelerated [neuroevolution](https://en.wikipedia.org/wiki/Neuroevolution) toolkit. Built on top of the JAX library, this toolkit enables neuroevolution algorithms to work with neural networks running in parallel across multiple TPU/GPUs. EvoJAX achieves very high performance by implementing the evolution algorithm, neural network and task all in NumPy, which is compiled just-in-time to run on accelerators.
 
 This repo also includes several extensible examples of EvoJAX for a wide range of tasks, including supervised learning, reinforcement learning and generative art, demonstrating how EvoJAX can run your evolution experiments within minutes on a single accelerator, compared to hours or days when using CPUs.
 
@@ -40,11 +40,18 @@ pip install evojax
 pip install git+https://github.com/google/evojax.git@main
 ```
 
+If you also want to install the extra dependencies required for certain optional functionalities, use
+```shell
+pip install evojax[extra]
+# Or
+pip install git+https://github.com/google/evojax.git@main#egg=evojax[extra]
+```
+
 ## Code Overview
 
 EvoJAX is a framework with three major components, which we expect the users to extend.
 1. **Neuroevolution Algorithms** All neuroevolution algorithms should implement the `evojax.algo.base.NEAlgorithm` interface and reside in `evojax/algo/`.
-We currently provide [PGPE](https://people.idsia.ch/~juergen/nn2010.pdf), with more coming soon.
+See [here](https://github.com/google/evojax/blob/main/evojax/algo/README.md) for the available algorithms in EvoJAX.
 2. **Policy Networks** All neural networks should implement the `evojax.policy.base.PolicyNetwork` interface and be saved in `evojax/policy/`.
 In this repo, we give example implementations of the MLP, ConvNet, Seq2Seq and [PermutationInvariant](https://attentionneuron.github.io/) models.
 3. **Tasks** All tasks should implement `evojax.task.base.VectorizedTask` and be in `evojax/task/`.
@@ -117,7 +124,7 @@ We also show that the modular design of EvoJAX allows its components to be used 
 
 The goal of EvoJAX is to get evolutionary computation to able to work on a vast array of tasks using accelerators.
 
-One issue before was that many evolution algorithms were only optimized for one particular task for some paper. This is the reason we focused only on one single algorithm (PGPE) in the first release of EvoJAX, while creating 6+ different tasks in diverse domains, ensuring that one single algorithm works for all of the tasks without any issues.
+One issue before was that many evolution algorithms were only optimized for one particular task for some paper. This is the reason we focused only on one single algorithm (PGPE) in the first release of EvoJAX, while creating 6+ different tasks in diverse domains, ensuring that one single algorithm works for all of the tasks without any issues. See [Table](https://github.com/google/evojax/blob/main/evojax/algo/README.md) of contributed algorithms.
 
 ### Evolutionary Algorithms
 
