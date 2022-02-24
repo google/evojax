@@ -1,0 +1,26 @@
+es_name: "ARS"
+problem_type: "waterworld_ma"
+normalize: false
+es_config:
+  elite_ratio: 0.5
+  pop_size: 16
+  init_stdev: 0.1
+  decay_stdev: 0.999
+  limit_stdev: 0.001
+  optimizer: "adam"
+  optimizer_config:
+    lrate_init: 0.015
+    lrate_decay: 0.999
+    lrate_limit: 0.005
+    beta_1: 0.99
+    beta_2: 0.999
+    eps: 1e-08
+hidden_size: 100
+num_tests: 16
+n_repeats: 64
+max_iter: 2000
+test_interval: 100
+log_interval: 10
+seed: 42
+gpu_id: [0, 1, 2, 3]
+debug: false

@@ -1,0 +1,23 @@
+es_name: "OpenES"
+problem_type: "cartpole_easy"
+normalize: false
+es_config:
+  pop_size: 100
+  init_stdev: 0.03
+  decay_stdev: 0.999
+  limit_stdev: 0.01
+  optimizer: "adam"
+  optimizer_config:
+    lrate_init: 0.02
+    lrate_decay: 0.999
+    lrate_limit: 0.001
+    momentum: 0.0
+hidden_size: 64
+num_tests: 100
+n_repeats: 16
+max_iter: 1000
+test_interval: 100
+log_interval: 50
+seed: 42
+gpu_id: 0
+debug: false

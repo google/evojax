@@ -1,0 +1,18 @@
+es_name: "PGPE"
+problem_type: "waterworld"
+normalize: false
+es_config:
+  pop_size: 256
+  center_learning_rate: 0.014
+  stdev_learning_rate: 0.088
+  init_stdev: 0.069
+  optimizer: "adam"
+hidden_size: 100
+num_tests: 100
+n_repeats: 32
+max_iter: 1000
+test_interval: 50
+log_interval: 10
+seed: 42
+gpu_id: [0, 1, 2, 3]
+debug: false

@@ -1,0 +1,14 @@
+num_iters: 25
+search_type: "Grid"
+maximize_objective: true
+verbose: true
+search_config:
+  real:
+    es_config/center_learning_rate:
+      begin: 0.01
+      end: 0.1
+      bins: 5
+    es_config/stdev_learning_rate:
+      begin: 0.01
+      end: 0.1
+      bins: 5

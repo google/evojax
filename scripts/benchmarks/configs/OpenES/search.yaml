@@ -1,0 +1,14 @@
+num_iters: 25
+search_type: "Grid"
+maximize_objective: true
+verbose: true
+search_config:
+  real:
+    es_config/optimizer_config/lrate_init:
+      begin: 0.001
+      end: 0.1
+      bins: 5
+    es_config/init_stdev:
+      begin: 0.01
+      end: 0.1
+      bins: 5
