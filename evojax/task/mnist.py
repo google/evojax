@@ -29,7 +29,7 @@ try:
 except ModuleNotFoundError:
     print('You need to install torchvision for this task.')
     print('  pip install torchvision')
-    sys.exit()
+    sys.exit(1)
 
 
 @dataclass
