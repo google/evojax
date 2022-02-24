@@ -1,6 +1,6 @@
 # Utilities for Benchmarking EvoJAX Algorithms 
 
-This repository contains benchmark results, helper scripts, ES configurations and logs for testing the performance of evolutionary strategies in [`evojax`](https://github.com/google/evojax/). These can be useful, when aiming to merge a new JAX-based ES into the projects.
+This repository contains benchmark results, helper scripts, ES configurations and logs for testing the performance of evolutionary strategies in [`evojax`](https://github.com/google/evojax/). These can be useful, when aiming to merge a new JAX-based ES into the project.
 
 ## Installation
 
@@ -13,7 +13,7 @@ pip install evojax pyyaml
 1. Fork `evojax`. 
 2. Add your strategy to `algo` and the `Strategies` wrapper in the `__init__.py` file.
 3. Add the base task configurations for you ES to `configs/<es>/`.
-4. Get compute access and execute the individual training runs for the base/default configurations via:
+4. Execute the individual training runs for the base/default configurations via:
 
 ```
 python train.py -config configs/<es>/cartpole_easy.yaml
@@ -73,7 +73,6 @@ Waterworld (MA)	| 2 (max_iter=2000)	| [Link](configs/PGPE/waterworld_ma.yaml) | 
 
 
 ### OpenES
-
 
 |   | Benchmarks | Parameters | Results (Avg) |
 |---|---|---|---|
