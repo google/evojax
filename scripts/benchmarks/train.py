@@ -9,7 +9,7 @@ from problems import setup_problem, save_yaml, load_yaml
 def main(config):
     # Set cuda device visibility
     if config["gpu_id"] is not None:
-        if type(config["gpu_id"] is list:
+        if type(config["gpu_id"]) is list:
             os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(
                 [str(i) for i in config["gpu_id"]]
             )
@@ -25,7 +25,7 @@ def main(config):
     if not os.path.exists(log_dir):
         os.makedirs(log_dir, exist_ok=True)
     logger = util.create_logger(
-        name=f"{config["problem_type"]}", log_dir=log_dir, debug=config["debug"]
+        name=f"{config['problem_type']}", log_dir=log_dir, debug=config["debug"]
     )
 
     logger.info(f"EvoJAX {config['problem_type']}")
@@ -39,7 +39,7 @@ def main(config):
 
     # Setup ES.
     solver = Strategies[config["es_name"]](
-        **config.es_config,
+        **config["es_config"],
         param_size=policy.num_params,
         seed=config["seed"],
     )

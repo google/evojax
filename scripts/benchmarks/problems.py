@@ -8,17 +8,17 @@ from evojax.policy.convnet import ConvNetPolicy
 
 
 def setup_problem(config, logger):
-    if config.problem_type == "cartpole_easy":
+    if config["problem_type"] == "cartpole_easy":
         return setup_cartpole(config, False)
-    elif config.problem_type == "cartpole_hard":
+    elif config["problem_type"] == "cartpole_hard":
         return setup_cartpole(config, True)
-    elif config.problem_type == "brax":
+    elif config["problem_type"] == "brax":
         return setup_brax(config)
-    elif config.problem_type == "mnist":
+    elif config["problem_type"] == "mnist":
         return setup_mnist(config, logger)
-    elif config.problem_type == "waterworld":
+    elif config["problem_type"] == "waterworld":
         return setup_waterworld(config)
-    elif config.problem_type == "waterworld_ma":
+    elif config["problem_type"] == "waterworld_ma":
         return setup_waterworld_ma(config)
 
 
@@ -29,7 +29,7 @@ def setup_cartpole(config, hard=False):
     test_task = CartPoleSwingUp(test=True, harder=hard)
     policy = MLPPolicy(
         input_dim=train_task.obs_shape[0],
-        hidden_dims=[config.hidden_size] * 2,
+        hidden_dims=[config["hidden_size"]] * 2,
         output_dim=train_task.act_shape[0],
     )
     return train_task, test_task, policy
@@ -38,8 +38,8 @@ def setup_cartpole(config, hard=False):
 def setup_brax(config):
     from evojax.task.brax_task import BraxTask
 
-    train_task = BraxTask(env_name=config.env_name, test=False)
-    test_task = BraxTask(env_name=config.env_name, test=True)
+    train_task = BraxTask(env_name=config["env_name"], test=False)
+    test_task = BraxTask(env_name=config["env_name"], test=True)
     policy = MLPPolicy(
         input_dim=train_task.obs_shape[0],
         output_dim=train_task.act_shape[0],
@@ -52,8 +52,8 @@ def setup_mnist(config, logger):
     from evojax.task.mnist import MNIST
 
     policy = ConvNetPolicy(logger=logger)
-    train_task = MNIST(batch_size=config.batch_size, test=False)
-    test_task = MNIST(batch_size=config.batch_size, test=True)
+    train_task = MNIST(batch_size=config["batch_size"], test=False)
+    test_task = MNIST(batch_size=config["batch_size"], test=True)
     return train_task, test_task, policy
 
 
@@ -65,7 +65,7 @@ def setup_waterworld(config, max_steps=500):
     policy = MLPPolicy(
         input_dim=train_task.obs_shape[0],
         hidden_dims=[
-            config.hidden_size,
+            config["hidden_size"],
         ],
         output_dim=train_task.act_shape[0],
         output_act_fn="softmax",
@@ -85,7 +85,7 @@ def setup_waterworld_ma(config, num_agents=16, max_steps=500):
     policy = MLPPolicy(
         input_dim=train_task.obs_shape[-1],
         hidden_dims=[
-            config.hidden_size,
+            config["hidden_size"],
         ],
         output_dim=train_task.act_shape[-1],
         output_act_fn="softmax",
