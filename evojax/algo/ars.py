@@ -10,14 +10,6 @@ from evojax.algo.base import NEAlgorithm
 from evojax.util import create_logger
 
 
-try:
-    from evosax import Augmented_RS, FitnessShaper
-except ModuleNotFoundError:
-    print("You need to install evosax for its Augmented Random Search:")
-    print("  pip install evosax")
-    sys.exit()
-
-
 class ARS(NEAlgorithm):
     """A wrapper around evosax's Augmented Random Search.
     Implementation: https://github.com/RobertTLange/evosax/blob/main/evosax/strategies/ars.py

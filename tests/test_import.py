@@ -16,4 +16,4 @@
 class TestClass:
     def test_one(self):
         import evojax
-        assert True
+        assert evojax.__name__ == 'evojax'
