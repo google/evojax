@@ -2,7 +2,7 @@ num_iters: 25
 search_type: "Grid"
 maximize_objective: true
 verbose: true
-search_config:
+search_params:
   real:
     es_config/optimizer_config/lrate_init:
       begin: 0.001

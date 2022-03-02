@@ -72,7 +72,7 @@ class OpenES(NEAlgorithm):
         self.pop_size = abs(pop_size)
         self.rand_key = jax.random.PRNGKey(seed=seed)
 
-        # Instantiate evosax's ARS strategy
+        # Instantiate evosax's Open ES strategy
         self.es = Open_ES(
             popsize=pop_size,
             num_dims=param_size,
