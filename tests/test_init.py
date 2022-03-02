@@ -84,3 +84,10 @@ class TestAlgo:
             from evojax.algo import ARS
             _ = ARS(pop_size=16, param_size=16)
             assert True
+
+    def test_open_es(self):
+        import sys
+        if sys.version_info.minor >= 7:  # python>=3.7, required by evosax behind ARS
+            from evojax.algo import OpenES
+            _ = OpenES(pop_size=16, param_size=16)
+            assert True
