@@ -9,13 +9,6 @@ import jax.numpy as jnp
 from evojax.algo.base import NEAlgorithm
 from evojax.util import create_logger
 
-try:
-    from evosax import Open_ES, FitnessShaper
-except ModuleNotFoundError:
-    print("You need to install evosax for its OpenES implementation:")
-    print("  pip install evosax")
-    sys.exit()
-
 
 class OpenES(NEAlgorithm):
     """A wrapper around evosax's OpenAI Evolution Strategies.
@@ -62,6 +55,20 @@ class OpenES(NEAlgorithm):
             seed - Random seed for parameters sampling.
             logger - Logger.
         """
+
+        # Delayed importing of evosax
+
+        if sys.version_info.minor < 7:
+            print('evosax, which is needed byOpenES, requires python>=3.7')
+            print('  please consider upgrading your Python version.')
+            sys.exit(1)
+
+        try:
+            from evosax import Open_ES, FitnessShaper
+        except ModuleNotFoundError:
+            print("You need to install evosax for its OpenES implementation:")
+            print("  pip install evosax")
+            sys.exit(1)
 
         if logger is None:
             self.logger = create_logger(name="OpenES")
