@@ -146,7 +146,8 @@ We suggest the below performance guidelines for new algorithms:
 
 Note that these are not hard requirements, but just rough guidelines.
 
-See this [example](https://github.com/google/evojax/pull/5#issuecomment-1043879609) pull request thread of a Genetic Algorithm that has been merged into EvoJAX to see how it should be done.
+Please use the [benchmark script](https://github.com/google/evojax/tree/main/scripts/benchmarks) to evaluate your algorithm before sending us a PR, let us know if you are unable to test on some tasks due to hardware limitations.
+See this [example](https://github.com/google/evojax/pull/5#issuecomment-1043879609) pull request thread of a Genetic Algorithm that has been merged into EvoJAX to see how it should be done. 
 
 Feel free to reach out to evojax-dev@google.com if you wish to discuss further.
 
