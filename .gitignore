@@ -158,3 +158,8 @@ cython_debug/
 # Experiment data and logs
 examples/data
 examples/log
+
+# Benchmark residuals
+grid_*
+default
+*.npz

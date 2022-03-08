@@ -1,0 +1,150 @@
+'0':
+  eval_id: 0
+  objective: 466.8155517578125
+  params:
+    es_config/init_stdev: 0.01
+    es_config/optimizer_config/lrate_init: 0.005
+'1':
+  eval_id: 1
+  objective: 529.465087890625
+  params:
+    es_config/init_stdev: 0.01
+    es_config/optimizer_config/lrate_init: 0.016
+'10':
+  eval_id: 10
+  objective: 462.7436828613281
+  params:
+    es_config/init_stdev: 0.055
+    es_config/optimizer_config/lrate_init: 0.005
+'11':
+  eval_id: 11
+  objective: 614.6631469726562
+  params:
+    es_config/init_stdev: 0.055
+    es_config/optimizer_config/lrate_init: 0.016
+'12':
+  eval_id: 12
+  objective: 625.5114135742188
+  params:
+    es_config/init_stdev: 0.055
+    es_config/optimizer_config/lrate_init: 0.028
+'13':
+  eval_id: 13
+  objective: 626.080322265625
+  params:
+    es_config/init_stdev: 0.055
+    es_config/optimizer_config/lrate_init: 0.039
+'14':
+  eval_id: 14
+  objective: 621.1392822265625
+  params:
+    es_config/init_stdev: 0.055
+    es_config/optimizer_config/lrate_init: 0.05
+'15':
+  eval_id: 15
+  objective: 457.5474853515625
+  params:
+    es_config/init_stdev: 0.078
+    es_config/optimizer_config/lrate_init: 0.005
+'16':
+  eval_id: 16
+  objective: 527.8845825195312
+  params:
+    es_config/init_stdev: 0.078
+    es_config/optimizer_config/lrate_init: 0.016
+'17':
+  eval_id: 17
+  objective: 619.8495483398438
+  params:
+    es_config/init_stdev: 0.078
+    es_config/optimizer_config/lrate_init: 0.028
+'18':
+  eval_id: 18
+  objective: 625.3858032226562
+  params:
+    es_config/init_stdev: 0.078
+    es_config/optimizer_config/lrate_init: 0.039
+'19':
+  eval_id: 19
+  objective: 626.59765625
+  params:
+    es_config/init_stdev: 0.078
+    es_config/optimizer_config/lrate_init: 0.05
+'2':
+  eval_id: 2
+  objective: 619.59326171875
+  params:
+    es_config/init_stdev: 0.01
+    es_config/optimizer_config/lrate_init: 0.028
+'20':
+  eval_id: 20
+  objective: 451.7759094238281
+  params:
+    es_config/init_stdev: 0.1
+    es_config/optimizer_config/lrate_init: 0.005
+'21':
+  eval_id: 21
+  objective: 518.8273315429688
+  params:
+    es_config/init_stdev: 0.1
+    es_config/optimizer_config/lrate_init: 0.016
+'22':
+  eval_id: 22
+  objective: 628.6185302734375
+  params:
+    es_config/init_stdev: 0.1
+    es_config/optimizer_config/lrate_init: 0.028
+'23':
+  eval_id: 23
+  objective: 620.4909057617188
+  params:
+    es_config/init_stdev: 0.1
+    es_config/optimizer_config/lrate_init: 0.039
+'24':
+  eval_id: 24
+  objective: 623.8580322265625
+  params:
+    es_config/init_stdev: 0.1
+    es_config/optimizer_config/lrate_init: 0.05
+'3':
+  eval_id: 3
+  objective: 605.4382934570312
+  params:
+    es_config/init_stdev: 0.01
+    es_config/optimizer_config/lrate_init: 0.039
+'4':
+  eval_id: 4
+  objective: 586.8464965820312
+  params:
+    es_config/init_stdev: 0.01
+    es_config/optimizer_config/lrate_init: 0.05
+'5':
+  eval_id: 5
+  objective: 474.4660949707031
+  params:
+    es_config/init_stdev: 0.032
+    es_config/optimizer_config/lrate_init: 0.005
+'6':
+  eval_id: 6
+  objective: 624.5582275390625
+  params:
+    es_config/init_stdev: 0.032
+    es_config/optimizer_config/lrate_init: 0.016
+'7':
+  eval_id: 7
+  objective: 626.697509765625
+  params:
+    es_config/init_stdev: 0.032
+    es_config/optimizer_config/lrate_init: 0.028
+'8':
+  eval_id: 8
+  objective: 617.7034912109375
+  params:
+    es_config/init_stdev: 0.032
+    es_config/optimizer_config/lrate_init: 0.039
+'9':
+  eval_id: 9
+  objective: 621.3505249023438
+  params:
+    es_config/init_stdev: 0.032
+    es_config/optimizer_config/lrate_init: 0.05
