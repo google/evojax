@@ -115,7 +115,7 @@ def save_model(model_dir: str,
                  obs_params=np.array(obs_params))
 
 
-def get_tensorboard_log_fn(log_dir: str) -> Callable[[int, jnp.ndarray], None]:
+def get_tensorboard_log_fn(log_dir: str) -> Callable[[int, jnp.ndarray, str], None]:
     """
     Returns a custom logging function for the `evojax` `Trainer`.
     The function logs rewards after every train/test iteration with Tensorboard.
@@ -127,12 +127,12 @@ def get_tensorboard_log_fn(log_dir: str) -> Callable[[int, jnp.ndarray], None]:
     try:
         from torch.utils.tensorboard import SummaryWriter
 
-        def log_with_pytorch(i: int, scores: jnp.ndarray):
-            stage = "test"
+        def log_with_pytorch(i: int, scores: jnp.ndarray, stage: str):
             with SummaryWriter(log_dir=log_dir) as writer:
                 writer.add_scalar(f"{stage}/score_min", scores.min().item(), global_step=i)
                 writer.add_scalar(f"{stage}/score_max", scores.max().item(), global_step=i)
                 writer.add_scalar(f"{stage}/score_mean", scores.mean().item(), global_step=i)
+                writer.add_scalar(f"{stage}/score_std", scores.std().item(), global_step=i)
                 writer.add_histogram(f"{stage}/score_distribution", np.array(scores), global_step=i)
 
         return log_with_pytorch
@@ -143,12 +143,12 @@ def get_tensorboard_log_fn(log_dir: str) -> Callable[[int, jnp.ndarray], None]:
     try:
         import tensorflow as tf
 
-        def log_with_tf(i: int, scores: jnp.ndarray):
-            stage = "test"
+        def log_with_tf(i: int, scores: jnp.ndarray, stage: str):
             with tf.summary.SummaryWriter(log_dir=log_dir).as_default():
                 tf.summary.scalar(f"{stage}/score_min", scores.min().item(), step=i)
                 tf.summary.scalar(f"{stage}/score_max", scores.max().item(), step=i)
                 tf.summary.scalar(f"{stage}/score_mean", scores.mean().item(), step=i)
+                tf.summary.scalar(f"{stage}/score_std", scores.std().item(), step=i)
                 tf.summary.histogram(f"{stage}/score_distribution", np.array(scores), step=i)
 
         return log_with_tf

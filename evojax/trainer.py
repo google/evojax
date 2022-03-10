@@ -172,6 +172,7 @@ class Trainer(object):
                             i, test_scores.size, test_scores.max(),
                             test_scores.mean(), test_scores.min(),
                             test_scores.std()))
+                    self._log_scores_fn(i, test_scores, "test")
                     mean_test_score = test_scores.mean()
                     save_model(
                         model_dir=self._log_dir,
