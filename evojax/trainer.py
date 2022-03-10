@@ -49,7 +49,7 @@ class Trainer(object):
                  model_dir: str = None,
                  log_dir: str = None,
                  logger: logging.Logger = None,
-                 log_scores_fn: Optional[Callable[[int, jnp.ndarray, str], None]] = None):
+                 log_scores_fn: Optional[Callable[[int, jnp.ndarray], None]] = None):
         """Initialization.
 
         Args:
@@ -69,7 +69,7 @@ class Trainer(object):
             log_dir - Directory to dump logs.
             logger - Logger.
             log_scores_fn - custom function to log the scores array. Expects input:
-                `current_iter`: int, `scores`: jnp.ndarray, `stage`: str = "train" | "test"
+                `current_iter`: int, `scores`: jnp.ndarray
         """
 
         if logger is None:
@@ -172,7 +172,6 @@ class Trainer(object):
                             i, test_scores.size, test_scores.max(),
                             test_scores.mean(), test_scores.min(),
                             test_scores.std()))
-                    self._log_scores_fn(i, scores, "test")
                     mean_test_score = test_scores.mean()
                     save_model(
                         model_dir=self._log_dir,
