@@ -69,7 +69,7 @@ class Trainer(object):
             log_dir - Directory to dump logs.
             logger - Logger.
             log_scores_fn - custom function to log the scores array. Expects input:
-                `current_iter`: int, `scores`: jnp.ndarray
+                `current_iter`: int, `scores`: jnp.ndarray, 'stage': str = "train" | "test"
         """
 
         if logger is None:
