@@ -82,6 +82,8 @@ def calc_distance(dR: jnp.ndarray) -> jnp.ndarray:
 
 def select_xy(xy: jnp.ndarray, ix: jnp.ndarray) -> jnp.ndarray:
     return jnp.take(xy, ix, axis=0)
+
+
 _select_xy = jax.vmap(select_xy, in_axes=(None, 0))
 
 
@@ -146,7 +148,7 @@ def calc_energy(position, theta):
 
     dR = map_product(displacement)(position, position)
     N = normal(theta)
-    
+
     fov = partial(field_of_view_mask, theta_min=0., theta_max=jnp.pi / 3.)
     fov = vmap(vmap(fov, (0, None)))
     mask = fov(dR, N)
@@ -174,8 +176,7 @@ def get_reward(state: State, max_steps: jnp.int32):
 def to_pillow_coordinate(position, width, height):
     # Fix the format for drawing with pillow.
     return jnp.stack([position[:, 0] * width,
-                      (1.0 - position[:, 1]) * height],
-                      axis=1)
+                      (1.0 - position[:, 1]) * height], axis=1)
 
 
 def rotate(px, py, cx, cy, angle):
@@ -220,8 +221,7 @@ def render_fishes(position, theta, width, height):
 
 def render_single(obs_single):
     position, theta = unpack_obs(obs_single)
-    image = render_fishes(position, theta, SCREEN_W * 2,
-                          SCREEN_H * 2)  #anti-aliasing
+    image = render_fishes(position, theta, SCREEN_W * 2, SCREEN_H * 2)  # anti-aliasing
     image = image.resize((SCREEN_W, SCREEN_H), resample=Image.LANCZOS)
     return image
 
@@ -231,7 +231,7 @@ class FlockingTask(VectorizedTask):
     def __init__(self, max_steps: int = 150):
         self.max_steps = max_steps
         self.obs_shape = tuple([NEIGHBOR_NUM * 3, BOIDS_NUM])
-        self.act_shape = tuple([1,])
+        self.act_shape = tuple([1, ])
 
         def reset_fn(key):
             next_key, key = jax.random.split(key)
