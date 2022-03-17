@@ -153,7 +153,7 @@ Feel free to reach out to evojax-dev@google.com if you wish to discuss further.
 
 ### New Tasks
 
-We also welcome new tasks and examples. Some suggestions:
+We also welcome new tasks and examples (see [here](https://github.com/google/evojax/tree/main/evojax/task) for all tasks in EvoJAX). Some suggestions:
 
 - Train a [Neural Turing Machine](https://en.wikipedia.org/wiki/Neural_Turing_machine) using evolution to come up with a sorting algorithm.
 - Soccer via self-play ([Example](https://mobile.aau.at/~welmenre/papers/fehervari-2010-Evolving_Neural_Network_Controllers_for_a_Team_of_Self-organizing_Robots.pdf))
