@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+This flocking task is based on the following colab notebook:
+https://github.com/google/jax-md/blob/main/notebooks/flocking.ipynb
+"""
+
 from PIL import Image, ImageDraw
 from functools import partial
 from typing import Tuple
