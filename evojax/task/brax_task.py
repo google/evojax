@@ -43,10 +43,15 @@ class BraxTask(VectorizedTask):
     def __init__(self,
                  env_name: str,
                  max_steps: int = 1000,
+                 legacy_spring: bool = True,
                  test: bool = False):
         self.max_steps = max_steps
         self.test = test
-        brax_env = create(env_name=env_name, episode_length=max_steps)
+        brax_env = create(
+            env_name=env_name,
+            episode_length=max_steps,
+            legacy_spring=legacy_spring,
+        )
         self.obs_shape = tuple([brax_env.observation_size, ])
         self.act_shape = tuple([brax_env.action_size, ])
 
