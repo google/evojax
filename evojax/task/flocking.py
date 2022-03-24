@@ -31,12 +31,12 @@ from evojax.task.base import TaskState
 
 DT = 0.2
 SPEED = 0.12
-J_ALIGN = 0.6
-D_ALIGN = 0.25
-J_AVOID = 0.12
-D_AVOID = 0.08
-J_COHESION = 0.025
-D_COHESION = 0.2
+J_ALIGN = 0.2
+D_ALIGN = 0.15
+J_AVOID = 0.1
+D_AVOID = 0.12
+J_COHESION = 0.3
+D_COHESION = 0.3
 ALPHA = 3
 
 SCREEN_W = 400
