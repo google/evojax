@@ -31,12 +31,12 @@ from evojax.task.base import TaskState
 
 DT = 0.2
 SPEED = 0.12
-J_ALIGN = 0.6
-D_ALIGN = 0.25
-J_AVOID = 0.12
-D_AVOID = 0.08
-J_COHESION = 0.025
-D_COHESION = 0.2
+J_ALIGN = 0.2
+D_ALIGN = 0.15
+J_AVOID = 0.1
+D_AVOID = 0.12
+J_COHESION = 0.3
+D_COHESION = 0.3
 ALPHA = 3
 
 SCREEN_W = 400
@@ -171,11 +171,15 @@ def update_state(state, action):
     return new_obs
 
 
-def get_reward(state: State, max_steps: jnp.int32):
+def get_reward(state: State, max_steps: jnp.int32, select_reward_func: jnp.int32):
     position, theta = unpack_obs(state.state)
-    reward = -calc_energy(position, theta)
-    gamma = state.steps / max_steps
-    return reward * gamma ** 2
+    reward = calc_energy(position, theta)
+    reward = jax.lax.cond(
+        select_reward_func == 0,
+        lambda x: -x,
+        lambda x: -x * (state.steps / max_steps) ** 2,
+        reward)
+    return reward
 
 
 def to_pillow_coordinate(position, width, height):
@@ -233,10 +237,11 @@ def render_single(obs_single):
 
 class FlockingTask(VectorizedTask):
 
-    def __init__(self, max_steps: int = 150):
+    def __init__(self, max_steps: int = 150, select_reward_func: int = 0):
         self.max_steps = max_steps
         self.obs_shape = tuple([NEIGHBOR_NUM * 3, BOIDS_NUM])
         self.act_shape = tuple([1, ])
+        self.select_reward_func = select_reward_func
 
         def reset_fn(key):
             next_key, key = jax.random.split(key)
@@ -254,7 +259,7 @@ class FlockingTask(VectorizedTask):
             new_obs = choose_neighbor(new_state)
             new_steps = jnp.int32(state.steps + 1)
             next_key, _ = jax.random.split(state.key)
-            reward = get_reward(state, max_steps)
+            reward = get_reward(state, max_steps, select_reward_func)
             done = jnp.where(max_steps <= new_steps, True, False)
             return State(obs=new_obs,
                          state=new_state,
