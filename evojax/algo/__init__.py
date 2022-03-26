@@ -18,6 +18,7 @@ from .pgpe import PGPE
 from .ars import ARS
 from .simple_ga import SimpleGA
 from .open_es import OpenES
+from .sep_cma_es import Sep_CMA_ES
 
 Strategies = {
     "CMA": CMA,
@@ -25,6 +26,7 @@ Strategies = {
     "SimpleGA": SimpleGA,
     "ARS": ARS,
     "OpenES": OpenES,
+    "Sep_CMA_ES": Sep_CMA_ES,
 }
 
 __all__ = [
@@ -34,5 +36,6 @@ __all__ = [
     "ARS",
     "SimpleGA",
     "OpenES",
+    "Sep_CMA_ES",
     "Strategies",
 ]
