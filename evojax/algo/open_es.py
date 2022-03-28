@@ -59,12 +59,12 @@ class OpenES(NEAlgorithm):
         # Delayed importing of evosax
 
         if sys.version_info.minor < 7:
-            print('evosax, which is needed byOpenES, requires python>=3.7')
-            print('  please consider upgrading your Python version.')
+            print("evosax, which is needed byOpenES, requires python>=3.7")
+            print("  please consider upgrading your Python version.")
             sys.exit(1)
 
         try:
-            from evosax import Open_ES, FitnessShaper
+            import evosax
         except ModuleNotFoundError:
             print("You need to install evosax for its OpenES implementation:")
             print("  pip install evosax")
@@ -80,7 +80,7 @@ class OpenES(NEAlgorithm):
         self.rand_key = jax.random.PRNGKey(seed=seed)
 
         # Instantiate evosax's Open ES strategy
-        self.es = Open_ES(
+        self.es = evosax.OpenES(
             popsize=pop_size,
             num_dims=param_size,
             opt_name=optimizer,
@@ -102,7 +102,7 @@ class OpenES(NEAlgorithm):
 
         # By default evojax assumes maximization of fitness score!
         # Evosax, on the other hand, minimizes!
-        self.fit_shaper = FitnessShaper(
+        self.fit_shaper = evosax.FitnessShaper(
             centered_rank=True, z_score=True, w_decay=w_decay, maximize=True
         )
 

@@ -58,15 +58,18 @@ class ARS(NEAlgorithm):
         # Delayed importing of evosax
 
         if sys.version_info.minor < 7:
-            print('evosax, which is needed by Augmented Random Search, requires python>=3.7')
-            print('  please consider upgrading your Python version.')
+            print(
+                "evosax, which is needed by Augmented Random Search, requires"
+                " python>=3.7"
+            )
+            print("  please consider upgrading your Python version.")
             sys.exit(1)
 
         try:
-            from evosax import Augmented_RS, FitnessShaper
+            import evosax
         except ModuleNotFoundError:
-            print('You need to install evosax for its Augmented Random Search:')
-            print('  pip install evosax')
+            print("You need to install evosax for its Augmented Random Search:")
+            print("  pip install evosax")
             sys.exit(1)
 
         # Set up object variables.
@@ -82,7 +85,7 @@ class ARS(NEAlgorithm):
         self.rand_key = jax.random.PRNGKey(seed=seed)
 
         # Instantiate evosax's ARS strategy
-        self.es = Augmented_RS(
+        self.es = evosax.ARS(
             popsize=pop_size,
             num_dims=param_size,
             elite_ratio=elite_ratio,
@@ -105,7 +108,7 @@ class ARS(NEAlgorithm):
 
         # By default evojax assumes maximization of fitness score!
         # Evosax, on the other hand, minimizes!
-        self.fit_shaper = FitnessShaper(w_decay=w_decay, maximize=True)
+        self.fit_shaper = evosax.FitnessShaper(w_decay=w_decay, maximize=True)
 
     def ask(self) -> jnp.ndarray:
         self.rand_key, ask_key = jax.random.split(self.rand_key)
