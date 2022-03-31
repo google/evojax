@@ -156,4 +156,4 @@ def get_tensorboard_log_fn(log_dir: str) -> Callable[[int, jnp.ndarray, str], No
     except ImportError:
         pass
 
-    raise ImportError("Please install either tensorflow or pytorch to log the rewards to tensorboard")
+    raise ImportError("Please install the tensorboard AND (tensorflow OR pytorch) packages to log the rewards to tensorboard")
