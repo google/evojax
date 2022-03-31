@@ -40,6 +40,7 @@ from evojax.policy import PermutationInvariantPolicy
 from evojax.algo import PGPE
 from evojax.algo import CMA
 from evojax import util
+from evojax.util import get_tensorboard_log_fn
 
 
 def parse_args():
@@ -124,6 +125,14 @@ def main(config):
             seed=config.seed,
         )
 
+    try:
+        log_scores_fn = get_tensorboard_log_fn(log_dir=os.path.join(log_dir, "tb_logs"))
+    except ImportError as e:
+        logger.warning(e)
+
+        def log_scores_fn(i, scores, stage):  # noqa
+            pass
+
     # Train.
     trainer = Trainer(
         policy=policy,
@@ -138,6 +147,7 @@ def main(config):
         seed=config.seed,
         log_dir=log_dir,
         logger=logger,
+        log_scores_fn=log_scores_fn
     )
     trainer.run(demo_mode=False)
 
