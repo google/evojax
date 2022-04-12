@@ -59,8 +59,18 @@ This will sequentially execute 25 ARS-MNIST evolution runs for a grid of differe
 
 ## Benchmark Results
 
-### Sep-CMA-ES
+### CMA-ES
 
+|   | Benchmarks | Parameters | Results (Avg) |
+|---|---|---|---|
+CartPole (easy) | 	900 (max_iter=1000)|[Link](configs/CMA_ES/cartpole_easy.yaml)| 927.3208 |
+CartPole (hard)	| 600 (max_iter=1000)|[Link](configs/CMA_ES/cartpole_hard.yaml)| 625.9829 |
+MNIST	| 90.0 (max_iter=2000)	| [Link](configs/CMA_ES/mnist.yaml)| 0.9581 |
+Brax Ant |	3000 (max_iter=1200) |[Link](configs/CMA_ES/brax_ant.yaml)| 3174.0608 |
+Waterworld	| 6 (max_iter=500)	 | [Link](configs/CMA_ES/waterworld.yaml)| 9.44 |
+Waterworld (MA)	| 2 (max_iter=2000)	| [Link](configs/CMA_ES/waterworld_ma.yaml) | 0.5625 |
+
+### Sep-CMA-ES
 
 |   | Benchmarks | Parameters | Results (Avg) |
 |---|---|---|---|
@@ -73,7 +83,6 @@ Waterworld (MA)	| 2 (max_iter=2000)	| [Link](configs/Sep_CMA_ES/waterworld_ma.ya
 
 
 ### PGPE
-
 
 |   | Benchmarks | Parameters | Results (Avg) |
 |---|---|---|---|
