@@ -19,6 +19,7 @@ from .ars import ARS
 from .simple_ga import SimpleGA
 from .open_es import OpenES
 from .cma_evosax import CMA_ES
+from .sep_cma_es import Sep_CMA_ES
 
 Strategies = {
     "CMA": CMA,
@@ -27,6 +28,7 @@ Strategies = {
     "ARS": ARS,
     "OpenES": OpenES,
     "CMA_ES": CMA_ES,
+    "Sep_CMA_ES": Sep_CMA_ES,
 }
 
 __all__ = [
@@ -37,5 +39,6 @@ __all__ = [
     "SimpleGA",
     "OpenES",
     "CMA_ES",
+    "Sep_CMA_ES",
     "Strategies",
 ]

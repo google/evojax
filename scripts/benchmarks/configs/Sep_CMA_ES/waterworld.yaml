@@ -1,0 +1,16 @@
+es_name: "Sep_CMA_ES"
+problem_type: "waterworld"
+normalize: false
+es_config:
+  pop_size: 256
+  elite_ratio: 0.5
+  init_stdev: 0.065
+hidden_size: 100
+num_tests: 100
+n_repeats: 32
+max_iter: 1000
+test_interval: 50
+log_interval: 10
+seed: 42
+gpu_id: [0, 1, 2, 3]
+debug: false

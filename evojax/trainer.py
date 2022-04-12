@@ -14,6 +14,9 @@
 
 import logging
 import time
+from typing import Optional, Callable
+
+import jax.numpy as jnp
 import numpy as np
 
 from evojax.task.base import VectorizedTask
@@ -45,7 +48,8 @@ class Trainer(object):
                  normalize_obs: bool = False,
                  model_dir: str = None,
                  log_dir: str = None,
-                 logger: logging.Logger = None):
+                 logger: logging.Logger = None,
+                 log_scores_fn: Optional[Callable[[int, jnp.ndarray, str], None]] = None):
         """Initialization.
 
         Args:
@@ -64,6 +68,8 @@ class Trainer(object):
             model_dir - Directory to save/load model.
             log_dir - Directory to dump logs.
             logger - Logger.
+            log_scores_fn - custom function to log the scores array. Expects input:
+                `current_iter`: int, `scores`: jnp.ndarray, 'stage': str = "train" | "test"
         """
 
         if logger is None:
@@ -77,6 +83,8 @@ class Trainer(object):
         self._max_iter = max_iter
         self.model_dir = model_dir
         self._log_dir = log_dir
+
+        self._log_scores_fn = log_scores_fn or (lambda x, y, z: None)
 
         self._obs_normalizer = ObsNormalizer(
             obs_shape=train_task.obs_shape,
@@ -152,6 +160,7 @@ class Trainer(object):
                         'avg={3:.4f}, min={4:.4f}, std={5:.4f}'.format(
                             i, scores.size, scores.max(), scores.mean(),
                             scores.min(), scores.std()))
+                    self._log_scores_fn(i, scores, "train")
 
                 if i > 0 and i % self._test_interval == 0:
                     best_params = self.solver.best_params
@@ -163,6 +172,7 @@ class Trainer(object):
                             i, test_scores.size, test_scores.max(),
                             test_scores.mean(), test_scores.min(),
                             test_scores.std()))
+                    self._log_scores_fn(i, test_scores, "test")
                     mean_test_score = test_scores.mean()
                     save_model(
                         model_dir=self._log_dir,
