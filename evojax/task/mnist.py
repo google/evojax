@@ -24,14 +24,6 @@ from flax.struct import dataclass
 from evojax.task.base import VectorizedTask
 from evojax.task.base import TaskState
 
-try:
-    from torchvision import datasets
-except ModuleNotFoundError:
-    print('You need to install torchvision for this task.')
-    print('  pip install torchvision')
-    sys.exit(1)
-
-
 @dataclass
 class State(TaskState):
     obs: jnp.ndarray
@@ -68,6 +60,15 @@ class MNIST(VectorizedTask):
         self.max_steps = 1
         self.obs_shape = tuple([28, 28, 1])
         self.act_shape = tuple([10, ])
+
+        # Delayed importing of torchvision
+
+        try:
+            from torchvision import datasets
+        except ModuleNotFoundError:
+            print('You need to install torchvision for this task.')
+            print('  pip install torchvision')
+            sys.exit(1)
 
         dataset = datasets.MNIST('./data', train=not test, download=True)
         data = np.expand_dims(dataset.data.numpy() / 255., axis=-1)

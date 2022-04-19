@@ -20,9 +20,12 @@ class TestTask:
         assert True
 
     def test_mnist(self):
-        from evojax.task.mnist import MNIST
-        _ = MNIST()
-        assert True
+        import sys
+        if sys.version_info.major == 3 and sys.version_info.minor <= 9:
+            # python<=3.9, required by the optional torchvision (see https://pypi.org/project/torchvision/)
+            from evojax.task.mnist import MNIST
+            _ = MNIST()
+            assert True
 
     def test_seq2seq(self):
         from evojax.task.seq2seq import Seq2seqTask
@@ -85,14 +88,16 @@ class TestAlgo:
 
     def test_ars(self):
         import sys
-        if sys.version_info.minor >= 7:  # python>=3.7, required by evosax behind ARS
+        if sys.version_info.major == 3 and sys.version_info.minor >= 7:
+            # python>=3.7, required by the optional evosax
             from evojax.algo import ARS
             _ = ARS(pop_size=16, param_size=16)
             assert True
 
     def test_open_es(self):
         import sys
-        if sys.version_info.minor >= 7:  # python>=3.7, required by evosax behind ARS
+        if sys.version_info.major == 3 and sys.version_info.minor >= 7:
+            # python>=3.7, required by the optional evosax
             from evojax.algo import OpenES
             _ = OpenES(pop_size=16, param_size=16)
             assert True
