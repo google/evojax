@@ -38,11 +38,6 @@ from evojax.policy.base import PolicyState
 from evojax.algo import SimpleGA
 from evojax import util
 
-try:
-    import pandas as pd
-except ModuleNotFoundError:
-    print('This task requires pandas, run "pip install -U pandas" to install.')
-    sys.exit()
 
 
 class MDKPPolicy(PolicyNetwork):
@@ -85,6 +80,13 @@ def parse_args():
 
 
 def main(config):
+    try:
+        import pandas as pd
+    except ModuleNotFoundError:
+        print('This task requires pandas,'
+              'run "pip install -U pandas" to install.')
+        sys.exit(1)
+
     log_dir = './log/mdkp'
     if not os.path.exists(log_dir):
         os.makedirs(log_dir, exist_ok=True)
@@ -128,7 +130,7 @@ def main(config):
     logger.info('')
     logger.info('Summary of results')
     logger.info('=' * 30)
-    logger.info('Number attributes: {}'.format(test_task.num_attrs))
+    logger.info('Number of attributes: {}'.format(test_task.num_attrs))
     logger.info('Number of items: {}'.format(test_task.num_items))
     logger.info('Caps: {}'.format(list(test_task.caps)))
     best_params = trainer.solver.best_params[None, :]

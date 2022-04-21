@@ -24,12 +24,6 @@ from flax.struct import dataclass
 from evojax.task.base import TaskState
 from evojax.task.base import VectorizedTask
 
-try:
-    import pandas as pd
-except ModuleNotFoundError:
-    print('This task requires pandas, run "pip install -U pandas" to install.')
-    sys.exit()
-
 
 @dataclass
 class State(TaskState):
@@ -60,8 +54,6 @@ class MDKP(VectorizedTask):
         self.test = test
 
         if csv_file is None or not os.path.exists(csv_file):
-            print('The specified CSV file ({}) is invalid, '
-                  'switch to synthesized data.'.format(csv_file))
             rnd = np.random.RandomState(seed=0)
             num_attrs = 3
             num_items = 3000
@@ -70,6 +62,13 @@ class MDKP(VectorizedTask):
             caps = rnd.uniform(
                 num_items / 3, num_items / 2, num_attrs) * upper_bound
         else:
+            try:
+                import pandas as pd
+            except ModuleNotFoundError:
+                print('This task requires pandas, '
+                      'run "pip install -U pandas" to install.')
+                sys.exit(1)
+
             data = pd.read_csv(csv_file, header=None).values
             num_items, num_attrs = data.shape
             num_items -= 1  # Exclude the 1st line.
