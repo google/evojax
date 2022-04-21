@@ -47,6 +47,11 @@ class TestTask:
         _ = FlockingTask()
         assert True
 
+    def test_mdkp(self):
+        from evojax.task.mdkp import MDKP
+        _ = MDKP()
+        assert True
+
 
 class TestPolicy:
     def test_seq2seq(self):

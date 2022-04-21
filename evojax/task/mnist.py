@@ -24,6 +24,7 @@ from flax.struct import dataclass
 from evojax.task.base import VectorizedTask
 from evojax.task.base import TaskState
 
+
 @dataclass
 class State(TaskState):
     obs: jnp.ndarray

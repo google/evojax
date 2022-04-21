@@ -39,7 +39,6 @@ from evojax.algo import SimpleGA
 from evojax import util
 
 
-
 class MDKPPolicy(PolicyNetwork):
     """This policy ignores inputs and is specific to a certain MDKP config."""
 

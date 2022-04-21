@@ -46,7 +46,7 @@ setup(
         "cma",
     ],
     extras_require={
-        "extra": ['evosax', 'torchvision'],
+        "extra": ['evosax', 'torchvision', 'pandas'],
     },
     dependency_links=[JAX_URL],
     python_requires=">=3.6",
