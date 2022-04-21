@@ -19,8 +19,9 @@ This is for users who want to use CMA-ES before we release a pure JAX version.
 CMA-ES paper: https://arxiv.org/abs/1604.00772
 """
 
+import sys
+
 import logging
-import cma
 import numpy as np
 from typing import Union
 
@@ -45,6 +46,14 @@ class CMA(NEAlgorithm):
         else:
             self.logger = logger
         self.pop_size = pop_size
+
+        try:
+            import cma
+        except ModuleNotFoundError:
+            print("You need to install cma for its CMA-ES:")
+            print("  pip install cma")
+            sys.exit(1)
+
         self.cma = cma.CMAEvolutionStrategy(
             x0=np.zeros(param_size),
             sigma0=init_stdev,

@@ -19,14 +19,6 @@ class TestTask:
         _ = CartPoleSwingUp()
         assert True
 
-    def test_mnist(self):
-        import sys
-        if sys.version_info.major == 3 and sys.version_info.minor <= 9:
-            # python<=3.9, required by the optional torchvision (see https://pypi.org/project/torchvision/)
-            from evojax.task.mnist import MNIST
-            _ = MNIST()
-            assert True
-
     def test_seq2seq(self):
         from evojax.task.seq2seq import Seq2seqTask
         _ = Seq2seqTask()
@@ -46,12 +38,7 @@ class TestTask:
         from evojax.task.flocking import FlockingTask
         _ = FlockingTask()
         assert True
-
-    def test_mdkp(self):
-        from evojax.task.mdkp import MDKP
-        _ = MDKP()
-        assert True
-
+ 
 
 class TestPolicy:
     def test_seq2seq(self):
@@ -80,29 +67,3 @@ class TestAlgo:
         from evojax.algo import PGPE
         _ = PGPE(pop_size=16, param_size=16)
         assert True
-
-    def test_cma(self):
-        from evojax.algo import CMA
-        _ = CMA(pop_size=16, param_size=16)
-        assert True
-
-    def test_simple_ga(self):
-        from evojax.algo import SimpleGA
-        _ = SimpleGA(pop_size=16, param_size=16)
-        assert True
-
-    def test_ars(self):
-        import sys
-        if sys.version_info.major == 3 and sys.version_info.minor >= 7:
-            # python>=3.7, required by the optional evosax
-            from evojax.algo import ARS
-            _ = ARS(pop_size=16, param_size=16)
-            assert True
-
-    def test_open_es(self):
-        import sys
-        if sys.version_info.major == 3 and sys.version_info.minor >= 7:
-            # python>=3.7, required by the optional evosax
-            from evojax.algo import OpenES
-            _ = OpenES(pop_size=16, param_size=16)
-            assert True
