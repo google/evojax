@@ -59,7 +59,7 @@ class MDKP(VectorizedTask):
     def __init__(self,
                  items_csv=None,
                  capacity_csv=None,
-                 use_synthesized_data=False,
+                 use_synthesized_data=True,
                  test=False):
         self.max_steps = 1
         self.test = test

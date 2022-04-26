@@ -158,7 +158,7 @@ def main(config):
     logger.info('')
     logger.info('Summary of results')
     logger.info('=' * 30)
-    logger.info('Number attributes: {}'.format(test_task.num_attrs))
+    logger.info('Number of attributes: {}'.format(test_task.num_attrs))
     logger.info('Number of items: {}'.format(test_task.num_items))
     logger.info('Number of bins: {}'.format(test_task.num_bins))
     logger.info('Caps: {}'.format(test_task.caps))
