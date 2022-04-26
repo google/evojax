@@ -44,13 +44,13 @@ class SimpleGA(NEAlgorithm):
 
         if self.pop_size % 2 == 1:
             self.pop_size += 1
-            self._logger.info(
+            self.logger.info(
                 'Population size should be an even number, set to {}'.format(
                     self.pop_size))
 
         if self.pop_size % self.truncation_divisor != 0:
             self.truncation_divisor = 2
-            self._logger.info(
+            self.logger.info(
                 'Population size must be a multiple of truncation divisor, \
                  set to {}'.format(self.truncation_divisor))
 
