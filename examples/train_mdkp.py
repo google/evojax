@@ -14,11 +14,15 @@
 
 """Use GA to solve an MDKP problem.
 
+This script shows that we can use EvoJAX to solve MDKP problems.
+Please be noted that it is meant to be a demo, and may not always find an
+approximated solution.
+
 Example commands:
 # Train on synthesized data.
-python train_mdkp.py --gpu-id=0
+python train_mdkp.py --gpu-id=0 --use-synthesized-data
 # Train on user specified data.
-python train_mdkp.py --gpu-id=0 --csv=my_data.csv
+python train_mdkp.py --gpu-id=0 --item-csv=my_data.csv --cap-csv=my_cap.csv
 """
 
 import argparse
@@ -42,11 +46,22 @@ from evojax import util
 class MDKPPolicy(PolicyNetwork):
     """This policy ignores inputs and is specific to a certain MDKP config."""
 
-    def __init__(self, num_items):
+    def __init__(self, num_items, num_bins):
         self.num_params = num_items
+        thresholds = jnp.ones([num_bins + 1, num_items]) / (num_bins + 1)
+        thresholds = jnp.cumsum(thresholds, axis=0)
+        thresholds = thresholds - thresholds.min(axis=0)
 
         def forward_fn(params, obs):
-            return jnp.where(jax.nn.sigmoid(params) > 0.5, 1, 0)
+            if num_bins == 1:
+                diff = jax.nn.sigmoid(params)[None, :] - 0.5
+            else:
+                diff = jnp.clip(params - 0.04, a_min=0, a_max=1)[None, :] - thresholds
+            selection = jnp.where(diff >= 0, 1, 0).sum(axis=0) - 1
+            act = jnp.zeros(
+                [num_bins + 1, num_items]).at[
+                selection, jnp.arange(num_items)].set(1)
+            return act[1:]
         self._forward_fn = jax.vmap(forward_fn)
 
     def get_actions(self,
@@ -61,7 +76,7 @@ def parse_args():
     parser.add_argument(
         '--pop-size', type=int, default=256, help='NE population size.')
     parser.add_argument(
-        '--max-iter', type=int, default=500, help='Max training iterations.')
+        '--max-iter', type=int, default=2000, help='Max training iterations.')
     parser.add_argument(
         '--test-interval', type=int, default=100, help='Test interval.')
     parser.add_argument(
@@ -71,7 +86,12 @@ def parse_args():
     parser.add_argument(
         '--gpu-id', type=str, help='GPU(s) to use.')
     parser.add_argument(
-        '--csv', type=str, default=None, help='User specified csv file.')
+        '--item-csv', type=str, default=None, help='Items csv file.')
+    parser.add_argument(
+        '--cap-csv', type=str, default=None, help='Capacities csv file.')
+    parser.add_argument(
+        '--use-synthesized-data', action='store_true',
+        help='Use synthesized data instead of CSV files.')
     parser.add_argument(
         '--debug', action='store_true', help='Debug mode.')
     config, _ = parser.parse_known_args()
@@ -79,6 +99,7 @@ def parse_args():
 
 
 def main(config):
+
     try:
         import pandas as pd
     except ModuleNotFoundError:
@@ -95,12 +116,20 @@ def main(config):
     logger.info('MDKP Demo')
     logger.info('=' * 30)
 
-    train_task = MDKP(csv_file=config.csv, test=False)
-    test_task = MDKP(csv_file=config.csv, test=True)
-    logger.info('Number attributes: {}'.format(test_task.num_attrs))
-    logger.info('Total number of items: {}'.format(test_task.num_items))
-
-    policy = MDKPPolicy(num_items=train_task.act_shape[0])
+    train_task = MDKP(
+        items_csv=config.item_csv,
+        capacity_csv=config.cap_csv,
+        use_synthesized_data=config.use_synthesized_data,
+        test=False)
+    test_task = MDKP(
+        items_csv=config.item_csv,
+        capacity_csv=config.cap_csv,
+        use_synthesized_data=config.use_synthesized_data,
+        test=True)
+    policy = MDKPPolicy(
+        num_bins=train_task.act_shape[0],
+        num_items=train_task.act_shape[1],
+    )
     solver = SimpleGA(
         pop_size=config.pop_size,
         param_size=policy.num_params,
@@ -131,7 +160,8 @@ def main(config):
     logger.info('=' * 30)
     logger.info('Number of attributes: {}'.format(test_task.num_attrs))
     logger.info('Number of items: {}'.format(test_task.num_items))
-    logger.info('Caps: {}'.format(list(test_task.caps)))
+    logger.info('Number of bins: {}'.format(test_task.num_bins))
+    logger.info('Caps: {}'.format(test_task.caps))
     best_params = trainer.solver.best_params[None, :]
     task_reset_fn = jax.jit(test_task.reset)
     policy_reset_fn = jax.jit(policy.reset)
@@ -141,14 +171,21 @@ def main(config):
     task_s = task_reset_fn(rollout_key)
     policy_s = policy_reset_fn(task_s)
     act, policy_s = act_fn(task_s, best_params, policy_s)
-    _, reward, _ = step_fn(task_s, act)
-    selections = np.array(act).ravel()
-    results = np.hstack([test_task.data, selections[:, None]])
-    result_csv = os.path.join(log_dir, 'results.csv')
-    pd.DataFrame(results).to_csv(result_csv, header=None)
-    logger.info('Number of selected items: {}'.format(selections.sum()))
-    logger.info('Total value: {}'.format(float(reward)))
-    logger.info('Results saved to {}'.format(result_csv))
+    task_s, reward, _ = step_fn(task_s, act)
+    selections = np.array(act)[0]
+    bin_assignment = (
+            selections *
+            (np.arange(test_task.num_bins)[:, None] + 1)).sum(axis=0)
+    results = np.hstack([test_task.items, bin_assignment[:, None]])
+    num_selected_items = int(selections.sum())
+    if reward == 0:
+        logger.info('No valid solution is found.')
+    else:
+        result_csv = os.path.join(log_dir, 'results.csv')
+        pd.DataFrame(results).to_csv(result_csv, header=None)
+        logger.info('Number of selected items: {}'.format(num_selected_items))
+        logger.info('Total value: {}'.format(float(reward)))
+        logger.info('Results saved to {}'.format(result_csv))
 
 
 if __name__ == '__main__':

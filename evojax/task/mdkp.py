@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import sys
 import numpy as np
 from typing import Tuple
@@ -28,39 +27,62 @@ from evojax.task.base import VectorizedTask
 @dataclass
 class State(TaskState):
     obs: jnp.ndarray
+    sel: jnp.ndarray
 
 
 class MDKP(VectorizedTask):
     """Multi-Dimensional Knapsack Problem (MDKP).
 
     Many real-world problems are MDKP in different contexts, and this task
-    allows a user to simulate one by using their own data in the form of a csv
-    file. If a csv file is not specified, we use synthesized data.
+    allows a user to simulate one by using their own data in the form of csv
+    files. In addition, users can also use synthesized data.
 
-    The format of the csv file is:
-        1st line contains the total cap of each attribute (M columns):
-            attr1_cap, attr2_cap, ..., attrM_cap
-        2nd line and beyond have details for each item (M+1 columns, N rows):
-            item_attr1, item1_attr2, ..., item1_attrM, item1_value
-            ...
-            itemN_attr1, itemN_attr2, ..., itemN_attrM, itemN_value
+    The format of the csv files are:
 
-    A valid solution should select k items that maximizes sum(item_k_value),
-    while keeping sum(item_attr_i) < attr_i_cap for all i in [1, M].
+    1. capacity_csv should have N lines and S columns.
+        bin1_attr1_cap, bin1_attr2_cap, ..., bin1_attrS_cap
+        bin2_attr1_cap, bin2_attr2_cap, ..., bin2_attrS_cap
+        ...
+        binN_attr1_cap, binN_attr2_cap, ..., binN_attrS_cap
+
+    2. items_csv should have M lines and S + 1 columns.
+        item1_attr1, item1_attr2, ..., item1_attrS, item1_value
+        item2_attr1, item2_attr2, ..., item2_attrS, item2_value
+        ...
+        itemM_attr1, itemM_attr2, ..., itemM_attrS, itemM_value
+
+    A valid solution should select K<=M items that maximizes sum(item{k}_value),
+    while keeping sum(item{k}_attr{j}) < bin{i}_attr{j}_cap
+    if item{k} is assigned to bin{i}, for i in [1, N] and j in [1, S].
     """
 
-    def __init__(self, csv_file=None, test=False):
+    def __init__(self,
+                 items_csv=None,
+                 capacity_csv=None,
+                 use_synthesized_data=True,
+                 test=False):
         self.max_steps = 1
         self.test = test
 
-        if csv_file is None or not os.path.exists(csv_file):
+        if use_synthesized_data:
             rnd = np.random.RandomState(seed=0)
             num_attrs = 3
-            num_items = 3000
+            num_items = 2000
+            num_bins = 5
             upper_bound = 100
-            data = rnd.uniform(1, upper_bound, size=(num_items, num_attrs + 1))
-            caps = rnd.uniform(
-                num_items / 3, num_items / 2, num_attrs) * upper_bound
+            items = rnd.randint(
+                low=0, high=upper_bound, size=(num_items, num_attrs + 1))
+
+            num_items_per_bin = int(num_items * 0.5 / num_bins)
+            num_sel_items = num_items_per_bin * num_bins
+            ix = np.arange(num_items)
+            rnd.shuffle(ix)
+            sel_ix = ix[:num_sel_items]
+            sel_items = items[sel_ix, :-1]
+            caps = np.array(
+                [sel_items[
+                 (i * num_items_per_bin):(i + 1) * num_items_per_bin
+                 ].sum(axis=0) for i in range(num_bins)])
         else:
             try:
                 import pandas as pd
@@ -69,35 +91,41 @@ class MDKP(VectorizedTask):
                       'run "pip install -U pandas" to install.')
                 sys.exit(1)
 
-            data = pd.read_csv(csv_file, header=None).values
-            num_items, num_attrs = data.shape
-            num_items -= 1  # Exclude the 1st line.
-            num_attrs -= 1  # Exclude the value column.
-            caps = data[0][:num_attrs]
-            data = data[1:]
+            caps = pd.read_csv(capacity_csv, header=None).values
+            num_bins, num_attrs = caps.shape
+            items = pd.read_csv(items_csv, header=None).values
+            num_items, num_cols = items.shape
+            assert num_cols == num_attrs + 1
 
         self.num_items = num_items
         self.num_attrs = num_attrs
-        self.data = data
+        self.num_bins = num_bins
+        self.items = items
         self.caps = caps
-        data = jnp.array(data)
+        items = jnp.array(items)
         caps = jnp.array(caps)
         self.obs_shape = tuple([num_items, num_attrs + 1])
-        self.act_shape = tuple([num_items, ])
+        self.act_shape = tuple([num_bins, num_items])
 
         def reset_fn(key):
-            return State(obs=data)
+            return State(obs=items, sel=jnp.zeros([num_bins, num_items]))
         self._reset_fn = jax.jit(jax.vmap(reset_fn))
 
         def step_fn(state, action):
-            selection = jnp.where(action > 0.5, 1, 0)
-            total_attr_and_values = (state.obs * selection[:, None]).sum(axis=0)
-            reward = total_attr_and_values[-1]
-            # If there is any attribute violation, we set reward to zero.
-            violation = jnp.prod(jnp.where(
-                total_attr_and_values[:num_attrs] > caps, 0, 1))
+            # selection.shape = (N, M), obs.shape = (M, S + 1)
+            selection = jnp.where(action > 0.5, 1., 0.)
+            # bin_items_attr_sum.shape = (N, S + 1)
+            bin_items_attr_sum = jnp.matmul(selection, state.obs)
+            reward = bin_items_attr_sum[:, -1].sum()
+            # If any item is assigned more than once, we set reward to zero.
+            times_selected = selection.sum(axis=0)
+            assignment_violation = jnp.prod(jnp.where(times_selected > 1, 0, 1))
+            reward = reward * assignment_violation
+            # If there is any limit violation, we set reward to zero.
+            violation = jnp.prod(
+                jnp.where(bin_items_attr_sum[:, :-1] > caps, 0, 1).ravel())
             reward = reward * violation
-            return state, reward, jnp.ones(())
+            return State(obs=state.obs, sel=action), reward, jnp.ones(())
         self._step_fn = jax.jit(jax.vmap(step_fn))
 
     def reset(self, key: jnp.array) -> TaskState:
