@@ -45,6 +45,7 @@ class Trainer(object):
                  n_evaluations: int = 100,
                  seed: int = 42,
                  debug: bool = False,
+                 use_for_loop: bool = False,
                  normalize_obs: bool = False,
                  model_dir: str = None,
                  log_dir: str = None,
@@ -64,6 +65,7 @@ class Trainer(object):
             n_evaluations - Number of tests to conduct.
             seed - Random seed to use.
             debug - Whether to turn on the debug flag.
+            use_for_loop - Use for loop for rollouts.
             normalize_obs - Whether to use an observation normalizer.
             model_dir - Directory to save/load model.
             log_dir - Directory to dump logs.
@@ -102,6 +104,7 @@ class Trainer(object):
             valid_vec_task=test_task,
             seed=seed,
             obs_normalizer=self._obs_normalizer,
+            use_for_loop=use_for_loop,
             logger=self._logger,
         )
 
