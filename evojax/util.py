@@ -31,7 +31,7 @@ def get_params_format_fn(init_params: FrozenDict) -> Tuple[int, Callable]:
     params_sizes = np.cumsum([np.prod(p.shape) for p in flat])
 
     def params_format_fn(params: jnp.ndarray) -> FrozenDict:
-        params = tree_util.tree_multimap(
+        params = tree_util.tree_map(
             lambda x, y: x.reshape(y.shape),
             jnp.split(params, params_sizes, axis=-1)[:-1],
             flat)
