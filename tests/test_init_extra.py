@@ -28,6 +28,11 @@ class TestTask:
         _ = MDKP()
         assert True
 
+    def test_procgen(self):
+        from evojax.task.procgen_task import ProcgenTask
+        _ = ProcgenTask(env_name='starpilot')
+        assert True
+
 
 class TestPolicy:
     pass
