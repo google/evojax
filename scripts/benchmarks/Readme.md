@@ -65,10 +65,11 @@ This will sequentially execute 25 ARS-MNIST evolution runs for a grid of differe
 |---|---|---|---|
 CartPole (easy) | 	900 (max_iter=1000)|[Link](configs/CMA_ES/cartpole_easy.yaml)| 927.3208 |
 CartPole (hard)	| 600 (max_iter=1000)|[Link](configs/CMA_ES/cartpole_hard.yaml)| 625.9829 |
-MNIST	| 90.0 (max_iter=2000)	| [Link](configs/CMA_ES/mnist.yaml)| 0.9581 |
+MNIST	| 0.90 (max_iter=2000)	| [Link](configs/CMA_ES/mnist.yaml)| 0.9581 |
 Brax Ant |	3000 (max_iter=1200) |[Link](configs/CMA_ES/brax_ant.yaml)| 3174.0608 |
-Waterworld	| 6 (max_iter=500)	 | [Link](configs/CMA_ES/waterworld.yaml)| 9.44 |
+Waterworld	| 6 (max_iter=1000)	 | [Link](configs/CMA_ES/waterworld.yaml)| 9.44 |
 Waterworld (MA)	| 2 (max_iter=2000)	| [Link](configs/CMA_ES/waterworld_ma.yaml) | 0.5625 |
+
 
 ### Sep-CMA-ES
 
@@ -76,9 +77,9 @@ Waterworld (MA)	| 2 (max_iter=2000)	| [Link](configs/CMA_ES/waterworld_ma.yaml) 
 |---|---|---|---|
 CartPole (easy) | 	900 (max_iter=1000)|[Link](configs/Sep_CMA_ES/cartpole_easy.yaml)| 924.3028 |
 CartPole (hard)	| 600 (max_iter=1000)|[Link](configs/Sep_CMA_ES/cartpole_hard.yaml)| 626.9728 |
-MNIST	| 90.0 (max_iter=2000)	| [Link](configs/Sep_CMA_ES/mnist.yaml)| 0.9545 |
+MNIST	| 0.90 (max_iter=2000)	| [Link](configs/Sep_CMA_ES/mnist.yaml)| 0.9545 |
 Brax Ant |	3000 (max_iter=1200) |[Link](configs/Sep_CMA_ES/brax_ant.yaml)| 3980.9194 |
-Waterworld	| 6 (max_iter=500)	 | [Link](configs/Sep_CMA_ES/waterworld.yaml)| 9.9000 |
+Waterworld	| 6 (max_iter=1000)	 | [Link](configs/Sep_CMA_ES/waterworld.yaml)| 9.9000 |
 Waterworld (MA)	| 2 (max_iter=2000)	| [Link](configs/Sep_CMA_ES/waterworld_ma.yaml) | 1.1875 |
 
 
@@ -88,10 +89,21 @@ Waterworld (MA)	| 2 (max_iter=2000)	| [Link](configs/Sep_CMA_ES/waterworld_ma.ya
 |---|---|---|---|
 CartPole (easy) | 	900 (max_iter=1000)|[Link](configs/PGPE/cartpole_easy.yaml)| 935.4268 |
 CartPole (hard)	| 600 (max_iter=1000)|[Link](configs/PGPE/cartpole_hard.yaml)| 631.1020 |
-MNIST	| 90.0 (max_iter=2000)	| [Link](configs/PGPE/mnist.yaml)| 0.9743 |
+MNIST	| 0.90 (max_iter=2000)	| [Link](configs/PGPE/mnist.yaml)| 0.9743 |
 Brax Ant |	3000 (max_iter=1200) |[Link](configs/PGPE/brax_ant.yaml)| 6054.3887 |
-Waterworld	| 6 (max_iter=500)	 | [Link](configs/PGPE/waterworld.yaml)| 11.6400 |
+Waterworld	| 6 (max_iter=1000)	 | [Link](configs/PGPE/waterworld.yaml)| 11.6400 |
 Waterworld (MA)	| 2 (max_iter=2000)	| [Link](configs/PGPE/waterworld_ma.yaml) | 2.0625 |
+
+### CMA-ES-JAX
+
+|   | Benchmarks | Parameters | Results (Avg) |
+|---|---|---|---|
+CartPole (easy) | 	900 (max_iter=1000)|[Link](configs/CMA_ES_JAX/cartpole_easy.yaml) RUNNING | 917.8397 |
+CartPole (hard)	| 600 (max_iter=1000)|[Link](configs/CMA_JAX_ES/cartpole_hard.yaml) RUNNING|  619.9166 |
+MNIST	| 0.90 (max_iter=2000)	| [Link](configs/CMA_ES_JAX/mnist.yaml) | 0.9493 |
+Waterworld	| 6 (max_iter=1000)	 | [Link](configs/CMA_ES_JAX/waterworld.yaml)  | 9.4500 |
+Brax Ant |	3000 (max_iter=1200) | - | - |
+Waterworld (MA)	| 2 (max_iter=2000)	| - | - |
 
 
 ### OpenES
@@ -100,9 +112,9 @@ Waterworld (MA)	| 2 (max_iter=2000)	| [Link](configs/PGPE/waterworld_ma.yaml) | 
 |---|---|---|---|
 CartPole (easy) | 	900 (max_iter=1000)|[Link](configs/OpenES/cartpole_easy.yaml)| 929.4153 |
 CartPole (hard)	| 600 (max_iter=1000)|[Link](configs/OpenES/cartpole_hard.yaml)| 604.6940 |
-MNIST	| 90.0 (max_iter=2000)	| [Link](configs/OpenES/mnist.yaml)| 0.9669 |
+MNIST	| 0.90 (max_iter=2000)	| [Link](configs/OpenES/mnist.yaml)| 0.9669 |
 Brax Ant |	3000 (max_iter=1200) |[Link](configs/OpenES/brax_ant.yaml)| 6726.2100 |
-Waterworld	| 6 (max_iter=500)	 | - | - |
+Waterworld	| 6 (max_iter=1000)	 | - | - |
 Waterworld (MA)	| 2 (max_iter=2000)	| - | - |
 
 
@@ -118,10 +130,10 @@ Waterworld (MA)	| 2 (max_iter=2000)	| - | - |
 |---|---|---|---|
 CartPole (easy) | 	900 (max_iter=1000)|[Link](configs/ARS/cartpole_easy.yaml)| 902.107 |
 CartPole (hard)	| 600 (max_iter=1000)|[Link](configs/ARS/cartpole_hard.yaml)| 666.6442 |
-Waterworld	| 6 (max_iter=500)	 |[Link](configs/ARS/waterworld.yaml)| 6.1300 |
+Waterworld	| 6 (max_iter=1000)	 |[Link](configs/ARS/waterworld.yaml)| 6.1300 |
 Waterworld (MA)	| 2 (max_iter=2000)	| [Link](configs/ARS/waterworld_ma.yaml)| 1.4831 |
 Brax Ant |	3000 (max_iter=300) |[Link](configs/ARS/brax_ant.yaml)| 3298.9746 |
-MNIST	| 90.0 (max_iter=2000)	| [Link](configs/ARS/mnist.yaml)| 0.9610 |
+MNIST	| 0.90 (max_iter=2000)	| [Link](configs/ARS/mnist.yaml)| 0.9610 |
 
 
 | Cartpole-Easy  | Cartpole-Hard | MNIST | 
