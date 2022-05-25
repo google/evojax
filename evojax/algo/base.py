@@ -14,6 +14,7 @@
 
 from abc import ABC
 from abc import abstractmethod
+from typing import Dict
 from typing import Union
 import numpy as np
 import jax.numpy as jnp
@@ -48,4 +49,16 @@ class NEAlgorithm(ABC):
 
     @best_params.setter
     def best_params(self, params: Union[np.ndarray, jnp.ndarray]) -> None:
+        raise NotImplementedError()
+
+
+class QualityDiversityMethod(NEAlgorithm):
+    """Quality diversity method."""
+
+    params_lattice: jnp.ndarray
+    fitness_lattice: jnp.ndarray
+    occupancy_lattice: jnp.ndarray
+
+    @abstractmethod
+    def observe_bd(self, bd: Dict[str, jnp.ndarray]) -> None:
         raise NotImplementedError()
