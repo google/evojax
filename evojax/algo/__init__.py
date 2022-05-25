@@ -20,6 +20,7 @@ from .simple_ga import SimpleGA
 from .open_es import OpenES
 from .cma_evosax import CMA_ES
 from .sep_cma_es import Sep_CMA_ES
+from .cma_jax import CMA_ES_JAX
 
 Strategies = {
     "CMA": CMA,
@@ -29,6 +30,7 @@ Strategies = {
     "OpenES": OpenES,
     "CMA_ES": CMA_ES,
     "Sep_CMA_ES": Sep_CMA_ES,
+    "CMA_ES_JAX": CMA_ES_JAX
 }
 
 __all__ = [
@@ -40,5 +42,6 @@ __all__ = [
     "OpenES",
     "CMA_ES",
     "Sep_CMA_ES",
+    "CMA_ES_JAX",
     "Strategies",
 ]

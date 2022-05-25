@@ -1,6 +1,7 @@
 # Other to ignore
 .DS_Store
 /data/
+/local/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

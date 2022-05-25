@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+TEST_EVOSAX = False
+
 
 class TestTask:
-
     def test_mnist(self):
         import sys
         if sys.version_info.major == 3 and sys.version_info.minor <= 9:
@@ -49,18 +50,19 @@ class TestAlgo:
         _ = SimpleGA(pop_size=16, param_size=16)
         assert True
 
-    def test_open_es(self):
-        import sys
-        if sys.version_info.major == 3 and sys.version_info.minor >= 7:
-            # python>=3.7, required by the optional evosax
-            from evojax.algo import OpenES
-            _ = OpenES(pop_size=16, param_size=16)
-            assert True
+    if TEST_EVOSAX:
+        def test_open_es(self):
+            import sys
+            if sys.version_info.major == 3 and sys.version_info.minor >= 7:
+                # python>=3.7, required by the optional evosax
+                from evojax.algo import OpenES
+                _ = OpenES(pop_size=16, param_size=16)
+                assert True
 
-    def test_ars(self):
-        import sys
-        if sys.version_info.major == 3 and sys.version_info.minor >= 7:
-            # python>=3.7, required by the optional evosax
-            from evojax.algo import ARS
-            _ = ARS(pop_size=16, param_size=16)
-            assert True
+        def test_ars(self):
+            import sys
+            if sys.version_info.major == 3 and sys.version_info.minor >= 7:
+                # python>=3.7, required by the optional evosax
+                from evojax.algo import ARS
+                _ = ARS(pop_size=16, param_size=16)
+                assert True
