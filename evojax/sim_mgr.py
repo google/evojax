@@ -68,6 +68,12 @@ def reshape_data_from_pmap(data: jnp.ndarray) -> jnp.ndarray:
     return jnp.reshape(data, (data.shape[0], data.shape[1] * data.shape[2], -1))
 
 
+@jax.jit
+def merge_state_from_pmap(state: TaskState) -> TaskState:
+    return jax.tree_map(
+        lambda x: x.reshape((x.shape[0] * x.shape[1], *x.shape[2:])), state)
+
+
 @partial(jax.jit, static_argnums=(1, 2))
 def duplicate_params(params: jnp.ndarray,
                      repeats: int,
@@ -197,10 +203,19 @@ class SimManager(object):
                 step_once_fn,
                 (task_states, policy_states, params, obs_params,
                  accumulated_rewards, valid_masks), (), max_steps)
-            return accumulated_rewards, obs_set, obs_mask
+            return accumulated_rewards, obs_set, obs_mask, task_states
 
         self._policy_reset_fn = jax.jit(policy_net.reset)
         self._policy_act_fn = jax.jit(policy_net.get_actions)
+
+        if (
+                hasattr(train_vec_task, 'bd_extractor') and
+                train_vec_task.bd_extractor is not None
+        ):
+            self._bd_summarize_fn = jax.jit(
+                train_vec_task.bd_extractor.summarize)
+        else:
+            self._bd_summarize_fn = lambda x: x
 
         # Set up training functions.
         self._train_reset_fn = train_vec_task.reset
@@ -226,7 +241,9 @@ class SimManager(object):
             self._valid_rollout_fn = jax.jit(jax.pmap(
                 self._valid_rollout_fn, in_axes=(0, 0, 0, None)))
 
-    def eval_params(self, params: jnp.ndarray, test: bool) -> jnp.ndarray:
+    def eval_params(self,
+                    params: jnp.ndarray,
+                    test: bool) -> Tuple[jnp.ndarray, TaskState]:
         """Evaluate population parameters or test the best parameter.
 
         Args:
@@ -240,7 +257,9 @@ class SimManager(object):
         else:
             return self._scan_loop_eval(params, test)
 
-    def _for_loop_eval(self, params: jnp.ndarray, test: bool) -> jnp.ndarray:
+    def _for_loop_eval(self,
+                       params: jnp.ndarray,
+                       test: bool) -> Tuple[jnp.ndarray, TaskState]:
         """Rollout using for loop (no multi-device or ma_training yet)."""
         policy_reset_func = self._policy_reset_fn
         policy_act_func = self._policy_act_fn
@@ -285,9 +304,11 @@ class SimManager(object):
             int(rollout_steps * task_state.obs.shape[0] / time_cost),
             sim_steps.sum() / task_state.obs.shape[0]))
 
-        return report_score(scores, n_repeats)
+        return report_score(scores, n_repeats), task_state
 
-    def _scan_loop_eval(self, params: jnp.ndarray, test: bool) -> jnp.ndarray:
+    def _scan_loop_eval(self,
+                        params: jnp.ndarray,
+                        test: bool) -> Tuple[jnp.ndarray, TaskState]:
         """Rollout using jax.lax.scan."""
         policy_reset_func = self._policy_reset_fn
         if test:
@@ -331,11 +352,12 @@ class SimManager(object):
             policy_state = split_states_for_pmap(policy_state)
 
         # Do the rollouts.
-        scores, all_obs, masks = rollout_func(
+        scores, all_obs, masks, final_states = rollout_func(
             task_state, policy_state, params, self.obs_params)
         if self._num_device > 1:
             all_obs = reshape_data_from_pmap(all_obs)
             masks = reshape_data_from_pmap(masks)
+            final_states = merge_state_from_pmap(final_states)
 
         if not test and not self.obs_normalizer.is_dummy:
             self.obs_params = self.obs_normalizer.update_normalization_params(
@@ -344,9 +366,18 @@ class SimManager(object):
         if self._ma_training:
             if not test:
                 # In training, each agent has different parameters.
-                return jnp.mean(scores.ravel().reshape((n_repeats, -1)), axis=0)
+                scores = jnp.mean(
+                    scores.ravel().reshape((n_repeats, -1)), axis=0)
             else:
                 # In tests, they share the same parameters.
-                return jnp.mean(scores.ravel().reshape((n_repeats, -1)), axis=1)
+                scores = jnp.mean(
+                    scores.ravel().reshape((n_repeats, -1)), axis=1)
         else:
-            return jnp.mean(scores.ravel().reshape((-1, n_repeats)), axis=-1)
+            scores = jnp.mean(scores.ravel().reshape((-1, n_repeats)), axis=-1)
+
+        # Note: QD methods do not support ma_training for now.
+        final_states = jax.tree_map(
+            lambda x: x.reshape((scores.shape[0], n_repeats, *x.shape[1:])),
+            final_states)
+
+        return scores, self._bd_summarize_fn(final_states)

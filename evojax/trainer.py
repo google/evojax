@@ -22,11 +22,13 @@ import numpy as np
 from evojax.task.base import VectorizedTask
 from evojax.policy import PolicyNetwork
 from evojax.algo import NEAlgorithm
+from evojax.algo import QualityDiversityMethod
 from evojax.sim_mgr import SimManager
 from evojax.obs_norm import ObsNormalizer
 from evojax.util import create_logger
 from evojax.util import load_model
 from evojax.util import save_model
+from evojax.util import save_lattices
 
 
 class Trainer(object):
@@ -147,11 +149,14 @@ class Trainer(object):
                     time.perf_counter() - start_time))
 
                 start_time = time.perf_counter()
-                scores = self.sim_mgr.eval_params(params=params, test=False)
+                scores, bds = self.sim_mgr.eval_params(
+                    params=params, test=False)
                 self._logger.debug('sim_mgr.eval_params time: {0:.4f}s'.format(
                     time.perf_counter() - start_time))
 
                 start_time = time.perf_counter()
+                if isinstance(self.solver, QualityDiversityMethod):
+                    self.solver.observe_bd(bds)
                 self.solver.tell(fitness=scores)
                 self._logger.debug('solver.tell time: {0:.4f}s'.format(
                     time.perf_counter() - start_time))
@@ -167,7 +172,7 @@ class Trainer(object):
 
                 if i > 0 and i % self._test_interval == 0:
                     best_params = self.solver.best_params
-                    test_scores = self.sim_mgr.eval_params(
+                    test_scores, _ = self.sim_mgr.eval_params(
                         params=best_params, test=True)
                     self._logger.info(
                         '[TEST] Iter={0}, #tests={1}, max={2:.4f} avg={3:.4f}, '
@@ -188,7 +193,7 @@ class Trainer(object):
 
             # Test and save the final model.
             best_params = self.solver.best_params
-            test_scores = self.sim_mgr.eval_params(
+            test_scores, _ = self.sim_mgr.eval_params(
                 params=best_params, test=True)
             self._logger.info(
                 '[TEST] Iter={0}, #tests={1}, max={2:.4f}, avg={3:.4f}, '
@@ -204,6 +209,14 @@ class Trainer(object):
                 best=mean_test_score > best_score,
             )
             best_score = max(best_score, mean_test_score)
+            if isinstance(self.solver, QualityDiversityMethod):
+                save_lattices(
+                    log_dir=self._log_dir,
+                    file_name='qd_lattices',
+                    fitness_lattice=self.solver.fitness_lattice,
+                    params_lattice=self.solver.params_lattice,
+                    occupancy_lattice=self.solver.occupancy_lattice,
+                )
             self._logger.info(
                 'Training done, best_score={0:.4f}'.format(best_score))
 
