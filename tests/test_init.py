@@ -38,7 +38,7 @@ class TestTask:
         from evojax.task.flocking import FlockingTask
         _ = FlockingTask()
         assert True
- 
+
 
 class TestPolicy:
     def test_seq2seq(self):

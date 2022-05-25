@@ -1,7 +1,7 @@
 """
 **Experimental** CMA-ES optimizer using JAX backend.
 
-Code in this file is an adaption from <https://github.com/CyberAgentAILab/cmaes/blob/main/cmaes/_cma.py> 
+Code in this file is an adaption from <https://github.com/CyberAgentAILab/cmaes/blob/main/cmaes/_cma.py>
 which is a faithful implementation of CMA-ES described in <https://arxiv.org/abs/1604.00772>.
 
 The adaption mainly replaces the Numpy backend with JAX one, and introduces several adjustments to facilitate
@@ -18,11 +18,10 @@ This is still an experimental implementation and has not been well-tested (yet).
 from functools import partial
 import logging
 import math
-from typing import Any, cast, Dict, List, Optional, Tuple, Union
+from typing import Optional
 
 import jax
 from jax import numpy as jnp
-import numpy as onp
 
 from evojax.algo.base import NEAlgorithm
 from evojax.util import create_logger
@@ -32,14 +31,15 @@ _EPS = 1e-8
 _MEAN_MAX = 1e32
 _SIGMA_MAX = 1e32
 
+
 class CMA_ES_JAX(NEAlgorithm):
     """CMA-ES stochastic optimizer class with ask-and-tell interface, using JAX backend.
 
     Args:
-        param_size: 
+        param_size:
             A parameter size.
         pop_size:
-            A population size (optional). 
+            A population size (optional).
             If not specified, a proper value will be inferred from param_size.
         mean:
             Initial mean vector of multi-variate gaussian distributions (optional).
@@ -61,7 +61,7 @@ class CMA_ES_JAX(NEAlgorithm):
         cov:
             A covariance matrix (optional).
         logger:
-            A logging.Logger instance (optional). 
+            A logging.Logger instance (optional).
             If not specified, a new one will be created.
     """
 
@@ -81,9 +81,10 @@ class CMA_ES_JAX(NEAlgorithm):
             mean = jnp.zeros(param_size)
         else:
             mean = ensure_jnp(mean)
-            assert mean.shape == (param_size,) , \
-              f"Both params_size and mean are specified." \
-              f"In this case,  mean (whose shape is {mean.shape}) must have a dimension of (param_size, ) (i.e. {(param_size, )}), which is not true."
+            assert mean.shape == (param_size,), \
+                f"Both params_size and mean are specified." \
+                f"In this case,  mean (whose shape is {mean.shape}) must have a dimension of (param_size, )" \
+                f" (i.e. {(param_size, )}), which is not true."
         mean = ensure_jnp(mean)
         assert jnp.all(
             jnp.abs(mean) < _MEAN_MAX
@@ -145,7 +146,8 @@ class CMA_ES_JAX(NEAlgorithm):
 
         # learning rate for the cumulation for the step-size control (eq.55)
         c_sigma = (mu_eff + 2) / (n_dim + mu_eff + 5)
-        d_sigma = 1 + 2 * max(0, math.sqrt((mu_eff - 1) / (n_dim + 1)) - 1) + c_sigma
+        d_sigma = 1 + 2 * \
+            max(0, math.sqrt((mu_eff - 1) / (n_dim + 1)) - 1) + c_sigma
         assert (
             c_sigma < 1
         ), "invalid learning rate for cumulation for the step-size control"
@@ -155,7 +157,8 @@ class CMA_ES_JAX(NEAlgorithm):
         assert cc <= 1, "invalid learning rate for cumulation for the rank-one update"
 
         self._n_dim = n_dim
-        self._popsize = self.pop_size = population_size  # self.pop_size is expected by EvoJAX trainer.
+        # self.pop_size is expected by EvoJAX trainer.
+        self._popsize = self.pop_size = population_size
         self._mu = mu
         self._mu_eff = mu_eff
 
@@ -168,7 +171,8 @@ class CMA_ES_JAX(NEAlgorithm):
 
         # E||N(0, I)|| (p.28)
         self._chi_n = math.sqrt(self._n_dim) * (
-            1.0 - (1.0 / (4.0 * self._n_dim)) + 1.0 / (21.0 * (self._n_dim ** 2))
+            1.0 - (1.0 / (4.0 * self._n_dim)) +
+            1.0 / (21.0 * (self._n_dim ** 2))
         )
 
         self._weights = weights
@@ -212,7 +216,8 @@ class CMA_ES_JAX(NEAlgorithm):
 
         # Logger
         if logger is None:
-            self.logger = create_logger(name="CMA") # Change this name accordingly
+            # Change this name accordingly
+            self.logger = create_logger(name="CMA")
         else:
             self.logger = logger
 
@@ -237,7 +242,7 @@ class CMA_ES_JAX(NEAlgorithm):
         assert bounds is None or _is_valid_bounds(bounds, self._mean), "invalid bounds"
         self._bounds = bounds
 
-    def _eigen_decomposition(self) -> Tuple[jnp.ndarray, jnp.ndarray]:
+    def _eigen_decomposition(self) -> jnp.ndarray:
         if self._B is not None and self._D is not None:
             return self._B, self._D
 
@@ -257,22 +262,22 @@ class CMA_ES_JAX(NEAlgorithm):
         bounds = self._bounds
         mask = jnp.zeros(shape=(n_samples,), dtype=bool)
 
-        if self._bounds is None: # We accept any sampled solutions
+        if self._bounds is None:  # We accept any sampled solutions
             self._key, subkey = jax.random.split(self._key)
             subkey = jax.random.split(subkey, n_samples)
             x = _v_masked_sample_solution(mask, subkey, B, D, n_dim, mean, sigma)
             return x
-        else: # This means we have valid bounds to respect through rejection sampling.
+        else:  # This means we have valid bounds to respect through rejection sampling.
             for i in range(0, self._n_max_resampling):
                 self._key, subkey = jax.random.split(self._key)
                 subkey = jax.random.split(subkey, n_samples)
                 if i == 0:
                     x = _v_masked_sample_solution(mask, subkey, B, D, n_dim, mean, sigma)
                 else:
-                  x = (
-                      _v_masked_sample_solution(mask, subkey, B, D, n_dim, mean, sigma) * (1 - jnp.expand_dims(mask, -1) ) +
-                      x * jnp.expand_dims(mask, -1)
-                  )
+                    x = (
+                        _v_masked_sample_solution(mask, subkey, B, D, n_dim, mean, sigma) * (1 - jnp.expand_dims(mask, -1)) +
+                        x * jnp.expand_dims(mask, -1)
+                    )
                 mask = _v_is_feasible(x, bounds)
                 if jnp.all(mask):
                     return x
@@ -280,22 +285,24 @@ class CMA_ES_JAX(NEAlgorithm):
             x = _v_repair_infeasible_params(x, bounds)
             return x
 
-    def ask(self, n_samples: int=None) -> jnp.ndarray:
+    def ask(self, n_samples: int = None) -> jnp.ndarray:
         """A wrapper of _ask, which handles optional n_samples and saves latest samples."""
 
-        if n_samples is None: # by default, do self._popsize samples.
+        if n_samples is None:  # by default, do self._popsize samples.
             n_samples = self._popsize
 
         x = self._ask(n_samples)
         self._latest_solutions = x
         return x
-    
+
     def tell(self, fitness: jnp.ndarray, solutions: Optional[jnp.ndarray] = None) -> None:
         """Tell evaluation values as fitness."""
 
         if solutions is None:
-            assert self._latest_solutions is not None, "`soltuions` is not given, expecting using latest samples but this was not done."
-            assert self._latest_solutions.shape[0] == self._popsize, f"Latest samples (shape={self._latest_solutions.shape}) not having popsize-length ({self._popsize})."
+            assert self._latest_solutions is not None, \
+                "`soltuions` is not given, expecting using latest samples but this was not done."
+            assert self._latest_solutions.shape[0] == self._popsize, \
+                f"Latest samples (shape={self._latest_solutions.shape}) not having popsize-length ({self._popsize})."
             solutions = self._latest_solutions
         else:
             solutions = ensure_jnp(solutions)
@@ -305,15 +312,15 @@ class CMA_ES_JAX(NEAlgorithm):
             assert jnp.all(
                 jnp.abs(s[0]) < _MEAN_MAX
             ), f"Abs of all param values must be less than {_MEAN_MAX} to avoid overflow errors"
-        
+
         # We want maximization, while the following logics is for minimimzation.
         # Handle this calse by simply revert fitness
-        fitness = - fitness 
+        fitness = - fitness
         self._g += 1
 
         fitness = ensure_jnp(fitness)
         ranking = jnp.argsort(fitness, axis=0)
-        
+
         # Stores 'best' and 'worst' values of the
         # last 'self._funhist_term' generations.
         funhist_idx = 2 * (self.generation % self._funhist_term)
@@ -334,7 +341,7 @@ class CMA_ES_JAX(NEAlgorithm):
         self._mean += self._cm * self._sigma * y_w
 
         # Step-size control
-        C_2 = B.dot(jnp.diag(1 / D)).dot(B.T) # C^(-1/2) = B D^(-1) B^T
+        C_2 = B.dot(jnp.diag(1 / D)).dot(B.T)  # C^(-1/2) = B D^(-1) B^T
         self._p_sigma = (1 - self._c_sigma) * self._p_sigma + math.sqrt(
             self._c_sigma * (2 - self._c_sigma) * self._mu_eff
         ) * C_2.dot(y_w)
@@ -370,11 +377,11 @@ class CMA_ES_JAX(NEAlgorithm):
         # (eq.47)
         rank_one = jnp.outer(self._pc, self._pc)
 
-        ## This way of computing rank_mu can lead to OOM.
-        #rank_mu = jnp.sum(
+        # This way of computing rank_mu can lead to OOM:
+        # rank_mu = jnp.sum(
         #    jnp.array([w * jnp.outer(y, y) for w, y in zip(w_io, y_k)]), axis=0
-        #)
-        ## Try another way of computing rank_mu
+        # )
+        # Try another way of computing rank_mu
         rank_mu = jnp.zeros_like(self._C)
         for w, y in zip(w_io, y_k):
             rank_mu = rank_mu + w * jnp.outer(y, y)
@@ -437,6 +444,7 @@ class CMA_ES_JAX(NEAlgorithm):
     def best_params(self) -> jnp.ndarray:
         return jnp.array(self._mean, copy=True)
 
+
 def ensure_jnp(x):
     '''Return a copy of x that is ensured to be jnp.ndarray.'''
     return jnp.array(x)
@@ -445,19 +453,23 @@ def ensure_jnp(x):
 @partial(jax.jit, static_argnames=['n_dim'])
 def _sample_solution(key, B, D, n_dim, mean, sigma) -> jnp.ndarray:
     z = jax.random.normal(key, shape=(n_dim,))   # ~ N(0, I)
-    y = cast(jnp.ndarray, B.dot(jnp.diag(D))).dot(z)  # ~ N(0, C)
+    y = B.dot(jnp.diag(D)).dot(z)  # ~ N(0, C)
     x = mean + sigma * y  # ~ N(m, σ^2 C)
     return x
 
+
 @partial(jax.jit, static_argnames=['n_dim'])
 def _masked_sample_solution(mask, key, B, D, n_dim, mean, sigma):
+    # TODO(alantian): Make `mask` effective in this bached sampling.
     return _sample_solution(key, B, D, n_dim, mean, sigma)
 
+
 _v_masked_sample_solution = jax.vmap(
-    _masked_sample_solution, 
-    in_axes=(0, 0, None, None, None, None, None), 
+    _masked_sample_solution,
+    in_axes=(0, 0, None, None, None, None, None),
     out_axes=0
 )
+
 
 def _is_feasible(param: jnp.ndarray, bounds: jnp.ndarray) -> jnp.ndarray:
     return jnp.logical_and(
@@ -465,15 +477,19 @@ def _is_feasible(param: jnp.ndarray, bounds: jnp.ndarray) -> jnp.ndarray:
         jnp.all(param <= bounds[:, 1]),
     )
 
+
 _v_is_feasible = jax.vmap(_is_feasible, in_axes=(0, None), out_axes=0)
-    
+
+
 def _repair_infeasible_params(param: jnp.ndarray, bounds: jnp.ndarray) -> jnp.ndarray:
     # clip with lower and upper bound.
     param = jnp.where(param < bounds[:, 0], bounds[:, 0], param)
     param = jnp.where(param > bounds[:, 1], bounds[:, 1], param)
     return param
 
-_v_repair_infeasible_params = jax.vmap(_repair_infeasible_params, in_axes=(0, None), out_axes=0)
+
+_v_repair_infeasible_params = jax.vmap(
+    _repair_infeasible_params, in_axes=(0, None), out_axes=0)
 
 
 def _is_valid_bounds(bounds: Optional[jnp.ndarray], mean: jnp.ndarray) -> bool:
@@ -495,7 +511,7 @@ def _compress_symmetric(sym2d: jnp.ndarray) -> jnp.ndarray:
     sym1d = jnp.zeros(dim)
     start = 0
     for i in range(n):
-        sym1d[start : start + n - i] = sym2d[i][i:]  # noqa: E203
+        sym1d[start: start + n - i] = sym2d[i][i:]  # noqa: E203
         start += n - i
     return sym1d
 
