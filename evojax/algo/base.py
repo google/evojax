@@ -52,7 +52,7 @@ class NEAlgorithm(ABC):
         raise NotImplementedError()
 
 
-class QualityDiversityMethod(NEAlgorithm, ABC):
+class QualityDiversityMethod(NEAlgorithm):
     """Quality diversity method."""
 
     params_lattice: jnp.ndarray

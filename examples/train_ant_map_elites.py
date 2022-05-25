@@ -14,7 +14,7 @@
 
 """Train an ant locomotion controller with MAP-Elites.
 
-To define a different behavior descriptor extractors, see BraxTask for example.
+To define a different BD extractor, see task/brax_task.py for example.
 
 Example command:
 python train_ant_map_elites.py --max-iter=3000
