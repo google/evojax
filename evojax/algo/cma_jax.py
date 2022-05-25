@@ -31,6 +31,7 @@ _EPS = 1e-8
 _MEAN_MAX = 1e32
 _SIGMA_MAX = 1e32
 
+USE_JITTED_EIGEN = True
 
 class CMA_ES_JAX(NEAlgorithm):
     """CMA-ES stochastic optimizer class with ask-and-tell interface, using JAX backend.
@@ -246,12 +247,16 @@ class CMA_ES_JAX(NEAlgorithm):
         if self._B is not None and self._D is not None:
             return self._B, self._D
 
-        self._C = (self._C + self._C.T) / 2
-        D2, B = jnp.linalg.eigh(self._C)
-        D = jnp.sqrt(jnp.where(D2 < 0, _EPS, D2))
-        self._C = jnp.dot(jnp.dot(B, jnp.diag(D ** 2)), B.T)
-
-        self._B, self._D = B, D
+        if USE_JITTED_EIGEN:
+            _B, _D, _C = _eigen_decomposition_core_jitted(self._C)
+            self._B, self._D, self._C = _B, _D, _C
+            B, D = _B, _D
+        else:
+            self._C = (self._C + self._C.T) / 2
+            D2, B = jnp.linalg.eigh(self._C)
+            D = jnp.sqrt(jnp.where(D2 < 0, _EPS, D2))
+            self._C = jnp.dot(jnp.dot(B, jnp.diag(D ** 2)), B.T)
+            self._B, self._D = B, D
         return B, D
 
     def _ask(self, n_samples) -> jnp.ndarray:
@@ -479,6 +484,15 @@ def _is_feasible(param: jnp.ndarray, bounds: jnp.ndarray) -> jnp.ndarray:
 
 
 _v_is_feasible = jax.vmap(_is_feasible, in_axes=(0, None), out_axes=0)
+
+@jax.jit
+def _eigen_decomposition_core_jitted(_C):
+    _C = (_C + _C.T) / 2
+    D2, B = jnp.linalg.eigh(_C)
+    D = jnp.sqrt(jnp.where(D2 < 0, _EPS, D2))
+    _C = jnp.dot(jnp.dot(B, jnp.diag(D ** 2)), B.T)
+    _B, _D = B, D
+    return _B, _D, _C
 
 
 def _repair_infeasible_params(param: jnp.ndarray, bounds: jnp.ndarray) -> jnp.ndarray:
