@@ -126,7 +126,7 @@ class Trainer(object):
                 raise ValueError('No policy parameters to evaluate.')
             self._logger.info('Start to test the parameters.')
             scores = np.array(
-                self.sim_mgr.eval_params(params=params, test=True))
+                self.sim_mgr.eval_params(params=params, test=True)[0])
             self._logger.info(
                 '[TEST] #tests={0}, max={1:.4f}, avg={2:.4f}, min={3:.4f}, '
                 'std={4:.4f}'.format(scores.size, scores.max(), scores.mean(),
