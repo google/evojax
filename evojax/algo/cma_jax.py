@@ -2,19 +2,22 @@
 **Experimental** CMA-ES optimizer using JAX backend.
 
 Code in this file is an adaption from <https://github.com/CyberAgentAILab/cmaes/blob/main/cmaes/_cma.py>
-which is a faithful implementation of CMA-ES described in <https://arxiv.org/abs/1604.00772>.
+which is a faithful implementation of CMA-ES (Covariance matrix adaptation evolution strategy)
+described in <https://arxiv.org/abs/1604.00772>.
 
-The adaption mainly replaces the Numpy backend with JAX one, and introduces several adjustments to facilitate
-efficient computation in JAX:
-- Use JAX's random paradigm
-- Disable pickling funcionality (`__getstate__()` and `__setstate__()`) for now.
-- Enable paralling sampling, completly change the logic of `ask()`
-- Adjust init parameters to confer with existing API.
-- In `tell()`, change the logic of reporting parameters and value together.
+Overal, the adaption replaces the NumPy backend with JAX. To facilitate efficient computation in JAX, it:
+- Uses stateful computation for JAX that is JIT-able.
+- Enables paralling sampling, completly change the logic of `ask()`
 
-This is still an experimental implementation and has not been well-tested (yet).
+Some edge-case are not concerned for now:
+- No pickling funcionality (`__getstate__()` and `__setstate__()`).
+- No bound / repeated sampling for bounded parameters. This makes `ask` easier.
+- No `funhist` / early stop. This make `tell` and stateful computation easier.
+
+This is still an experimental implementation and has not been thoroughly-tested yet.
 """
 
+from typing import NamedTuple
 from functools import partial
 import logging
 import math
@@ -31,11 +34,39 @@ _EPS = 1e-8
 _MEAN_MAX = 1e32
 _SIGMA_MAX = 1e32
 
-USE_JITTED_EIGEN = True
+
+class _HyperParameters(NamedTuple):
+    n_dim: int
+    pop_size: int
+    mu: int
+
+
+class _Coefficients(NamedTuple):
+    mu_eff: jnp.ndarray
+    cc: jnp.ndarray
+    c1: jnp.ndarray
+    cmu: jnp.ndarray
+    c_sigma: jnp.ndarray
+    d_sigma: jnp.ndarray
+    cm: jnp.ndarray
+    chi_n: jnp.ndarray
+    weights: jnp.ndarray
+
+
+class _State(NamedTuple):
+    p_sigma: jnp.ndarray
+    pc: jnp.ndarray
+    mean: jnp.ndarray
+    C: jnp.ndarray
+    sigma: jnp.ndarray
+    D: jnp.ndarray
+    B: jnp.ndarray
+    g: int
+    key: jnp.ndarray
+
 
 class CMA_ES_JAX(NEAlgorithm):
     """CMA-ES stochastic optimizer class with ask-and-tell interface, using JAX backend.
-
     Args:
         param_size:
             A parameter size.
@@ -51,14 +82,6 @@ class CMA_ES_JAX(NEAlgorithm):
             If not specified, a default value of 0.1 will be used.
         seed:
             A seed number (optional).
-        bounds:
-            Lower and upper domain boundaries for each parameter (optional).
-        n_max_resampling:
-            A maximum number of resampling parameters (optional).
-            If all sampled parameters are infeasible, the last sampled one
-            will be clipped with lower and upper bounds.
-            Only used for bounded optimization.
-            If not specified, a default value of 100 will be used.
         cov:
             A covariance matrix (optional).
         logger:
@@ -73,8 +96,6 @@ class CMA_ES_JAX(NEAlgorithm):
         mean: Optional[jnp.ndarray] = None,
         init_stdev: Optional[float] = 0.1,
         seed: Optional[int] = 0,
-        bounds: Optional[jnp.ndarray] = None,
-        n_max_resampling: int = 100,
         cov: Optional[jnp.ndarray] = None,
         logger: logging.Logger = None,
     ):
@@ -101,7 +122,7 @@ class CMA_ES_JAX(NEAlgorithm):
         population_size = pop_size
         if population_size is None:
             population_size = 4 + math.floor(3 * math.log(n_dim))  # (eq. 48)
-        assert population_size > 0, "popsize must be non-zero positive value."
+        assert population_size > 0, "pop_size must be non-zero positive value."
 
         mu = population_size // 2
 
@@ -112,8 +133,10 @@ class CMA_ES_JAX(NEAlgorithm):
                 for i in range(population_size)
             ]
         )
-        mu_eff = (jnp.sum(weights_prime[:mu]) ** 2) / jnp.sum(weights_prime[:mu] ** 2)
-        mu_eff_minus = (jnp.sum(weights_prime[mu:]) ** 2) / jnp.sum(weights_prime[mu:] ** 2)
+        mu_eff = (jnp.sum(weights_prime[:mu]) **
+                  2) / jnp.sum(weights_prime[:mu] ** 2)
+        mu_eff_minus = (
+            jnp.sum(weights_prime[mu:]) ** 2) / jnp.sum(weights_prime[mu:] ** 2)
 
         # learning rate for the rank-one update
         alpha_cov = 2.0
@@ -121,7 +144,7 @@ class CMA_ES_JAX(NEAlgorithm):
         assert isinstance(c1, jnp.ndarray)
         # learning rate for the rank-μ update
         cmu = min(
-            1 - c1 - 1e-8,  # 1e-8 is for large popsize.
+            1 - c1 - 1e-8,  # 1e-8 is for large pop_size.
             alpha_cov
             * (mu_eff - 2 + 1 / mu_eff)
             / ((n_dim + 2) ** 2 + alpha_cov * mu_eff / 2),
@@ -157,65 +180,49 @@ class CMA_ES_JAX(NEAlgorithm):
         cc = (4 + mu_eff / n_dim) / (n_dim + 4 + 2 * mu_eff / n_dim)
         assert cc <= 1, "invalid learning rate for cumulation for the rank-one update"
 
-        self._n_dim = n_dim
-        # self.pop_size is expected by EvoJAX trainer.
-        self._popsize = self.pop_size = population_size
-        self._mu = mu
-        self._mu_eff = mu_eff
-
-        self._cc = cc
-        self._c1 = c1
-        self._cmu = cmu
-        self._c_sigma = c_sigma
-        self._d_sigma = d_sigma
-        self._cm = cm
-
-        # E||N(0, I)|| (p.28)
-        self._chi_n = math.sqrt(self._n_dim) * (
-            1.0 - (1.0 / (4.0 * self._n_dim)) +
-            1.0 / (21.0 * (self._n_dim ** 2))
+        self.hyper_parameters = _HyperParameters(
+            n_dim=n_dim,
+            pop_size=population_size,
+            mu=mu,
         )
 
-        self._weights = weights
+        self.coefficients = _Coefficients(
+            mu_eff=mu_eff,
+            cc=cc,
+            c1=c1,
+            cmu=cmu,
+            c_sigma=c_sigma,
+            d_sigma=d_sigma,
+            cm=cm,
+            # E||N(0, I)|| (p.28)
+            chi_n=math.sqrt(n_dim) * (
+                1.0 - (1.0 / (4.0 * n_dim)) +
+                1.0 / (21.0 * (n_dim ** 2))
+            ),
+            weights=weights,
+        )
 
-        # evolution path
-        self._p_sigma = jnp.zeros(n_dim)
-        self._pc = jnp.zeros(n_dim)
-
-        self._mean = mean
-
+        # evolution path (state)
         if cov is None:
-            self._C = jnp.eye(n_dim)
+            cov = jnp.eye(n_dim)
         else:
-            assert cov.shape == (n_dim, n_dim), "Invalid shape of covariance matrix"
-            self._C = cov
+            assert cov.shape == (
+                n_dim, n_dim), "Invalid shape of covariance matrix"
 
-        self._sigma = sigma
-        self._D: Optional[jnp.ndarray] = None
-        self._B: Optional[jnp.ndarray] = None
+        self.state = _State(
+            p_sigma=jnp.zeros(n_dim),
+            pc=jnp.zeros(n_dim),
+            mean=mean,
+            C=cov,
+            sigma=sigma,
+            D=None,
+            B=None,
+            g=0,
+            key=jax.random.PRNGKey(seed),
+        )
 
-        # bounds contains low and high of each parameter.
-        assert bounds is None or _is_valid_bounds(bounds, mean), "invalid bounds"
-        self._bounds = bounds
-        self._n_max_resampling = n_max_resampling
-
-        self._g = 0
-
-        self._key = jax.random.PRNGKey(seed)
-
-        # Termination criteria
-        self._tolx = 1e-12 * sigma
-        self._tolxup = 1e4
-        self._tolfun = 1e-12
-        self._tolconditioncov = 1e14
-
-        self._funhist_term = 10 + math.ceil(30 * n_dim / population_size)
-        self._funhist_values = jnp.empty(self._funhist_term * 2)
-
-        # Saved latest solutions
+        # Below are helper vars.
         self._latest_solutions = None
-
-        # Logger
         if logger is None:
             # Change this name accordingly
             self.logger = create_logger(name="CMA")
@@ -225,76 +232,49 @@ class CMA_ES_JAX(NEAlgorithm):
     @property
     def dim(self) -> int:
         """A number of dimensions"""
-        return self._n_dim
+        return self.hyper_parameters.n_dim
 
     @property
     def population_size(self) -> int:
         """A population size"""
-        return self._popsize
+        return self.hyper_parameters.pop_size
+
+    @property
+    def pop_size(self) -> int:
+        """A population size, as expected by EvoJAX trainer."""
+        return self.hyper_parameters.pop_size
 
     @property
     def generation(self) -> int:
         """Generation number which is monotonically incremented
         when multi-variate gaussian distribution is updated."""
-        return self._g
-
-    def set_bounds(self, bounds: Optional[jnp.ndarray]) -> None:
-        """Update boundary constraints"""
-        assert bounds is None or _is_valid_bounds(bounds, self._mean), "invalid bounds"
-        self._bounds = bounds
+        return self.state.g
 
     def _eigen_decomposition(self) -> jnp.ndarray:
-        if self._B is not None and self._D is not None:
-            return self._B, self._D
-
-        if USE_JITTED_EIGEN:
-            _B, _D, _C = _eigen_decomposition_core_jitted(self._C)
-            self._B, self._D, self._C = _B, _D, _C
-            B, D = _B, _D
-        else:
-            self._C = (self._C + self._C.T) / 2
-            D2, B = jnp.linalg.eigh(self._C)
-            D = jnp.sqrt(jnp.where(D2 < 0, _EPS, D2))
-            self._C = jnp.dot(jnp.dot(B, jnp.diag(D ** 2)), B.T)
-            self._B, self._D = B, D
+        if self.state.B is not None and self.state.D is not None:
+            return self.state.B, self.state.D
+        B, D, C = _eigen_decomposition_core(self.state.C)
+        self.state = self.state._replace(B=B, D=D, C=C)
         return B, D
 
     def _ask(self, n_samples) -> jnp.ndarray:
-        """Real implementaiton of ask, which samples multiple parameters in parallel.."""
-
+        """Real implementaiton of ask, which samples multiple parameters in parallel."""
+        n_dim = self.hyper_parameters.n_dim
+        mean, sigma = self.state.mean, self.state.sigma
         B, D = self._eigen_decomposition()
-        n_dim, mean, sigma = self._n_dim, self._mean, self._sigma
-        bounds = self._bounds
-        mask = jnp.zeros(shape=(n_samples,), dtype=bool)
 
-        if self._bounds is None:  # We accept any sampled solutions
-            self._key, subkey = jax.random.split(self._key)
-            subkey = jax.random.split(subkey, n_samples)
-            x = _v_masked_sample_solution(mask, subkey, B, D, n_dim, mean, sigma)
-            return x
-        else:  # This means we have valid bounds to respect through rejection sampling.
-            for i in range(0, self._n_max_resampling):
-                self._key, subkey = jax.random.split(self._key)
-                subkey = jax.random.split(subkey, n_samples)
-                if i == 0:
-                    x = _v_masked_sample_solution(mask, subkey, B, D, n_dim, mean, sigma)
-                else:
-                    x = (
-                        _v_masked_sample_solution(mask, subkey, B, D, n_dim, mean, sigma) * (1 - jnp.expand_dims(mask, -1)) +
-                        x * jnp.expand_dims(mask, -1)
-                    )
-                mask = _v_is_feasible(x, bounds)
-                if jnp.all(mask):
-                    return x
-            x = _v_masked_sample_solution(mask, subkey, B, D, n_dim, mean, sigma)
-            x = _v_repair_infeasible_params(x, bounds)
-            return x
+        key, subkey = jax.random.split(self.state.key)
+        self.state = self.state._replace(key=key)
+        subkey = jax.random.split(subkey, n_samples)
+        x = _batch_sample_solution(subkey, B, D, n_dim, mean, sigma)
+
+        return x
 
     def ask(self, n_samples: int = None) -> jnp.ndarray:
         """A wrapper of _ask, which handles optional n_samples and saves latest samples."""
 
-        if n_samples is None:  # by default, do self._popsize samples.
-            n_samples = self._popsize
+        if n_samples is None:
+            n_samples = self.pop_size
 
         x = self._ask(n_samples)
         self._latest_solutions = x
@@ -306,148 +286,34 @@ class CMA_ES_JAX(NEAlgorithm):
         if solutions is None:
             assert self._latest_solutions is not None, \
                 "`soltuions` is not given, expecting using latest samples but this was not done."
-            assert self._latest_solutions.shape[0] == self._popsize, \
-                f"Latest samples (shape={self._latest_solutions.shape}) not having popsize-length ({self._popsize})."
+            assert self._latest_solutions.shape[0] == self.hyper_parameters.pop_size, \
+                f"Latest samples (shape={self._latest_solutions.shape}) not having pop_size-length ({self._popsize})."
             solutions = self._latest_solutions
         else:
-            solutions = ensure_jnp(solutions)
-            assert solutions.shape[0] == self._popsize, "Given solutions must have popsize-length, which is not ture."
-
-        for s in solutions:
-            assert jnp.all(
-                jnp.abs(s[0]) < _MEAN_MAX
-            ), f"Abs of all param values must be less than {_MEAN_MAX} to avoid overflow errors"
+            assert solutions.shape[0] == self.hyper_parameters.pop_size, \
+                "Given solutions must have pop_size-length, which is not ture."
 
         # We want maximization, while the following logics is for minimimzation.
         # Handle this calse by simply revert fitness
         fitness = - fitness
-        self._g += 1
 
-        fitness = ensure_jnp(fitness)
-        ranking = jnp.argsort(fitness, axis=0)
+        # real computation
 
-        # Stores 'best' and 'worst' values of the
-        # last 'self._funhist_term' generations.
-        funhist_idx = 2 * (self.generation % self._funhist_term)
-        self._funhist_values = self._funhist_values.at[funhist_idx].set(fitness[ranking[0]])
-        self._funhist_values = self._funhist_values.at[funhist_idx+1].set(fitness[ranking[-1]])
-
-        sorted_solutions = solutions[ranking]
-
-        # Sample new population of search_points, for k=1, ..., popsize
+        # - must do it as _tell_core below expects B, C, D to be computed.
         B, D = self._eigen_decomposition()
-        self._B, self._D = None, None
+        self.state = self.state._replace(B=B, D=D)
 
-        x_k = jnp.array(sorted_solutions)  # ~ N(m, σ^2 C)
-        y_k = (x_k - self._mean) / self._sigma  # ~ N(0, C)
+        next_state = _tell_core(hps=self.hyper_parameters, coeff=self.coefficients,
+                                state=self.state, fitness=fitness, solutions=solutions)
 
-        # Selection and recombination
-        y_w = jnp.sum(y_k[: self._mu].T * self._weights[: self._mu], axis=1)  # eq.41
-        self._mean += self._cm * self._sigma * y_w
-
-        # Step-size control
-        C_2 = B.dot(jnp.diag(1 / D)).dot(B.T)  # C^(-1/2) = B D^(-1) B^T
-        self._p_sigma = (1 - self._c_sigma) * self._p_sigma + math.sqrt(
-            self._c_sigma * (2 - self._c_sigma) * self._mu_eff
-        ) * C_2.dot(y_w)
-
-        norm_p_sigma = jnp.linalg.norm(self._p_sigma)
-        self._sigma *= jnp.exp(
-            (self._c_sigma / self._d_sigma) * (norm_p_sigma / self._chi_n - 1)
-        )
-        self._sigma = min(self._sigma, _SIGMA_MAX)
-
-        # Covariance matrix adaption
-        h_sigma_cond_left = norm_p_sigma / math.sqrt(
-            1 - (1 - self._c_sigma) ** (2 * (self._g + 1))
-        )
-        h_sigma_cond_right = (1.4 + 2 / (self._n_dim + 1)) * self._chi_n
-        h_sigma = 1.0 if h_sigma_cond_left < h_sigma_cond_right else 0.0  # (p.28)
-
-        # (eq.45)
-        self._pc = (1 - self._cc) * self._pc + h_sigma * math.sqrt(
-            self._cc * (2 - self._cc) * self._mu_eff
-        ) * y_w
-
-        # (eq.46)
-        w_io = self._weights * jnp.where(
-            self._weights >= 0,
-            1,
-            self._n_dim / (jnp.linalg.norm(C_2.dot(y_k.T), axis=0) ** 2 + _EPS),
-        )
-
-        delta_h_sigma = (1 - h_sigma) * self._cc * (2 - self._cc)  # (p.28)
-        assert delta_h_sigma <= 1
-
-        # (eq.47)
-        rank_one = jnp.outer(self._pc, self._pc)
-
-        # This way of computing rank_mu can lead to OOM:
-        # rank_mu = jnp.sum(
-        #    jnp.array([w * jnp.outer(y, y) for w, y in zip(w_io, y_k)]), axis=0
-        # )
-        # Try another way of computing rank_mu
-        rank_mu = jnp.zeros_like(self._C)
-        for w, y in zip(w_io, y_k):
-            rank_mu = rank_mu + w * jnp.outer(y, y)
-
-        self._C = (
-            (
-                1
-                + self._c1 * delta_h_sigma
-                - self._c1
-                - self._cmu * jnp.sum(self._weights)
-            )
-            * self._C
-            + self._c1 * rank_one
-            + self._cmu * rank_mu
-        )
-
-    def should_stop(self) -> bool:
-        B, D = self._eigen_decomposition()
-        dC = jnp.diag(self._C)
-
-        # Stop if the range of function values of the recent generation is below tolfun.
-        if (
-            self.generation > self._funhist_term
-            and jnp.max(self._funhist_values) - jnp.min(self._funhist_values)
-            < self._tolfun
-        ):
-            return True
-
-        # Stop if the std of the normal distribution is smaller than tolx
-        # in all coordinates and pc is smaller than tolx in all components.
-        if jnp.all(self._sigma * dC < self._tolx) and jnp.all(
-            self._sigma * self._pc < self._tolx
-        ):
-            return True
-
-        # Stop if detecting divergent behavior.
-        if self._sigma * jnp.max(D) > self._tolxup:
-            return True
-
-        # No effect coordinates: stop if adding 0.2-standard deviations
-        # in any single coordinate does not change m.
-        if jnp.any(self._mean == self._mean + (0.2 * self._sigma * jnp.sqrt(dC))):
-            return True
-
-        # No effect axis: stop if adding 0.1-standard deviation vector in
-        # any principal axis direction of C does not change m. "pycma" check
-        # axis one by one at each generation.
-        i = self.generation % self.dim
-        if jnp.all(self._mean == self._mean + (0.1 * self._sigma * D[i] * B[:, i])):
-            return True
-
-        # Stop if the condition number of the covariance matrix exceeds 1e14.
-        condition_cov = jnp.max(D) / jnp.min(D)
-        if condition_cov > self._tolconditioncov:
-            return True
-
-        return False
+        self.state = next_state
 
     @property
     def best_params(self) -> jnp.ndarray:
-        return jnp.array(self._mean, copy=True)
+        return jnp.array(self.state.mean, copy=True)
+
+    def get_best_params_ref(self) -> jnp.ndarray:
+        return self.state.mean
 
 
 def ensure_jnp(x):
@@ -455,7 +321,112 @@ def ensure_jnp(x):
     return jnp.array(x)
 
 
-@partial(jax.jit, static_argnames=['n_dim'])
+@partial(jax.jit, static_argnums=0)
+def _tell_core(
+    hps: _HyperParameters,
+    coeff: _Coefficients,
+    state: _State,
+    fitness: jnp.ndarray,
+    solutions: jnp.ndarray,
+) -> _State:
+    next_state = state
+
+    g = state.g + 1
+    next_state = next_state._replace(g=g)
+
+    ranking = jnp.argsort(fitness, axis=0)
+
+    sorted_solutions = solutions[ranking]
+
+    B, D = state.B, state.D
+
+    # Sample new population of search_points, for k=1, ..., pop_size
+    B, D = state.B, state.D  # already computed.
+    next_state = next_state._replace(B=None, D=None)
+
+    x_k = jnp.array(sorted_solutions)  # ~ N(m, σ^2 C)
+    y_k = (x_k - state.mean) / state.sigma  # ~ N(0, C)
+
+    # Selection and recombination
+    # y_w = jnp.sum(y_k[: hps.mu].T * coeff.weights[: hps.mu], axis=1)  # eq.41
+    # use lax.dynamic_slice_in_dim here:
+    y_w = jnp.sum(
+        jax.lax.dynamic_slice_in_dim(y_k, 0, hps.mu, axis=0).T *
+        jax.lax.dynamic_slice_in_dim(coeff.weights,  0, hps.mu, axis=0),
+        axis=1,
+    )
+    mean = state.mean + coeff.cm * state.sigma * y_w
+    next_state = next_state._replace(mean=mean)
+
+    # Step-size control
+    C_2 = B.dot(jnp.diag(1 / D)).dot(B.T)  # C^(-1/2) = B D^(-1) B^T
+    p_sigma = (1 - coeff.c_sigma) * state.p_sigma + jnp.sqrt(
+        coeff.c_sigma * (2 - coeff.c_sigma) * coeff.mu_eff
+    ) * C_2.dot(y_w)
+    next_state = next_state._replace(p_sigma=p_sigma)
+
+    norm_p_sigma = jnp.linalg.norm(state.p_sigma)
+    sigma = state.sigma * jnp.exp(
+        (coeff.c_sigma / coeff.d_sigma) * (norm_p_sigma / coeff.chi_n - 1)
+    )
+    sigma = jnp.min(jnp.array([sigma, _SIGMA_MAX]))
+    next_state = next_state._replace(sigma=sigma)
+
+    # Covariance matrix adaption
+    h_sigma_cond_left = norm_p_sigma / jnp.sqrt(
+        1 - (1 - coeff.c_sigma) ** (2 * (state.g + 1))
+    )
+    h_sigma_cond_right = (1.4 + 2 / (hps.n_dim + 1)) * coeff.chi_n
+    # h_sigma = 1.0 if h_sigma_cond_left < h_sigma_cond_right else 0.0  # (p.28)
+    h_sigma = jax.lax.cond(
+        pred=(h_sigma_cond_left < h_sigma_cond_right),
+        true_fun=(lambda: 1.0),
+        false_fun=(lambda: 0.0),
+    )
+
+    # (eq.45)
+    pc = (1 - coeff.cc) * state.pc + h_sigma * \
+        jnp.sqrt(coeff.cc * (2 - coeff.cc) * coeff.mu_eff) * y_w
+    next_state = next_state._replace(pc=pc)
+
+    # (eq.46)
+    w_io = coeff.weights * jnp.where(
+        coeff.weights >= 0,
+        1,
+        hps.n_dim / (jnp.linalg.norm(C_2.dot(y_k.T), axis=0) ** 2 + _EPS),
+    )
+
+    delta_h_sigma = (1 - h_sigma) * coeff.cc * (2 - coeff.cc)  # (p.28)
+    # assert delta_h_sigma <= 1
+
+    # (eq.47)
+    rank_one = jnp.outer(state.pc, state.pc)
+
+    # This way of computing rank_mu can lead to OOM:
+    # rank_mu = jnp.sum(
+    #    jnp.array([w * jnp.outer(y, y) for w, y in zip(w_io, y_k)]), axis=0
+    # )
+    # Try another way of computing rank_mu
+    rank_mu = jnp.zeros_like(state.C)
+    for w, y in zip(w_io, y_k):
+        rank_mu = rank_mu + w * jnp.outer(y, y)
+
+    C = (
+        (
+            1
+            + coeff.c1 * delta_h_sigma
+            - coeff.c1
+            - coeff.cmu * jnp.sum(coeff.weights)
+        )
+        * state.C
+        + coeff.c1 * rank_one
+        + coeff.cmu * rank_mu
+    )
+    next_state = next_state._replace(C=C)
+
+    return next_state
+
+
 def _sample_solution(key, B, D, n_dim, mean, sigma) -> jnp.ndarray:
     z = jax.random.normal(key, shape=(n_dim,))   # ~ N(0, I)
     y = B.dot(jnp.diag(D)).dot(z)  # ~ N(0, C)
@@ -463,78 +434,21 @@ def _sample_solution(key, B, D, n_dim, mean, sigma) -> jnp.ndarray:
     return x
 
 
-@partial(jax.jit, static_argnames=['n_dim'])
-def _masked_sample_solution(mask, key, B, D, n_dim, mean, sigma):
-    # TODO(alantian): Make `mask` effective in this bached sampling.
-    return _sample_solution(key, B, D, n_dim, mean, sigma)
-
-
-_v_masked_sample_solution = jax.vmap(
-    _masked_sample_solution,
-    in_axes=(0, 0, None, None, None, None, None),
-    out_axes=0
+_batch_sample_solution = jax.jit(
+    jax.vmap(
+        _sample_solution,
+        in_axes=(0, None, None, None, None, None),
+        out_axes=0
+    ),
+    static_argnums=3,
 )
 
 
-def _is_feasible(param: jnp.ndarray, bounds: jnp.ndarray) -> jnp.ndarray:
-    return jnp.logical_and(
-        jnp.all(param >= bounds[:, 0]),
-        jnp.all(param <= bounds[:, 1]),
-    )
-
-
-_v_is_feasible = jax.vmap(_is_feasible, in_axes=(0, None), out_axes=0)
-
 @jax.jit
-def _eigen_decomposition_core_jitted(_C):
+def _eigen_decomposition_core(_C):
     _C = (_C + _C.T) / 2
     D2, B = jnp.linalg.eigh(_C)
     D = jnp.sqrt(jnp.where(D2 < 0, _EPS, D2))
     _C = jnp.dot(jnp.dot(B, jnp.diag(D ** 2)), B.T)
     _B, _D = B, D
     return _B, _D, _C
-
-
-def _repair_infeasible_params(param: jnp.ndarray, bounds: jnp.ndarray) -> jnp.ndarray:
-    # clip with lower and upper bound.
-    param = jnp.where(param < bounds[:, 0], bounds[:, 0], param)
-    param = jnp.where(param > bounds[:, 1], bounds[:, 1], param)
-    return param
-
-
-_v_repair_infeasible_params = jax.vmap(
-    _repair_infeasible_params, in_axes=(0, None), out_axes=0)
-
-
-def _is_valid_bounds(bounds: Optional[jnp.ndarray], mean: jnp.ndarray) -> bool:
-    if bounds is None:
-        return True
-    if (mean.size, 2) != bounds.shape:
-        return False
-    if not jnp.all(bounds[:, 0] <= mean):
-        return False
-    if not jnp.all(mean <= bounds[:, 1]):
-        return False
-    return True
-
-
-def _compress_symmetric(sym2d: jnp.ndarray) -> jnp.ndarray:
-    assert len(sym2d.shape) == 2 and sym2d.shape[0] == sym2d.shape[1]
-    n = sym2d.shape[0]
-    dim = (n * (n + 1)) // 2
-    sym1d = jnp.zeros(dim)
-    start = 0
-    for i in range(n):
-        sym1d[start: start + n - i] = sym2d[i][i:]  # noqa: E203
-        start += n - i
-    return sym1d
-
-
-def _decompress_symmetric(sym1d: jnp.ndarray) -> jnp.ndarray:
-    n = int(jnp.sqrt(sym1d.size * 2))
-    assert (n * (n + 1)) // 2 == sym1d.size
-    R, C = jnp.triu_indices(n)
-    out = jnp.zeros((n, n), dtype=sym1d.dtype)
-    out[R, C] = sym1d
-    out[C, R] = sym1d
-    return out

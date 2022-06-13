@@ -67,3 +67,8 @@ class TestAlgo:
         from evojax.algo import PGPE
         _ = PGPE(pop_size=16, param_size=16)
         assert True
+
+    def test_cma_es_jax(self):
+        from evojax.algo import CMA_ES_JAX
+        _ = CMA_ES_JAX(pop_size=16, param_size=16)
+        assert True

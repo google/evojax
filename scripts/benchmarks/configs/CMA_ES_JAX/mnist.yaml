@@ -11,5 +11,5 @@ log_interval: 10
 num_tests: 1
 n_repeats: 1
 seed: 42
-gpu_id: [3]
+gpu_id: 2
 debug: false

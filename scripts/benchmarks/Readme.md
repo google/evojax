@@ -98,10 +98,10 @@ Waterworld (MA)	| 2 (max_iter=2000)	| [Link](configs/PGPE/waterworld_ma.yaml) | 
 
 |   | Benchmarks | Parameters | Results (Avg) |
 |---|---|---|---|
-CartPole (easy) | 	900 (max_iter=1000)|[Link](configs/CMA_ES_JAX/cartpole_easy.yaml) | 917.8397 |
-CartPole (hard)	| 600 (max_iter=1000)|[Link](configs/CMA_JAX_ES/cartpole_hard.yaml)|  619.9166 |
-MNIST	| 0.90 (max_iter=2000)	| [Link](configs/CMA_ES_JAX/mnist.yaml) | 0.9493 |
-Waterworld	| 6 (max_iter=1000)	 | [Link](configs/CMA_ES_JAX/waterworld.yaml)  | 9.4500 |
+CartPole (easy) | 	900 (max_iter=1000)|[Link](configs/CMA_ES_JAX/cartpole_easy.yaml) | 913.3524 |
+CartPole (hard)	| 600 (max_iter=1000)|[Link](configs/CMA_ES_JAX/cartpole_hard.yaml)|  626.3537 |
+MNIST	| 0.90 (max_iter=2000)	| [Link](configs/CMA_ES_JAX/mnist.yaml) | 0.9519 |
+Waterworld	| 6 (max_iter=1000)	 | [Link](configs/CMA_ES_JAX/waterworld.yaml)  | 10.5100 |
 Brax Ant |	3000 (max_iter=1200) | - | - |
 Waterworld (MA)	| 2 (max_iter=2000)	| - | - |
 
