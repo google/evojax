@@ -45,6 +45,7 @@ setup(
         "Pillow",
         "cma",
         "matplotlib",
+        "pyyaml",
     ],
     extras_require={
         "extra": ['evosax', 'torchvision', 'pandas', 'procgen', 'brax'],
