@@ -5,14 +5,14 @@ Code in this file is an adaption from <https://github.com/CyberAgentAILab/cmaes/
 which is a faithful implementation of CMA-ES (Covariance matrix adaptation evolution strategy)
 described in <https://arxiv.org/abs/1604.00772>.
 
-Overal, the adaption replaces the NumPy backend with JAX. To facilitate efficient computation in JAX, it:
+Overall, the adaption replaces the NumPy backend with JAX. To facilitate efficient computation in JAX, it:
 - Uses stateful computation for JAX that is JIT-able.
-- Enables paralling sampling, completly change the logic of `ask()`
+- Enables paralleling sampling.
 
 Some edge-case are not concerned for now:
-- No pickling funcionality (`__getstate__()` and `__setstate__()`).
+- No pickling functionality (`__getstate__()` and `__setstate__()`).
 - No bound / repeated sampling for bounded parameters. This makes `ask` easier.
-- No `funhist` / early stop. This make `tell` and stateful computation easier.
+- No `funhist` / early stop. This makes `tell` and stateful computation easier.
 
 This is still an experimental implementation and has not been thoroughly-tested yet.
 """
@@ -31,8 +31,13 @@ from evojax.util import create_logger
 
 
 _EPS = 1e-8
-_MEAN_MAX = 1e32
-_SIGMA_MAX = 1e32
+
+
+# We set thresholds for mean and sigma respectively.
+_MEAN_MAX_X64 = 1e302
+_SIGMA_MAX_X64 = 1e302
+_MEAN_MAX_X32 = 1e32
+_SIGMA_MAX_X32 = 1e32
 
 
 class _HyperParameters(NamedTuple):
@@ -51,6 +56,7 @@ class _Coefficients(NamedTuple):
     cm: jnp.ndarray
     chi_n: jnp.ndarray
     weights: jnp.ndarray
+    sigma_max: jnp.ndarray
 
 
 class _State(NamedTuple):
@@ -108,9 +114,11 @@ class CMA_ES_JAX(NEAlgorithm):
                 f"In this case,  mean (whose shape is {mean.shape}) must have a dimension of (param_size, )" \
                 f" (i.e. {(param_size, )}), which is not true."
         mean = ensure_jnp(mean)
+        dtype = mean.dtype
+        mean_max = ensure_jnp(_MEAN_MAX_X64 if dtype == jnp.float64 else _MEAN_MAX_X32)
         assert jnp.all(
-            jnp.abs(mean) < _MEAN_MAX
-        ), f"Abs of all elements of mean vector must be less than {_MEAN_MAX}"
+            jnp.abs(mean) < mean_max
+        ), f"Abs of all elements of mean vector must be less than {mean_max}"
 
         n_dim = len(mean)
         assert n_dim > 1, "The dimension of mean must be larger than 1"
@@ -200,6 +208,7 @@ class CMA_ES_JAX(NEAlgorithm):
                 1.0 / (21.0 * (n_dim ** 2))
             ),
             weights=weights,
+            sigma_max=ensure_jnp(_SIGMA_MAX_X64 if dtype == jnp.float64 else _SIGMA_MAX_X32),
         )
 
         # evolution path (state)
@@ -369,7 +378,7 @@ def _tell_core(
     sigma = state.sigma * jnp.exp(
         (coeff.c_sigma / coeff.d_sigma) * (norm_p_sigma / coeff.chi_n - 1)
     )
-    sigma = jnp.min(jnp.array([sigma, _SIGMA_MAX]))
+    sigma = jnp.min(jnp.array([sigma, coeff.sigma_max]))
     next_state = next_state._replace(sigma=sigma)
 
     # Covariance matrix adaption
