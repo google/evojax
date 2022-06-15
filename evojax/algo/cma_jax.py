@@ -127,9 +127,10 @@ class CMA_ES_JAX(NEAlgorithm):
             mean_max = ensure_jnp(jnp.inf)
             sigma_max = ensure_jnp(jnp.inf)
 
-        assert jnp.all(
-            jnp.abs(mean) < mean_max
-        ), f"Abs of all elements of mean vector must be less than {mean_max}"
+        if enable_numeric_check:
+            assert jnp.all(
+                jnp.abs(mean) <= mean_max
+            ), f"Abs of all elements of mean vector must be less than {mean_max}"
 
         n_dim = len(mean)
         assert n_dim > 1, "The dimension of mean must be larger than 1"
