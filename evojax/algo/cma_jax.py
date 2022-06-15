@@ -114,8 +114,7 @@ class CMA_ES_JAX(NEAlgorithm):
                 f"In this case,  mean (whose shape is {mean.shape}) must have a dimension of (param_size, )" \
                 f" (i.e. {(param_size, )}), which is not true."
         mean = ensure_jnp(mean)
-        dtype = mean.dtype
-        mean_max = ensure_jnp(_MEAN_MAX_X64 if dtype == jnp.float64 else _MEAN_MAX_X32)
+        mean_max = ensure_jnp(_MEAN_MAX_X64 if jax.config.jax_enable_x64 else _MEAN_MAX_X32)
         assert jnp.all(
             jnp.abs(mean) < mean_max
         ), f"Abs of all elements of mean vector must be less than {mean_max}"
@@ -208,7 +207,7 @@ class CMA_ES_JAX(NEAlgorithm):
                 1.0 / (21.0 * (n_dim ** 2))
             ),
             weights=weights,
-            sigma_max=ensure_jnp(_SIGMA_MAX_X64 if dtype == jnp.float64 else _SIGMA_MAX_X32),
+            sigma_max=ensure_jnp(_SIGMA_MAX_X64 if jax.config.jax_enable_x64 else _SIGMA_MAX_X32),
         )
 
         # evolution path (state)
