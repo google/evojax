@@ -93,6 +93,10 @@ class CMA_ES_JAX(NEAlgorithm):
         logger:
             A logging.Logger instance (optional).
             If not specified, a new one will be created.
+        enable_numeric_check:
+            A bool indicating whether to enable numeric check (optional).
+            If True, a numeric check for mean and standard deviation is enabled.
+            The default value is False.
     """
 
     def __init__(
@@ -104,6 +108,7 @@ class CMA_ES_JAX(NEAlgorithm):
         seed: Optional[int] = 0,
         cov: Optional[jnp.ndarray] = None,
         logger: logging.Logger = None,
+        enable_numeric_check: Optional[bool] = False,
     ):
         if mean is None:
             mean = jnp.zeros(param_size)
@@ -114,7 +119,14 @@ class CMA_ES_JAX(NEAlgorithm):
                 f"In this case,  mean (whose shape is {mean.shape}) must have a dimension of (param_size, )" \
                 f" (i.e. {(param_size, )}), which is not true."
         mean = ensure_jnp(mean)
-        mean_max = ensure_jnp(_MEAN_MAX_X64 if jax.config.jax_enable_x64 else _MEAN_MAX_X32)
+
+        if enable_numeric_check:
+            mean_max = ensure_jnp(_MEAN_MAX_X64 if jax.config.jax_enable_x64 else _MEAN_MAX_X32)
+            sigma_max = ensure_jnp(_SIGMA_MAX_X64 if jax.config.jax_enable_x64 else _SIGMA_MAX_X32)
+        else:
+            mean_max = ensure_jnp(jnp.inf)
+            sigma_max = ensure_jnp(jnp.inf)
+
         assert jnp.all(
             jnp.abs(mean) < mean_max
         ), f"Abs of all elements of mean vector must be less than {mean_max}"
@@ -207,7 +219,7 @@ class CMA_ES_JAX(NEAlgorithm):
                 1.0 / (21.0 * (n_dim ** 2))
             ),
             weights=weights,
-            sigma_max=ensure_jnp(_SIGMA_MAX_X64 if jax.config.jax_enable_x64 else _SIGMA_MAX_X32),
+            sigma_max=sigma_max,
         )
 
         # evolution path (state)
