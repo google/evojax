@@ -1,7 +1,7 @@
 import sys
 
 import logging
-from typing import Union
+from typing import Union, Optional
 import numpy as np
 import jax
 import jax.numpy as jnp
@@ -22,6 +22,8 @@ class iAMaLGaM(NEAlgorithm):
         pop_size: int,
         elite_ratio: float = 0.35,
         full_covariance: bool = False,
+        eta_sigma: Optional[float] = None,
+        eta_shift: Optional[float] = None,
         init_stdev: float = 0.01,
         decay_stdev: float = 0.999,
         limit_stdev: float = 0.001,
@@ -36,6 +38,8 @@ class iAMaLGaM(NEAlgorithm):
             pop_size - Population size.
             elite_ratio - Population elite fraction used for mean update.
             full_covariance - Whether to estimate full covariance or only diag.
+            eta_sigma - Lrate for covariance (use default if not provided).
+            eta_shift - Lrate for mean shift (use default if not provided).
             init_stdev - Initial scale of Gaussian perturbation.
             decay_stdev - Multiplicative scale decay between tell iterations.
             limit_stdev - Smallest scale (clipping limit).
@@ -72,7 +76,7 @@ class iAMaLGaM(NEAlgorithm):
         self.pop_size = abs(pop_size)
         self.rand_key = jax.random.PRNGKey(seed=seed)
 
-        # Instantiate evosax's iAMaLGaM strategy
+        # Instantiate evosax's iAMaLGaM - choice between full cov & diagonal
         if full_covariance:
             self.es = evosax.Full_iAMaLGaM(
                 popsize=pop_size, num_dims=param_size, elite_ratio=elite_ratio
@@ -90,6 +94,12 @@ class iAMaLGaM(NEAlgorithm):
             init_min=0.0,
             init_max=0.0,
         )
+
+        # Only replace learning rates for mean shift and sigma if provided!
+        if eta_shift is not None:
+            self.es_params = self.es_params.replace(eta_shift=eta_shift)
+        if eta_sigma is not None:
+            self.es_params = self.es_params.replace(eta_sigma=eta_sigma)
 
         # Initialize the evolution strategy state
         self.rand_key, init_key = jax.random.split(self.rand_key)
