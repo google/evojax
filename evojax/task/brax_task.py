@@ -15,6 +15,7 @@
 import sys
 from typing import Optional
 from typing import Tuple
+from typing import Union
 
 import jax
 import jax.numpy as jnp
@@ -37,7 +38,19 @@ except ModuleNotFoundError:
 class State(TaskState):
     state: BraxState
     obs: jnp.ndarray
+
+
+@dataclass
+class ExtendedState(State):
+    # Add states for map elites here.
     feet_contact: jnp.ndarray
+
+
+def get_state_dataclass(**states):
+    if 'feet_contact' in states:
+        return ExtendedState(**states)
+    else:
+        return State(**states)
 
 
 class BraxTask(VectorizedTask):
@@ -67,32 +80,48 @@ class BraxTask(VectorizedTask):
             ).sum(axis=-1) > 0
             return has_contacts[2::2].astype(jnp.int32)
 
+        def set_feet_contact_points():
+            # TODO: Got values through trail and error, need to verify if actually correct.
+            contact_point_mapping = {"ant": 4,
+                                     "halfcheetah": 3,
+                                     "humanoid": 5,
+                                     "fetch": 6}
+            return contact_point_mapping[env_name]
+
         def reset_fn(key):
             state = brax_env.reset(key)
-            state = State(state=state, obs=state.obs,
-                          feet_contact=jnp.zeros(4, dtype=jnp.int32))
             if bd_extractor is not None:
+                state = get_state_dataclass(state=state, obs=state.obs,
+                                            feet_contact=jnp.zeros(set_feet_contact_points(), dtype=jnp.int32))
                 state = bd_extractor.init_extended_state(state)
+            else:
+                state = get_state_dataclass(state=state, obs=state.obs)
             return state
+
         self._reset_fn = jax.jit(jax.vmap(reset_fn))
 
         def step_fn(state, action):
-            feet_contact = detect_feet_contact(state.state, action)
-            brax_state = brax_env.step(state.state, action)
-            state = state.replace(
-                state=brax_state, obs=brax_state.obs, feet_contact=feet_contact)
             if bd_extractor is not None:
+                feet_contact = detect_feet_contact(state.state, action)
+                brax_state = brax_env.step(state.state, action)
+                state = state.replace(
+                    state=brax_state, obs=brax_state.obs, feet_contact=feet_contact)
                 state = bd_extractor.update(
                     state, action, brax_state.reward, brax_state.done)
+            else:
+                brax_state = brax_env.step(state.state, action)
+                state = state.replace(
+                    state=brax_state, obs=brax_state.obs)
             return state, brax_state.reward, brax_state.done
+
         self._step_fn = jax.jit(jax.vmap(step_fn))
 
-    def reset(self, key: jnp.ndarray) -> State:
+    def reset(self, key: jnp.ndarray) -> Union[State, ExtendedState]:
         return self._reset_fn(key)
 
     def step(self,
-             state: State,
-             action: jnp.ndarray) -> Tuple[State, jnp.ndarray, jnp.ndarray]:
+             state: Union[State, ExtendedState],
+             action: jnp.ndarray) -> Tuple[Union[State, ExtendedState], jnp.ndarray, jnp.ndarray]:
         return self._step_fn(state, action)
 
 
@@ -112,7 +141,7 @@ class AntBDExtractor(BDExtractor):
             ('step_cnt', jnp.int32),
             ('valid_mask', jnp.int32),
         ]
-        super(AntBDExtractor, self).__init__(bd_spec, bd_state_spec, State)
+        super(AntBDExtractor, self).__init__(bd_spec, bd_state_spec, ExtendedState)
         self._logger = logger
 
     def init_state(self, extended_task_state):
@@ -128,15 +157,15 @@ class AntBDExtractor(BDExtractor):
                 extended_task_state.valid_mask * (1 - done)).astype(jnp.int32)
         return extended_task_state.replace(
             feet_contact_times=(
-                extended_task_state.feet_contact_times +
-                extended_task_state.feet_contact * valid_mask),
+                    extended_task_state.feet_contact_times +
+                    extended_task_state.feet_contact * valid_mask),
             step_cnt=extended_task_state.step_cnt + valid_mask,
             valid_mask=valid_mask)
 
     def summarize(self, extended_task_state):
         feet_contact_ratio = (
-            extended_task_state.feet_contact_times /
-            extended_task_state.step_cnt[..., None]).mean(axis=1)
+                extended_task_state.feet_contact_times /
+                extended_task_state.step_cnt[..., None]).mean(axis=1)
         bds = {bd[0]: (feet_contact_ratio[:, i] * bd[1]).astype(jnp.int32)
                for i, bd in enumerate(self.bd_spec)}
         return extended_task_state.replace(**bds)
