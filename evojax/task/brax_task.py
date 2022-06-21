@@ -41,14 +41,16 @@ class State(TaskState):
 
 
 @dataclass
-class ExtendedState(State):
-    # Add states for map elites here.
+class BDExtractorState(TaskState):
+    # Add feet_contact state for map elites here.
+    state: BraxState
+    obs: jnp.ndarray
     feet_contact: jnp.ndarray
 
 
 def get_state_dataclass(**states):
     if 'feet_contact' in states:
-        return ExtendedState(**states)
+        return BDExtractorState(**states)
     else:
         return State(**states)
 
@@ -116,12 +118,12 @@ class BraxTask(VectorizedTask):
 
         self._step_fn = jax.jit(jax.vmap(step_fn))
 
-    def reset(self, key: jnp.ndarray) -> Union[State, ExtendedState]:
+    def reset(self, key: jnp.ndarray) -> Union[State, BDExtractorState]:
         return self._reset_fn(key)
 
     def step(self,
-             state: Union[State, ExtendedState],
-             action: jnp.ndarray) -> Tuple[Union[State, ExtendedState], jnp.ndarray, jnp.ndarray]:
+             state: Union[State, BDExtractorState],
+             action: jnp.ndarray) -> Tuple[Union[State, BDExtractorState], jnp.ndarray, jnp.ndarray]:
         return self._step_fn(state, action)
 
 
@@ -141,7 +143,7 @@ class AntBDExtractor(BDExtractor):
             ('step_cnt', jnp.int32),
             ('valid_mask', jnp.int32),
         ]
-        super(AntBDExtractor, self).__init__(bd_spec, bd_state_spec, ExtendedState)
+        super(AntBDExtractor, self).__init__(bd_spec, bd_state_spec, BDExtractorState)
         self._logger = logger
 
     def init_state(self, extended_task_state):
