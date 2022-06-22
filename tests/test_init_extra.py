@@ -66,3 +66,11 @@ class TestAlgo:
                 from evojax.algo import ARS
                 _ = ARS(pop_size=16, param_size=16)
                 assert True
+
+        def test_iamalgam(self):
+            import sys
+            if sys.version_info.major == 3 and sys.version_info.minor >= 7:
+                # python>=3.7, required by the optional evosax
+                from evojax.algo import iAMaLGaM
+                _ = iAMaLGaM(pop_size=16, param_size=16)
+                assert True

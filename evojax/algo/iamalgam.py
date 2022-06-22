@@ -52,7 +52,7 @@ class iAMaLGaM(NEAlgorithm):
 
         if sys.version_info.minor < 7:
             print(
-                "evosax, which is needed by Augmented Random Search, requires"
+                "evosax, which is needed by iAMaLGaM, requires"
                 " python>=3.7"
             )
             print("  please consider upgrading your Python version.")
@@ -61,7 +61,7 @@ class iAMaLGaM(NEAlgorithm):
         try:
             import evosax
         except ModuleNotFoundError:
-            print("You need to install evosax for its Augmented Random Search:")
+            print("You need to install evosax for its iAMaLGaM:")
             print("  pip install evosax")
             sys.exit(1)
 
