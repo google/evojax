@@ -1,0 +1,20 @@
+es_name: "iAMaLGaM"
+problem_type: "mnist"
+normalize: false
+es_config:
+  full_covariance: true
+  elite_ratio: 0.35
+  pop_size: 100
+  init_stdev: 0.0
+  decay_stdev: 0.999
+  limit_stdev: 0.0
+hidden_size: 100
+batch_size: 1024
+max_iter: 2000
+test_interval: 500
+log_interval: 100
+num_tests: 1
+n_repeats: 1
+seed: 42
+gpu_id: [0]
+debug: false
