@@ -376,8 +376,9 @@ class SimManager(object):
             scores = jnp.mean(scores.ravel().reshape((-1, n_repeats)), axis=-1)
 
         # Note: QD methods do not support ma_training for now.
-        final_states = jax.tree_map(
-            lambda x: x.reshape((scores.shape[0], n_repeats, *x.shape[1:])),
-            final_states)
+        if not self._ma_training:
+            final_states = jax.tree_map(
+                lambda x: x.reshape((scores.shape[0], n_repeats, *x.shape[1:])),
+                final_states)
 
         return scores, self._bd_summarize_fn(final_states)

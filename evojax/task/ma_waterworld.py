@@ -265,7 +265,7 @@ def get_obs(agent: BubbleStatus,
         )
         ix_walls = jnp.argmin(dist_to_walls)
         # Check for intersections with the items and agents.
-        items_and_agents = tree_util.tree_multimap(
+        items_and_agents = tree_util.tree_map(
             lambda x, y: jnp.concatenate([x, y], axis=0),
             items, agents)
         n_items = len(items_and_agents.valid)
