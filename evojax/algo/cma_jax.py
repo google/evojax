@@ -169,8 +169,7 @@ class CMA_ES_JAX(NEAlgorithm):
             * (mu_eff - 2 + 1 / mu_eff)
             / ((n_dim + 2) ** 2 + alpha_cov * mu_eff / 2),
         )
-        assert c1 <= 1 - cmu, "invalid learning rate for the rank-one update"
-        assert cmu <= 1 - c1, "invalid learning rate for the rank-μ update"
+        assert c1 + cmu <= 1, "invalid learning rate for the rank-one and/or rank-μ update"
 
         min_alpha = min(
             1 + c1 / cmu,  # eq.50
