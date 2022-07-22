@@ -1,7 +1,7 @@
 import sys
 
 import logging
-from typing import Union
+from typing import Union, Optional
 import numpy as np
 import jax
 import jax.numpy as jnp
@@ -10,29 +10,20 @@ from evojax.algo.base import NEAlgorithm
 from evojax.util import create_logger
 
 
-class OpenES(NEAlgorithm):
-    """A wrapper around evosax's OpenAI Evolution Strategies.
-    Implementation:
-    https://github.com/RobertTLange/evosax/blob/main/evosax/strategies/open_es.py
-    Reference: Salimans et al. (2017) - https://arxiv.org/pdf/1703.03864.pdf
-
-    NOTE: More details on the optimizer configuration can be found here
-    https://github.com/RobertTLange/evosax/blob/main/evosax/utils/optimizer.py
+class iAMaLGaM(NEAlgorithm):
+    """A wrapper around evosax's iAMaLGaM.
+    Implementation: https://github.com/RobertTLange/evosax/blob/main/evosax/strategies/indep_iamalgam.py
+    Reference: Bosman et al. (2013) - https://tinyurl.com/y9fcccx2
     """
 
     def __init__(
         self,
         param_size: int,
         pop_size: int,
-        optimizer: str = "adam",
-        optimizer_config: dict = {
-            "lrate_init": 0.01,  # Initial learning rate
-            "lrate_decay": 0.999,  # Multiplicative decay factor
-            "lrate_limit": 0.001,  # Smallest possible lrate
-            "beta_1": 0.99,  # beta_1 Adam
-            "beta_2": 0.999,  # beta_2 Adam
-            "eps": 1e-8,  # eps constant Adam denominator
-        },
+        elite_ratio: float = 0.35,
+        full_covariance: bool = False,
+        eta_sigma: Optional[float] = None,
+        eta_shift: Optional[float] = None,
         init_stdev: float = 0.01,
         decay_stdev: float = 0.999,
         limit_stdev: float = 0.001,
@@ -45,9 +36,10 @@ class OpenES(NEAlgorithm):
         Args:
             param_size - Parameter size.
             pop_size - Population size.
-            elite_ratio - Population elite fraction used for gradient estimate.
-            optimizer - Optimizer name ("sgd", "adam", "rmsprop", "clipup").
-            optimizer_config - Configuration of optimizer hyperparameters.
+            elite_ratio - Population elite fraction used for mean update.
+            full_covariance - Whether to estimate full covariance or only diag.
+            eta_sigma - Lrate for covariance (use default if not provided).
+            eta_shift - Lrate for mean shift (use default if not provided).
             init_stdev - Initial scale of Gaussian perturbation.
             decay_stdev - Multiplicative scale decay between tell iterations.
             limit_stdev - Smallest scale (clipping limit).
@@ -59,19 +51,24 @@ class OpenES(NEAlgorithm):
         # Delayed importing of evosax
 
         if sys.version_info.minor < 7:
-            print("evosax, which is needed byOpenES, requires python>=3.7")
+            print(
+                "evosax, which is needed by iAMaLGaM, requires"
+                " python>=3.7"
+            )
             print("  please consider upgrading your Python version.")
             sys.exit(1)
 
         try:
             import evosax
         except ModuleNotFoundError:
-            print("You need to install evosax for its OpenES implementation:")
+            print("You need to install evosax for its iAMaLGaM:")
             print("  pip install evosax")
             sys.exit(1)
 
+        # Set up object variables.
+
         if logger is None:
-            self.logger = create_logger(name="OpenES")
+            self.logger = create_logger(name="iAMaLGaM")
         else:
             self.logger = logger
 
@@ -79,14 +76,16 @@ class OpenES(NEAlgorithm):
         self.pop_size = abs(pop_size)
         self.rand_key = jax.random.PRNGKey(seed=seed)
 
-        # Instantiate evosax's Open ES strategy
-        self.es = evosax.OpenES(
-            popsize=pop_size,
-            num_dims=param_size,
-            opt_name=optimizer,
-        )
+        # Instantiate evosax's iAMaLGaM - choice between full cov & diagonal
+        if full_covariance:
+            self.es = evosax.Full_iAMaLGaM(
+                popsize=pop_size, num_dims=param_size, elite_ratio=elite_ratio
+            )
+        else:
+            self.es = evosax.Indep_iAMaLGaM(
+                popsize=pop_size, num_dims=param_size, elite_ratio=elite_ratio
+            )
 
-        # Set hyperparameters according to provided inputs
         # Set hyperparameters according to provided inputs
         self.es_params = self.es.default_params.replace(
             sigma_init=init_stdev,
@@ -96,10 +95,11 @@ class OpenES(NEAlgorithm):
             init_max=0.0,
         )
 
-        # Update optimizer-specific parameters of Adam
-        self.es_params = self.es_params.replace(
-            opt_params=self.es_params.opt_params.replace(**optimizer_config)
-        )
+        # Only replace learning rates for mean shift and sigma if provided!
+        if eta_shift is not None:
+            self.es_params = self.es_params.replace(eta_shift=eta_shift)
+        if eta_sigma is not None:
+            self.es_params = self.es_params.replace(eta_sigma=eta_sigma)
 
         # Initialize the evolution strategy state
         self.rand_key, init_key = jax.random.split(self.rand_key)
@@ -107,9 +107,7 @@ class OpenES(NEAlgorithm):
 
         # By default evojax assumes maximization of fitness score!
         # Evosax, on the other hand, minimizes!
-        self.fit_shaper = evosax.FitnessShaper(
-            centered_rank=True, z_score=True, w_decay=w_decay, maximize=True
-        )
+        self.fit_shaper = evosax.FitnessShaper(w_decay=w_decay, maximize=True)
 
     def ask(self) -> jnp.ndarray:
         self.rand_key, ask_key = jax.random.split(self.rand_key)

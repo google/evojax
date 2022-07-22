@@ -1,0 +1,19 @@
+es_name: "iAMaLGaM"
+problem_type: "waterworld_ma"
+normalize: false
+es_config:
+  full_covariance: false
+  elite_ratio: 0.35
+  pop_size: 16
+  init_stdev: 0.0
+  decay_stdev: 0.999
+  limit_stdev: 0.0
+hidden_size: 100
+num_tests: 16
+n_repeats: 64
+max_iter: 2000
+test_interval: 100
+log_interval: 10
+seed: 42
+gpu_id: 0
+debug: false

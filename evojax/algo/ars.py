@@ -93,14 +93,18 @@ class ARS(NEAlgorithm):
         )
 
         # Set hyperparameters according to provided inputs
-        self.es_params = self.es.default_params
-        for k, v in optimizer_config.items():
-            self.es_params[k] = v
-        self.es_params["sigma_init"] = init_stdev
-        self.es_params["sigma_decay"] = decay_stdev
-        self.es_params["sigma_limit"] = limit_stdev
-        self.es_params["init_min"] = 0.0
-        self.es_params["init_max"] = 0.0
+        self.es_params = self.es.default_params.replace(
+            sigma_init=init_stdev,
+            sigma_decay=decay_stdev,
+            sigma_limit=limit_stdev,
+            init_min=0.0,
+            init_max=0.0,
+        )
+
+        # Update optimizer-specific parameters of Adam
+        self.es_params = self.es_params.replace(
+            opt_params=self.es_params.opt_params.replace(**optimizer_config)
+        )
 
         # Initialize the evolution strategy state
         self.rand_key, init_key = jax.random.split(self.rand_key)
@@ -126,9 +130,11 @@ class ARS(NEAlgorithm):
 
     @property
     def best_params(self) -> jnp.ndarray:
-        return jnp.array(self.es_state["mean"], copy=True)
+        return jnp.array(self.es_state.mean, copy=True)
 
     @best_params.setter
     def best_params(self, params: Union[np.ndarray, jnp.ndarray]) -> None:
-        self.es_state["best_member"] = jnp.array(params, copy=True)
-        self.es_state["mean"] = jnp.array(params, copy=True)
+        self.es_state = self.es_state.replace(
+            best_member=jnp.array(params, copy=True),
+            mean=jnp.array(params, copy=True),
+        )

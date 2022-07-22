@@ -4,7 +4,7 @@ EvoJAX is a scalable, general purpose, hardware-accelerated [neuroevolution](htt
 
 This repo also includes several extensible examples of EvoJAX for a wide range of tasks, including supervised learning, reinforcement learning and generative art, demonstrating how EvoJAX can run your evolution experiments within minutes on a single accelerator, compared to hours or days when using CPUs.
 
-EvoJAX paper: https://arxiv.org/abs/2202.05008
+EvoJAX paper: https://arxiv.org/abs/2202.05008 (presentation [video](https://youtu.be/TMkft3wWpb8))
 
 Please use this BibTeX if you wish to cite this project in your publications:
 

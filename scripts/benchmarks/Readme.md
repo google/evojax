@@ -63,6 +63,17 @@ This will sequentially execute 25 ARS-MNIST evolution runs for a grid of differe
 
 |   | Benchmarks | Parameters | Results (Avg) |
 |---|---|---|---|
+CartPole (easy) | 	900 (max_iter=1000)|[Link](configs/iAMaLGaM/cartpole_easy.yaml)| 919.2294 |
+CartPole (hard)	| 600 (max_iter=1000)|[Link](configs/iAMaLGaM/cartpole_hard.yaml)| 620.8969 |
+Waterworld	| 6 (max_iter=1000)	 | [Link](configs/iAMaLGaM/waterworld.yaml)| 9.53 |
+Waterworld (MA)	| 2 (max_iter=2000)	| [Link](configs/iAMaLGaM/waterworld_ma.yaml) | - |
+MNIST	| 0.90 (max_iter=2000)	| [Link](configs/iAMaLGaM/mnist.yaml)| - |
+Brax Ant |	3000 (max_iter=1200) |[Link](configs/iAMaLGaM/brax_ant.yaml)| - |
+
+### CMA-ES
+
+|   | Benchmarks | Parameters | Results (Avg) |
+|---|---|---|---|
 CartPole (easy) | 	900 (max_iter=1000)|[Link](configs/CMA_ES/cartpole_easy.yaml)| 927.3208 |
 CartPole (hard)	| 600 (max_iter=1000)|[Link](configs/CMA_ES/cartpole_hard.yaml)| 625.9829 |
 MNIST	| 0.90 (max_iter=2000)	| [Link](configs/CMA_ES/mnist.yaml)| 0.9581 |
