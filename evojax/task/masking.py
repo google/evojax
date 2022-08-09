@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-import numpy as np
 from typing import Tuple
 
 import jax
@@ -24,7 +22,7 @@ from flax.struct import dataclass
 from evojax.task.base import VectorizedTask
 from evojax.task.base import TaskState
 
-from evojax.mnist_tests.code.datasets import MnistDataset, digit, fashion, kuzushiji
+from evojax.datasets import MnistDataset, digit, fashion, kuzushiji
 import torch.nn.utils.prune as prune
 from torchvision import transforms
 
