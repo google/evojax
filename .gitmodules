@@ -1,0 +1,3 @@
+[submodule "evojax/mnist_tests"]
+	path = evojax/mnist_tests
+	url = https://github.com/bwoodyear/MnistSimpleCNN
