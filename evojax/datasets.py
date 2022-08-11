@@ -27,7 +27,7 @@ def read_data_files(dataset_name, split):
 
     folder_name = FOLDER_NAMES[dataset_name]
 
-    folder_path = os.path.join(dirname, 'mnist_tests', 'data', folder_name, 'raw')
+    folder_path = os.path.join(dirname, 'evojax', 'data', folder_name, 'raw')
     file_prefix = 't10k' if split == 'test' else split
 
     image_file = f'{file_prefix}-images-idx3-ubyte'
