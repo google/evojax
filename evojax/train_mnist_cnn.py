@@ -173,7 +173,12 @@ if __name__ == "main":
 
     for dataset_name in [digit, fashion, kuzushiji]:
         x_train, y_train = read_data_files(dataset_name, 'train')
+        x_array_train.append(x_train)
+        y_array_train.append(y_train)
+
         x_test, y_test = read_data_files(dataset_name, 'test')
+        x_array_test.append(x_test)
+        y_array_test.append(y_test)
 
     train_ds['image'] = jnp.float32(np.concatenate(x_array_train)) / 255.
     test_ds['image'] = jnp.float32(np.concatenate(x_array_test)) / 255.
