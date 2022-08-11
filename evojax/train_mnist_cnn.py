@@ -7,7 +7,7 @@ from jax import random
 from flax import linen as nn
 from flax.training import train_state
 
-from evojax.datasets import MnistDataset, digit, fashion, kuzushiji
+from evojax.datasets import read_data_files, digit, fashion, kuzushiji
 
 import optax
 
@@ -163,8 +163,23 @@ if __name__ == "main":
     num_epochs = 10
     batch_size = 32
 
-    train_ds = MnistDataset(training=True, transform=None, dataset_names=[digit, fashion, kuzushiji])
-    test_ds = MnistDataset(training=False, transform=None, dataset_names=[digit, fashion, kuzushiji])
+    # train_ds = MnistDataset(training=True, transform=None, dataset_names=[digit, fashion, kuzushiji])
+    # test_ds = MnistDataset(training=False, transform=None, dataset_names=[digit, fashion, kuzushiji])
+
+    train_ds = {}
+    test_ds = {}
+    x_array_train, y_array_train = [], []
+    x_array_test, y_array_test = [], []
+
+    for dataset_name in [digit, fashion, kuzushiji]:
+        x_train, y_train = read_data_files(dataset_name, 'train')
+        x_test, y_test = read_data_files(dataset_name, 'test')
+
+    train_ds['image'] = jnp.float32(np.concatenate(x_array_train)) / 255.
+    test_ds['image'] = jnp.float32(np.concatenate(x_array_test)) / 255.
+
+    train_ds['label'] = jnp.int16(np.concatenate(y_array_train))
+    test_ds['label'] = jnp.int16(np.concatenate(y_array_test))
 
     for epoch in range(1, num_epochs + 1):
         # Use a separate PRNG key to permute image data during shuffling

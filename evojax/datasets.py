@@ -1,9 +1,9 @@
 import os
-import torch
+# import torch
 import numpy as np
-from PIL import Image
-from sklearn.utils import shuffle
-from torchvision import transforms
+# from PIL import Image
+# from sklearn.utils import shuffle
+# from torchvision import transforms
 
 dirname = os.path.dirname(__file__)
 
@@ -48,46 +48,46 @@ def read_data_files(dataset_name, split):
     return xs, np.stack([ys, ys_with_label], axis=1)
 
 
-class MnistDataset(torch.utils.data.Dataset):
-    def __init__(self, training=True, transform=None, dataset_names=()):
-        """
-        Create the class for MNIST datasets.
-
-        :param training: bool, whether this is the training or test set
-        :param transform: torchvision transforms, what transformations to apply to the images
-        :param dataset_names: tuple of the dataset names to include
-        """
-        split = 'train' if training else 'test'
-
-        x_dataset_list = []
-        y_dataset_list = []
-
-        for name in dataset_names:
-            x, y = read_data_files(name, split)
-            x_dataset_list.append(x)
-            y_dataset_list.append(y)
-        if not x_dataset_list or not y_dataset_list:
-            raise ValueError('No datasets have been selected.')
-
-        # Join datasets together
-        xs = np.concatenate(x_dataset_list, axis=0)
-        ys = np.concatenate(y_dataset_list, axis=0)
-
-        # Shuffle the image and label arrays, keep the same seed for now
-        xs, ys = shuffle(xs, ys, random_state=0)
-
-        self.x_data = xs
-        self.y_data = ys
-        self.transform = transform
-
-    def __len__(self):
-        return len(self.x_data)
-
-    def __getitem__(self, idx):
-        x = Image.fromarray(self.x_data[idx].reshape(28, 28))
-        y = torch.tensor(np.array(self.y_data[idx]))
-        if self.transform:
-            x = self.transform(x)
-        x = transforms.ToTensor()(np.array(x)/255)
-        return x, y
+# class MnistDataset(torch.utils.data.Dataset):
+#     def __init__(self, training=True, transform=None, dataset_names=()):
+#         """
+#         Create the class for MNIST datasets.
+#
+#         :param training: bool, whether this is the training or test set
+#         :param transform: torchvision transforms, what transformations to apply to the images
+#         :param dataset_names: tuple of the dataset names to include
+#         """
+#         split = 'train' if training else 'test'
+#
+#         x_dataset_list = []
+#         y_dataset_list = []
+#
+#         for name in dataset_names:
+#             x, y = read_data_files(name, split)
+#             x_dataset_list.append(x)
+#             y_dataset_list.append(y)
+#         if not x_dataset_list or not y_dataset_list:
+#             raise ValueError('No datasets have been selected.')
+#
+#         # Join datasets together
+#         xs = np.concatenate(x_dataset_list, axis=0)
+#         ys = np.concatenate(y_dataset_list, axis=0)
+#
+#         # Shuffle the image and label arrays, keep the same seed for now
+#         xs, ys = shuffle(xs, ys, random_state=0)
+#
+#         self.x_data = xs
+#         self.y_data = ys
+#         self.transform = transform
+#
+#     def __len__(self):
+#         return len(self.x_data)
+#
+#     def __getitem__(self, idx):
+#         x = Image.fromarray(self.x_data[idx].reshape(28, 28))
+#         y = torch.tensor(np.array(self.y_data[idx]))
+#         if self.transform:
+#             x = self.transform(x)
+#         x = transforms.ToTensor()(np.array(x)/255)
+#         return x, y
 
