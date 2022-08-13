@@ -155,8 +155,19 @@ def train_epoch(state, train_ds, batch_size, epoch, rng):
     return state
 
 
-def eval_model(params, test_ds):
-    metrics = eval_step(params, test_ds)
+def eval_model(params, test_ds, batch_size):
+    test_ds_size = len(test_ds['image'])
+    steps_per_epoch = test_ds_size // batch_size
+
+    perms = jax.random.permutation(rng, test_ds_size)
+    perms = perms[:steps_per_epoch * batch_size]  # skip incomplete batch
+    perms = perms.reshape((steps_per_epoch, batch_size))
+    batch_metrics = []
+    for perm in perms:
+        batch = {k: v[perm, ...] for k, v in test_ds.items()}
+        metrics = eval_step(params, batch)
+        batch_metrics.append(metrics)
+
     metrics = jax.device_get(metrics)
     summary = jax.tree_util.tree_map(lambda x: x.item(), metrics)
     return summary['loss'], summary['accuracy']
@@ -173,13 +184,13 @@ if __name__ == '__main__':
     del init_rng  # Must not be used anymore.
 
     num_epochs = 10
-    batch_size = 128
+    global_batch_size = 128
 
     # train_ds = MnistDataset(training=True, transform=None, dataset_names=[digit, fashion, kuzushiji])
     # test_ds = MnistDataset(training=False, transform=None, dataset_names=[digit, fashion, kuzushiji])
 
-    train_ds = {}
-    test_ds = {}
+    train_dataset = {}
+    test_dataset = {}
     x_array_train, y_array_train = [], []
     x_array_test, y_array_test = [], []
 
@@ -192,20 +203,20 @@ if __name__ == '__main__':
         x_array_test.append(x_test)
         y_array_test.append(y_test)
 
-    train_ds['image'] = jnp.float32(np.concatenate(x_array_train)) / 255.
-    test_ds['image'] = jnp.float32(np.concatenate(x_array_test)) / 255.
+    train_dataset['image'] = jnp.float32(np.concatenate(x_array_train)) / 255.
+    test_dataset['image'] = jnp.float32(np.concatenate(x_array_test)) / 255.
 
     # Only use the class label, not dataset label here
-    train_ds['label'] = jnp.int16(np.concatenate(y_array_train)[:, 0])
-    test_ds['label'] = jnp.int16(np.concatenate(y_array_test)[:, 0])
+    train_dataset['label'] = jnp.int16(np.concatenate(y_array_train)[:, 0])
+    test_dataset['label'] = jnp.int16(np.concatenate(y_array_test)[:, 0])
 
     for epoch in range(1, num_epochs + 1):
         # Use a separate PRNG key to permute image data during shuffling
         rng, input_rng = jax.random.split(rng)
         # Run an optimization step over a training batch
-        state = train_epoch(state, train_ds, batch_size, epoch, input_rng)
+        state = train_epoch(state, train_dataset, global_batch_size, epoch, input_rng)
         # Evaluate on the test set after each training epoch
-        test_loss, test_accuracy = eval_model(state.params, test_ds)
+        test_loss, test_accuracy = eval_model(state.params, test_dataset, global_batch_size)
         print(' test epoch: %d, loss: %.2f, accuracy: %.2f' % (
             epoch, test_loss, test_accuracy * 100))
 
