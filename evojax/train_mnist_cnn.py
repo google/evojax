@@ -173,7 +173,7 @@ if __name__ == '__main__':
     del init_rng  # Must not be used anymore.
 
     num_epochs = 10
-    batch_size = 1024
+    batch_size = 128
 
     # train_ds = MnistDataset(training=True, transform=None, dataset_names=[digit, fashion, kuzushiji])
     # test_ds = MnistDataset(training=False, transform=None, dataset_names=[digit, fashion, kuzushiji])
