@@ -14,7 +14,7 @@ import optax
 
 class CNN(nn.Module):
     """CNN for MNIST."""
-    train: bool
+    # train: bool
 
     def setup(self):
         self.conv1 = nn.Conv(features=32, kernel_size=(3, 3), padding='SAME', name='conv1')
