@@ -63,19 +63,27 @@ class CNN(nn.Module):
         # x = nn.relu(self.bn9(self.conv9(x)))
         # x = nn.relu(self.bn10(self.conv10(x)))
         #
-        x = nn.relu(self.conv1(x))
-        x = nn.relu(self.conv2(x))
-        x = nn.relu(self.conv3(x))
-        x = nn.relu(self.conv4(x))
-        x = nn.relu(self.conv5(x))
-        x = nn.relu(self.conv6(x))
-        x = nn.relu(self.conv7(x))
-        x = nn.relu(self.conv8(x))
-        x = nn.relu(self.conv9(x))
-        x = nn.relu(self.conv10(x))
+        # x = nn.relu(self.conv1(x))
+        # x = nn.relu(self.conv2(x))
+        # x = nn.relu(self.conv3(x))
+        # x = nn.relu(self.conv4(x))
+        # x = nn.relu(self.conv5(x))
+        # x = nn.relu(self.conv6(x))
+        # x = nn.relu(self.conv7(x))
+        # x = nn.relu(self.conv8(x))
+        # x = nn.relu(self.conv9(x))
+        # x = nn.relu(self.conv10(x))
 
         # for i in range(1, 11):
         #     x = nn.relu(getattr(self, f'bn{i}')(getattr(self, f'conv{i}')(x)))
+
+        # Use the example MNIST CNN
+        x = nn.Conv(features=8, kernel_size=(5, 5), padding='SAME')(x)
+        x = nn.relu(x)
+        x = nn.max_pool(x, window_shape=(2, 2), strides=(2, 2))
+        x = nn.Conv(features=16, kernel_size=(5, 5), padding='SAME')(x)
+        x = nn.relu(x)
+        x = nn.max_pool(x, window_shape=(2, 2), strides=(2, 2))
 
         x = x.reshape((x.shape[0], -1))  # flatten
 
@@ -103,7 +111,7 @@ def create_train_state(rng, learning_rate, momentum):
     """Creates initial `TrainState`."""
     cnn = CNN()
     params = cnn.init(rng, jnp.ones([1, 28, 28, 1]))['params']
-    tx = optax.sgd(learning_rate, momentum)
+    tx = optax.adam(learning_rate)
     return train_state.TrainState.create(
       apply_fn=cnn.apply, params=params, tx=tx)
 
