@@ -195,8 +195,9 @@ if __name__ == '__main__':
     train_ds['image'] = jnp.float32(np.concatenate(x_array_train)) / 255.
     test_ds['image'] = jnp.float32(np.concatenate(x_array_test)) / 255.
 
-    train_ds['label'] = jnp.int16(np.concatenate(y_array_train))
-    test_ds['label'] = jnp.int16(np.concatenate(y_array_test))
+    # Only use the class label, not dataset label here
+    train_ds['label'] = jnp.int16(np.concatenate(y_array_train)[:, 0])
+    test_ds['label'] = jnp.int16(np.concatenate(y_array_test)[:, 0])
 
     for epoch in range(1, num_epochs + 1):
         # Use a separate PRNG key to permute image data during shuffling
