@@ -150,7 +150,7 @@ def eval_model(params, test_ds):
     return summary['loss'], summary['accuracy']
 
 
-if __name__ == "main":
+if __name__ == '__main__':
     rng = jax.random.PRNGKey(0)
     rng, init_rng = jax.random.split(rng)
 
