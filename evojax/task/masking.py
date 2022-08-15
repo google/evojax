@@ -22,15 +22,14 @@ from flax.struct import dataclass
 from evojax.task.base import VectorizedTask
 from evojax.task.base import TaskState
 
-from evojax.datasets import MnistDataset, digit, fashion, kuzushiji
-import torch.nn.utils.prune as prune
-from torchvision import transforms
+from evojax.datasets import read_data_files, digit, fashion, kuzushiji
 
 
 @dataclass
 class State(TaskState):
     obs: jnp.ndarray
-    labels: jnp.ndarray
+    class_labels: jnp.ndarray
+    dataset_labels: jnp.ndarray
 
 
 def sample_batch(key: jnp.ndarray,
@@ -67,31 +66,27 @@ class Masking(VectorizedTask):
         self.obs_shape = tuple([1, ])
         self.act_shape = tuple([10, ])
 
-        # Delayed importing of torchvision
+        train_dataset = {}
+        test_dataset = {}
+        x_array_train, y_array_train = [], []
+        x_array_test, y_array_test = [], []
 
-        # try:
-        #     from torchvision import datasets
-        # except ModuleNotFoundError:
-        #     print('You need to install torchvision for this task.')
-        #     print('  pip install torchvision')
-        #     sys.exit(1)
+        for dataset_name in [digit, fashion, kuzushiji]:
+            x_train, y_train = read_data_files(dataset_name, 'train')
+            x_array_train.append(x_train)
+            y_array_train.append(y_train)
 
-        # dataset = datasets.MNIST('./data', train=not test, download=True)
-        # data = np.expand_dims(dataset.data.numpy() / 255., axis=-1)
-        # labels = dataset.targets.numpy()
+            x_test, y_test = read_data_files(dataset_name, 'test')
+            x_array_test.append(x_test)
+            y_array_test.append(y_test)
 
-        datasets_to_use = [digit, fashion, kuzushiji]
-        if not test:
-            transform = transforms.Compose([
-                transforms.RandomRotation(20, interpolation=transforms.InterpolationMode.NEAREST),
-                transforms.RandomAffine(0, translate=(0.2, 0.2), interpolation=transforms.InterpolationMode.NEAREST)
-            ])
-        else:
-            transform = None
+        train_dataset['image'] = jnp.float32(np.concatenate(x_array_train)) / 255.
+        test_dataset['image'] = jnp.float32(np.concatenate(x_array_test)) / 255.
 
-        pytorch_dataset = MnistDataset(training=not test, transform=transform, dataset_names=datasets_to_use)
-        data = pytorch_dataset.x_data
-        labels = pytorch_dataset.y_data
+        # Only use the class label, not dataset label here
+        train_dataset['label'] = jnp.int16(np.concatenate(y_array_train)[:, 0])
+        test_dataset['label'] = jnp.int16(np.concatenate(y_array_test)[:, 0])
+
 
         def reset_fn(key):
             if test:
@@ -104,11 +99,9 @@ class Masking(VectorizedTask):
 
         def step_fn(state, action):
             if test:
-                try:
-                    mnist_model.linear.weight = mnist_model.linear.weight_orig
-                except AttributeError:
-                    pass
-                prune.custom_from_mask(mnist_model.linear.weight, 'weight', mask=action)
+                params = unfreeze(params)
+                params['bert'] = bert_params
+                params = freeze(params)
 
                 reward = accuracy(action, state.labels)
             else:

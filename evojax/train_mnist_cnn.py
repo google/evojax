@@ -193,7 +193,7 @@ def eval_model(params, test_ds, batch_size):
     return epoch_metrics_np['loss'], epoch_metrics_np['accuracy']
 
 
-if __name__ == '__main__':
+def run_mnist_training(return_model=True):
     rng = jax.random.PRNGKey(0)
     rng, init_rng = jax.random.split(rng)
 
@@ -233,5 +233,11 @@ if __name__ == '__main__':
         state = train_epoch(state, train_dataset, global_batch_size, epoch, input_rng)
         # Evaluate on the test set after each training epoch
         test_loss, test_accuracy = eval_model(state.params, test_dataset, global_batch_size)
-        print(f'test epoch: {epoch}, loss: {test_loss:.2f}, accuracy: {test_accuracy*100:.2f}')
+        print(f'test epoch: {epoch}, loss: {test_loss:.2f}, accuracy: {test_accuracy * 100:.2f}')
 
+    if return_model:
+        return state.params
+
+
+if __name__ == '__main__':
+    run_mnist_training(return_model=False)

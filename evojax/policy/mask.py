@@ -20,9 +20,6 @@ import jax.numpy as jnp
 from jax import random
 
 from flax import linen as nn
-from flax.training import train_state
-
-import optax
 
 from evojax.policy.base import PolicyNetwork
 from evojax.policy.base import PolicyState
@@ -33,12 +30,7 @@ from evojax.util import get_params_format_fn
 
 class Mask(nn.Module):
     """Mask network for MNIST."""
-    def __init__(self, base_model):
-        super(Mask, self).__init__()
-
-        in_features = base_model.linear.in_features
-        out_features = base_model.linear.out_features
-        self.mask_size = in_features * out_features
+    mask_size: int
 
     @nn.compact
     def __call__(self, x, round_output=True):
@@ -56,13 +48,13 @@ class Mask(nn.Module):
 class MaskPolicy(PolicyNetwork):
     """A dense neural network for masking the MNIST classification task."""
 
-    def __init__(self, logger: logging.Logger = None, mnist_model=None):
+    def __init__(self, logger: logging.Logger = None, mask_size=None):
         if logger is None:
-            self._logger = create_logger('ConvNetPolicy')
+            self._logger = create_logger('MaskNetPolicy')
         else:
             self._logger = logger
 
-        model = Mask(mnist_model)
+        model = Mask(mask_size)
         params = model.init(random.PRNGKey(0), jnp.zeros([1, 1]))
         self.num_params, format_params_fn = get_params_format_fn(params)
         self._logger.info(f'Mask.num_params = {self.num_params}')

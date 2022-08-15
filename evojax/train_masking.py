@@ -22,14 +22,14 @@ import os
 import shutil
 
 from evojax import Trainer
-# from evojax.task.mnist import MNIST
 from evojax.task.masking import Masking
-# from evojax.policy.convnet import ConvNetPolicy
 from evojax.policy.mask import MaskPolicy
 from evojax.algo import PGPE
 from evojax import util
 
-from evojax.mnist_tests.code.train import run, digit, fashion, kuzushiji
+from evojax.train_mnist_cnn import run_mnist_training
+
+from evojax.datasets import digit, fashion, kuzushiji
 
 
 def parse_args():
@@ -69,15 +69,9 @@ def main(config):
     logger.info('EvoJAX Masking Tests')
     logger.info('=' * 30)
 
-    mnist_model = run(return_model=True,
-                      epochs=10,
-                      lr=1e-3,
-                      training_type='multi-task',
-                      dataset_order=[digit, fashion, kuzushiji]
-    )
-    mnist_model.eval()
+    cnn_params = run_mnist_training(return_model=True)
 
-    policy = MaskPolicy(logger=logger, mnist_model=mnist_model)
+    policy = MaskPolicy(logger=logger, mask_size=mnist_model)
     train_task = Masking(batch_size=config.batch_size, test=False, mnist_model=mnist_model)
     test_task = Masking(batch_size=config.batch_size, test=True, mnist_model=mnist_model)
     solver = PGPE(
