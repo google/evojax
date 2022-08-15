@@ -17,37 +17,41 @@ class CNN(nn.Module):
     # train: bool
 
     def setup(self):
-        self.conv1 = nn.Conv(features=32, kernel_size=(3, 3), padding='SAME', name='conv1')
-        # self.bn1 = nn.BatchNorm(32, momentum=0.9, use_running_average=True, name='bn1')
+        # self.conv1 = nn.Conv(features=32, kernel_size=(3, 3), padding='SAME', name='conv1')
+        # # self.bn1 = nn.BatchNorm(32, momentum=0.9, use_running_average=True, name='bn1')
+        #
+        # self.conv2 = nn.Conv(features=48, kernel_size=(3, 3), padding='SAME', name='conv2')
+        # # self.bn2 = nn.BatchNorm(48, momentum=0.9, use_running_average=True, name='bn2')
+        #
+        # self.conv3 = nn.Conv(features=64, kernel_size=(3, 3), padding='SAME', name='conv3')
+        # # self.bn3 = nn.BatchNorm(64, momentum=0.9, use_running_average=not self.train, name='bn3')
+        #
+        # self.conv4 = nn.Conv(features=80, kernel_size=(3, 3), padding='SAME', name='conv4')
+        # # self.bn4 = nn.BatchNorm(80, momentum=0.9, use_running_average=not self.train, name='bn4')
+        #
+        # self.conv5 = nn.Conv(features=96, kernel_size=(3, 3), padding='SAME', name='conv5')
+        # # self.bn5 = nn.BatchNorm(96, momentum=0.9, use_running_average=not self.train, name='bn5')
+        #
+        # self.conv6 = nn.Conv(features=112, kernel_size=(3, 3), padding='SAME', name='conv6')
+        # # self.bn6 = nn.BatchNorm(112, momentum=0.9, use_running_average=not self.train, name='bn6')
+        #
+        # self.conv7 = nn.Conv(features=128, kernel_size=(3, 3), padding='SAME', name='conv7')
+        # # self.bn7 = nn.BatchNorm(128, momentum=0.9, use_running_average=not self.train, name='bn7')
+        #
+        # self.conv8 = nn.Conv(features=144, kernel_size=(3, 3), padding='SAME', name='conv8')
+        # # self.bn8 = nn.BatchNorm(144, momentum=0.9, use_running_average=not self.train, name='bn8')
+        #
+        # self.conv9 = nn.Conv(features=160, kernel_size=(3, 3), padding='SAME', name='conv9')
+        # # self.bn9 = nn.BatchNorm(160, momentum=0.9, use_running_average=not self.train, name='bn9')
+        #
+        # self.conv10 = nn.Conv(features=176, kernel_size=(3, 3), padding='SAME', name='conv10')
+        # # self.bn10 = nn.BatchNorm(176, momentum=0.9, use_running_average=not self.train, name='bn10')
+        #
+        # self.linear = nn.Dense(10, name='linear')
 
-        self.conv2 = nn.Conv(features=48, kernel_size=(3, 3), padding='SAME', name='conv2')
-        # self.bn2 = nn.BatchNorm(48, momentum=0.9, use_running_average=True, name='bn2')
-
-        self.conv3 = nn.Conv(features=64, kernel_size=(3, 3), padding='SAME', name='conv3')
-        # self.bn3 = nn.BatchNorm(64, momentum=0.9, use_running_average=not self.train, name='bn3')
-
-        self.conv4 = nn.Conv(features=80, kernel_size=(3, 3), padding='SAME', name='conv4')
-        # self.bn4 = nn.BatchNorm(80, momentum=0.9, use_running_average=not self.train, name='bn4')
-
-        self.conv5 = nn.Conv(features=96, kernel_size=(3, 3), padding='SAME', name='conv5')
-        # self.bn5 = nn.BatchNorm(96, momentum=0.9, use_running_average=not self.train, name='bn5')
-
-        self.conv6 = nn.Conv(features=112, kernel_size=(3, 3), padding='SAME', name='conv6')
-        # self.bn6 = nn.BatchNorm(112, momentum=0.9, use_running_average=not self.train, name='bn6')
-
-        self.conv7 = nn.Conv(features=128, kernel_size=(3, 3), padding='SAME', name='conv7')
-        # self.bn7 = nn.BatchNorm(128, momentum=0.9, use_running_average=not self.train, name='bn7')
-
-        self.conv8 = nn.Conv(features=144, kernel_size=(3, 3), padding='SAME', name='conv8')
-        # self.bn8 = nn.BatchNorm(144, momentum=0.9, use_running_average=not self.train, name='bn8')
-
-        self.conv9 = nn.Conv(features=160, kernel_size=(3, 3), padding='SAME', name='conv9')
-        # self.bn9 = nn.BatchNorm(160, momentum=0.9, use_running_average=not self.train, name='bn9')
-
-        self.conv10 = nn.Conv(features=176, kernel_size=(3, 3), padding='SAME', name='conv10')
-        # self.bn10 = nn.BatchNorm(176, momentum=0.9, use_running_average=not self.train, name='bn10')
-
-        self.linear = nn.Dense(10, name='linear')
+        self.conv1 = nn.Conv(features=32, kernel_size=(3,3), padding="SAME", name="CONV1")
+        self.conv2 = nn.Conv(features=16, kernel_size=(3,3), padding="SAME", name="CONV2")
+        self.linear1 = nn.Dense(10, name="DENSE")
 
     @nn.compact
     def __call__(self, x):
@@ -78,23 +82,30 @@ class CNN(nn.Module):
         #     x = nn.relu(getattr(self, f'bn{i}')(getattr(self, f'conv{i}')(x)))
 
         # Use the example MNIST CNN
-        x = nn.Conv(features=8, kernel_size=(5, 5), padding='SAME')(x)
-        x = nn.relu(x)
-        x = nn.max_pool(x, window_shape=(2, 2), strides=(2, 2))
-        x = nn.Conv(features=16, kernel_size=(5, 5), padding='SAME')(x)
-        x = nn.relu(x)
-        x = nn.max_pool(x, window_shape=(2, 2), strides=(2, 2))
+        # x = nn.Conv(features=8, kernel_size=(5, 5), padding='SAME')(x)
+        # x = nn.relu(x)
+        # x = nn.max_pool(x, window_shape=(2, 2), strides=(2, 2))
+        # x = nn.Conv(features=16, kernel_size=(5, 5), padding='SAME')(x)
+        # x = nn.relu(x)
+        # x = nn.max_pool(x, window_shape=(2, 2), strides=(2, 2))
+        #
+        # x = x.reshape((x.shape[0], -1))  # flatten
+        #
+        # x = self.linear(x)
+        # x = nn.log_softmax(x)
 
-        x = x.reshape((x.shape[0], -1))  # flatten
+        x = nn.relu(self.conv1(x))
+        x = nn.relu(self.conv2(x))
 
-        x = self.linear(x)
-        x = nn.log_softmax(x)
+        x = x.reshape((x.shape[0], -1))
+        x = self.linear1(x)
+        # x = nn.softmax(x)
         return x
 
 
 def cross_entropy_loss(*, logits, labels):
     labels_onehot = jax.nn.one_hot(labels, num_classes=10)
-    return optax.softmax_cross_entropy(logits=logits, labels=labels_onehot).mean()
+    return optax.softmax_cross_entropy(logits=logits, labels=labels_onehot).sum()
 
 
 def compute_metrics(*, logits, labels):
@@ -107,7 +118,7 @@ def compute_metrics(*, logits, labels):
     return metrics
 
 
-def create_train_state(rng, learning_rate, momentum):
+def create_train_state(rng, learning_rate):
     """Creates initial `TrainState`."""
     cnn = CNN()
     params = cnn.init(rng, jnp.ones([1, 28, 28, 1]))['params']
@@ -146,9 +157,7 @@ def train_epoch(state, train_ds, batch_size, epoch, rng):
     perms = perms[:steps_per_epoch * batch_size]  # skip incomplete batch
     perms = perms.reshape((steps_per_epoch, batch_size))
     batch_metrics = []
-    import ipdb
-    ipdb.set_trace()
-    
+
     for perm in perms:
         batch = {k: v[perm, ...] for k, v in train_ds.items()}
         state, metrics = train_step(state, batch)
@@ -170,35 +179,31 @@ def eval_model(params, test_ds, batch_size):
     test_ds_size = len(test_ds['image'])
     steps_per_epoch = test_ds_size // batch_size
 
-    perms = jax.random.permutation(rng, test_ds_size)
-    perms = perms[:steps_per_epoch * batch_size]  # skip incomplete batch
-    perms = perms.reshape((steps_per_epoch, batch_size))
     batch_metrics = []
-    for perm in perms:
-        batch = {k: v[perm, ...] for k, v in test_ds.items()}
+    for i in range(steps_per_epoch):
+        batch = {k: v[i*batch_size: (i+1)*batch_size, ...] for k, v in test_ds.items()}
         metrics = eval_step(params, batch)
         batch_metrics.append(metrics)
 
-    metrics = jax.device_get(metrics)
-    summary = jax.tree_util.tree_map(lambda x: x.item(), metrics)
-    return summary['loss'], summary['accuracy']
+    batch_metrics_np = jax.device_get(batch_metrics)
+    epoch_metrics_np = {
+      k: np.mean([metrics[k] for metrics in batch_metrics_np])
+      for k in batch_metrics_np[0]}
+
+    return epoch_metrics_np['loss'], epoch_metrics_np['accuracy']
 
 
 if __name__ == '__main__':
     rng = jax.random.PRNGKey(0)
     rng, init_rng = jax.random.split(rng)
 
-    learning_rate = 0.1
-    momentum = 0.9
+    learning_rate = 1e-3
 
-    state = create_train_state(init_rng, learning_rate, momentum)
+    state = create_train_state(init_rng, learning_rate)
     del init_rng  # Must not be used anymore.
 
     num_epochs = 10
-    global_batch_size = 128
-
-    # train_ds = MnistDataset(training=True, transform=None, dataset_names=[digit, fashion, kuzushiji])
-    # test_ds = MnistDataset(training=False, transform=None, dataset_names=[digit, fashion, kuzushiji])
+    global_batch_size = 1024
 
     train_dataset = {}
     test_dataset = {}
@@ -229,6 +234,5 @@ if __name__ == '__main__':
         state = train_epoch(state, train_dataset, global_batch_size, epoch, input_rng)
         # Evaluate on the test set after each training epoch
         test_loss, test_accuracy = eval_model(state.params, test_dataset, global_batch_size)
-        print(' test epoch: %d, loss: %.2f, accuracy: %.2f' % (
-            epoch, test_loss, test_accuracy * 100))
+        print(f'test epoch: {epoch}, loss: {test_loss:.2f}, accuracy: {test_accuracy*100:.2f}')
 
