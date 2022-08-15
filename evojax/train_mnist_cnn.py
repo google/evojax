@@ -210,8 +210,8 @@ if __name__ == '__main__':
     x_array_train, y_array_train = [], []
     x_array_test, y_array_test = [], []
 
-    # for dataset_name in [digit, fashion, kuzushiji]:
-    for dataset_name in [digit]:
+    for dataset_name in [digit, fashion, kuzushiji]:
+    # for dataset_name in [digit]:
         x_train, y_train = read_data_files(dataset_name, 'train')
         x_array_train.append(x_train)
         y_array_train.append(y_train)
