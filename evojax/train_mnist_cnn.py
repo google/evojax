@@ -146,6 +146,9 @@ def train_epoch(state, train_ds, batch_size, epoch, rng):
     perms = perms[:steps_per_epoch * batch_size]  # skip incomplete batch
     perms = perms.reshape((steps_per_epoch, batch_size))
     batch_metrics = []
+    import ipdb
+    ipdb.set_trace()
+    
     for perm in perms:
         batch = {k: v[perm, ...] for k, v in train_ds.items()}
         state, metrics = train_step(state, batch)
