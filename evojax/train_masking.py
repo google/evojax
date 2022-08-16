@@ -20,7 +20,8 @@ Example command to run this script: `python train_masking.py`
 import argparse
 import os
 import shutil
-import numpy as np
+import jax.profiler as prof
+
 
 from evojax import Trainer
 from evojax.task.masking import Masking
@@ -30,13 +31,11 @@ from evojax import util
 
 from evojax.train_mnist_cnn import run_mnist_training, linear_layer_name
 
-from evojax.datasets import digit, fashion, kuzushiji
-
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--pop-size', type=int, default=16, help='NE population size.')
+        '--pop-size', type=int, default=8, help='NE population size.')
     parser.add_argument(
         '--batch-size', type=int, default=128, help='Batch size for training.')
     parser.add_argument(
@@ -121,3 +120,5 @@ if __name__ == '__main__':
     if configs.gpu_id is not None:
         os.environ['CUDA_VISIBLE_DEVICES'] = configs.gpu_id
     main(configs)
+
+    prof.save_device_memory_profile("memory.prof")
