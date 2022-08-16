@@ -11,6 +11,8 @@ from evojax.datasets import read_data_files, digit, fashion, kuzushiji
 
 import optax
 
+linear_layer_name = 'DENSE'
+
 
 class CNN(nn.Module):
     """CNN for MNIST."""
@@ -49,12 +51,12 @@ class CNN(nn.Module):
         #
         # self.linear = nn.Dense(10, name='linear')
 
-        self.conv1 = nn.Conv(features=32, kernel_size=(3,3), padding="SAME", name="CONV1")
-        self.conv2 = nn.Conv(features=16, kernel_size=(3,3), padding="SAME", name="CONV2")
-        self.linear1 = nn.Dense(10, name="DENSE")
+        self.conv1 = nn.Conv(features=32, kernel_size=(3, 3), padding="SAME", name="CONV1")
+        self.conv2 = nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")
+        self.linear1 = nn.Dense(10, name=linear_layer_name)
 
     @nn.compact
-    def __call__(self, x):
+    def __call__(self, x, mask=None):
 
         # x = nn.relu(self.bn1(self.conv1(x)))
         # x = nn.relu(self.bn2(self.conv2(x)))
@@ -98,6 +100,11 @@ class CNN(nn.Module):
         x = nn.relu(self.conv2(x))
 
         x = x.reshape((x.shape[0], -1))
+
+        # TODO is this a fine way to implement the masking???
+        if mask:
+            x = x * mask
+
         x = self.linear1(x)
         # x = nn.softmax(x)
         return x

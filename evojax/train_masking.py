@@ -20,6 +20,7 @@ Example command to run this script: `python train_mnist.py --gpu-id=0`
 import argparse
 import os
 import shutil
+import numpy as np
 
 from evojax import Trainer
 from evojax.task.masking import Masking
@@ -27,7 +28,7 @@ from evojax.policy.mask import MaskPolicy
 from evojax.algo import PGPE
 from evojax import util
 
-from evojax.train_mnist_cnn import run_mnist_training
+from evojax.train_mnist_cnn import run_mnist_training, linear_layer_name
 
 from evojax.datasets import digit, fashion, kuzushiji
 
@@ -70,10 +71,15 @@ def main(config):
     logger.info('=' * 30)
 
     cnn_params = run_mnist_training(return_model=True)
+    linear_weights = cnn_params[linear_layer_name]["kernel"]
+    # mask_size = np.prod(linear_weights.shape)
+    # TODO currently just masking the input features to the linear layer
+    mask_size = linear_weights[0]
 
-    policy = MaskPolicy(logger=logger, mask_size=mnist_model)
-    train_task = Masking(batch_size=config.batch_size, test=False, mnist_model=mnist_model)
-    test_task = Masking(batch_size=config.batch_size, test=True, mnist_model=mnist_model)
+    policy = MaskPolicy(logger=logger, mask_size=mask_size)
+    train_task = Masking(batch_size=config.batch_size, test=False, mnist_params=cnn_params, mask_size=mask_size)
+    test_task = Masking(batch_size=config.batch_size, test=True, mnist_params=cnn_params, mask_size=mask_size)
+
     solver = PGPE(
         pop_size=config.pop_size,
         param_size=policy.num_params,

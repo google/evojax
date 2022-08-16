@@ -18,30 +18,33 @@ import numpy as np
 import jax
 import jax.numpy as jnp
 from jax import random
+from flax.core import freeze, unfreeze
 from flax.struct import dataclass
 
 from evojax.task.base import VectorizedTask
 from evojax.task.base import TaskState
 
 from evojax.datasets import read_data_files, digit, fashion, kuzushiji
-from evojax.train_mnist_cnn import CNN
+from evojax.train_mnist_cnn import CNN, linear_layer_name
 
 
 @dataclass
 class State(TaskState):
-    obs: jnp.ndarray
-    class_labels: jnp.ndarray
-    dataset_labels: jnp.ndarray
+    obs: jnp.ndarray  # This will be the dataset label for now as this is the input for the
+    labels: jnp.ndarray
+    image_data: jnp.ndarray
 
 
 def sample_batch(key: jnp.ndarray,
                  data: jnp.ndarray,
-                 labels: jnp.ndarray,
+                 class_labels: jnp.ndarray,
+                 dataset_labels: jnp.ndarray,
                  batch_size: int) -> Tuple:
     ix = random.choice(
         key=key, a=data.shape[0], shape=(batch_size,), replace=False)
     return (jnp.take(data, indices=ix, axis=0),
-            jnp.take(labels, indices=ix, axis=0))
+            jnp.take(class_labels, indices=ix, axis=0),
+            jnp.take(dataset_labels, indices=ix, axis=0))
 
 
 def loss(prediction: jnp.ndarray, target: jnp.ndarray) -> jnp.float32:
@@ -60,54 +63,49 @@ class Masking(VectorizedTask):
     def __init__(self,
                  batch_size: int = 1024,
                  test: bool = False,
-                 mnist_params=None):
+                 mnist_params=None,
+                 mask_size: int = None):
 
         self.mnist_params = mnist_params
+        self.linear_weights_orig = self.mnist_params[linear_layer_name]["kernel"]
 
         self.max_steps = 1
         self.obs_shape = tuple([1, ])
-        self.act_shape = tuple([10, ])
+        self.act_shape = tuple([mask_size, ])
 
-        train_dataset = {}
-        test_dataset = {}
-        x_array_train, y_array_train = [], []
-        x_array_test, y_array_test = [], []
-
+        x_array, y_array = [], []
         for dataset_name in [digit, fashion, kuzushiji]:
-            x_train, y_train = read_data_files(dataset_name, 'train')
-            x_array_train.append(x_train)
-            y_array_train.append(y_train)
+            x, y = read_data_files(dataset_name, 'test' if self.test else 'train')
+            x_array.append(x)
+            y_array.append(y)
 
-            x_test, y_test = read_data_files(dataset_name, 'test')
-            x_array_test.append(x_test)
-            y_array_test.append(y_test)
-
-        train_dataset['image'] = jnp.float32(np.concatenate(x_array_train)) / 255.
-        test_dataset['image'] = jnp.float32(np.concatenate(x_array_test)) / 255.
-
-        # Only use the class label, not dataset label here
-        train_dataset['label'] = jnp.int16(np.concatenate(y_array_train)[:, 0])
-        test_dataset['label'] = jnp.int16(np.concatenate(y_array_test)[:, 0])
-
+        image_data = jnp.float32(np.concatenate(x_array)) / 255.
+        labels = jnp.int16(np.concatenate(y_array))
+        class_labels = labels[:, 0]
+        dataset_labels = labels[:, 1]
 
         def reset_fn(key):
-            if test:
-                batch_data, batch_labels = data, labels
-            else:
-                batch_data, batch_labels = sample_batch(
-                    key, data, labels, batch_size)
-            return State(obs=batch_data, labels=batch_labels)
+            batch_data, batch_class_labels, batch_dataset_labels = sample_batch(
+                key, image_data, class_labels, dataset_labels, batch_size)
+            return State(obs=dataset_labels, labels=batch_class_labels, image_data=image_data)
         self._reset_fn = jax.jit(jax.vmap(reset_fn))
 
         def step_fn(state, action):
-            if test:
-                params = unfreeze(params)
-                params['bert'] = bert_params
-                params = freeze(params)
+            # TODO is this state the dataclass or state of the masking model???
 
-                reward = accuracy(action, state.labels)
+            # Action should be the mask which will be applied to the linear weights
+            # TODO Should the weights be masked or just the input to the linear layer
+            # params = unfreeze(self.mnist_params)
+            # masked_weights = self.linear_weights_orig * action.reshape(self.linear_weights_orig.shape)
+            # params[linear_layer_name]["kernel"] = masked_weights
+            # params = freeze(params)
+
+            output_logits = CNN().apply({'params': self.mnist_params}, state.image_data, action)
+
+            if test:
+                reward = accuracy(output_logits, state.labels)
             else:
-                reward = -loss(action, state.labels)
+                reward = -loss(output_logits, state.labels)
             return state, reward, jnp.ones(())
         self._step_fn = jax.jit(jax.vmap(step_fn))
 
