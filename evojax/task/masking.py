@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from typing import Tuple
+import numpy as np
 
 import jax
 import jax.numpy as jnp
@@ -23,6 +24,7 @@ from evojax.task.base import VectorizedTask
 from evojax.task.base import TaskState
 
 from evojax.datasets import read_data_files, digit, fashion, kuzushiji
+from evojax.train_mnist_cnn import CNN
 
 
 @dataclass
@@ -58,9 +60,9 @@ class Masking(VectorizedTask):
     def __init__(self,
                  batch_size: int = 1024,
                  test: bool = False,
-                 mnist_model=None):
+                 mnist_params=None):
 
-        self.mnist_model = mnist_model
+        self.mnist_params = mnist_params
 
         self.max_steps = 1
         self.obs_shape = tuple([1, ])
