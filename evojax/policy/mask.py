@@ -55,7 +55,7 @@ class MaskPolicy(PolicyNetwork):
             self._logger = logger
 
         model = Mask(mask_size)
-        params = model.init(random.PRNGKey(0), jnp.zeros([1, ]))
+        params = model.init(random.PRNGKey(0), jnp.ones([1, 1]))
         self.num_params, format_params_fn = get_params_format_fn(params)
         self._logger.info(f'Mask.num_params = {self.num_params}')
         self._format_params_fn = jax.vmap(format_params_fn)

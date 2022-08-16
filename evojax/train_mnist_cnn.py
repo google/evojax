@@ -54,7 +54,7 @@ class CNN(nn.Module):
 
         self.conv1 = nn.Conv(features=32, kernel_size=(3, 3), padding="SAME", name="CONV1")
         self.conv2 = nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")
-        self.linear1 = nn.Dense(10, name=linear_layer_name)
+        self.linear1 = nn.Dense(features=10, name=linear_layer_name)
 
     @nn.compact
     def __call__(self, x,
