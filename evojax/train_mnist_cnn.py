@@ -211,7 +211,7 @@ def run_mnist_training(return_model=True):
     state = create_train_state(init_rng, learning_rate)
     del init_rng  # Must not be used anymore.
 
-    num_epochs = 5
+    num_epochs = 3
     global_batch_size = 1024
 
     train_dataset = {}

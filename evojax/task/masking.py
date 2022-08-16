@@ -74,7 +74,8 @@ class Masking(VectorizedTask):
         self.act_shape = tuple([mask_size, ])
 
         x_array, y_array = [], []
-        for dataset_name in [digit, fashion, kuzushiji]:
+        for dataset_name in [digit, fashion]:
+        # for dataset_name in [digit, fashion, kuzushiji]:
             x, y = read_data_files(dataset_name, 'test' if test else 'train')
             x_array.append(x)
             y_array.append(y)
