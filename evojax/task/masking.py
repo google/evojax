@@ -79,21 +79,26 @@ class Masking(VectorizedTask):
             x_array.append(x)
             y_array.append(y)
 
-        # TODO remove this once the memory issues have been fixed
-        if not test:
-            random_sample = np.random.permutation(range(180000))[:2**13]
-        else:
-            random_sample = np.random.permutation(range(30000))[:2**11]
+        # # TODO remove this once the memory issues have been fixed
+        # if not test:
+        #     random_sample = np.random.permutation(range(180000))[:2**13]
+        # else:
+        #     random_sample = np.random.permutation(range(30000))[:2**11]
 
-        image_data = jnp.float32(np.concatenate(x_array)[random_sample]) / 255.
-        labels = jnp.int16(np.concatenate(y_array)[random_sample])
+        image_data = jnp.float32(np.concatenate(x_array)) / 255.
+        labels = jnp.int16(np.concatenate(y_array))
         class_labels = labels[:, 0]
         dataset_labels = labels[:, 1]
 
         def reset_fn(key):
-            batch_data, batch_class_labels, batch_dataset_labels = sample_batch(
-                key, image_data, class_labels, dataset_labels, batch_size)
-            return State(obs=dataset_labels, labels=batch_class_labels, image_data=image_data)
+            if test:
+                batch_data, batch_class_labels, batch_dataset_labels = image_data, class_labels, dataset_labels
+            else:
+                batch_data, batch_class_labels, batch_dataset_labels = sample_batch(
+                    key, image_data, class_labels, dataset_labels, batch_size)
+            return State(obs=batch_dataset_labels,
+                         labels=batch_class_labels,
+                         image_data=batch_data)
         self._reset_fn = jax.jit(jax.vmap(reset_fn))
 
         def step_fn(state, action):

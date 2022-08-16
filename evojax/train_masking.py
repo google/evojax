@@ -35,9 +35,9 @@ from evojax.train_mnist_cnn import run_mnist_training, linear_layer_name
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--pop-size', type=int, default=8, help='NE population size.')
+        '--pop-size', type=int, default=64, help='NE population size.')
     parser.add_argument(
-        '--batch-size', type=int, default=128, help='Batch size for training.')
+        '--batch-size', type=int, default=1024, help='Batch size for training.')
     parser.add_argument(
         '--max-iter', type=int, default=5000, help='Max training iterations.')
     parser.add_argument(
