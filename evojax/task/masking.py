@@ -74,14 +74,16 @@ class Masking(VectorizedTask):
         self.act_shape = tuple([mask_size, ])
 
         x_array, y_array = [], []
-        for dataset_name in [digit, fashion]:
-        # for dataset_name in [digit, fashion, kuzushiji]:
+        for dataset_name in [digit, fashion, kuzushiji]:
             x, y = read_data_files(dataset_name, 'test' if test else 'train')
             x_array.append(x)
             y_array.append(y)
 
-        image_data = jnp.float32(np.concatenate(x_array)) / 255.
-        labels = jnp.int16(np.concatenate(y_array))
+        # TODO remove this once the memory issues have been fixed
+        random_sample = np.random.permutation(range(180000))[:2**13]
+
+        image_data = jnp.float32(np.concatenate(x_array)[random_sample]) / 255.
+        labels = jnp.int16(np.concatenate(y_array)[random_sample])
         class_labels = labels[:, 0]
         dataset_labels = labels[:, 1]
 
