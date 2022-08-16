@@ -75,7 +75,7 @@ class Masking(VectorizedTask):
 
         x_array, y_array = [], []
         for dataset_name in [digit, fashion, kuzushiji]:
-            x, y = read_data_files(dataset_name, 'test' if self.test else 'train')
+            x, y = read_data_files(dataset_name, 'test' if test else 'train')
             x_array.append(x)
             y_array.append(y)
 
