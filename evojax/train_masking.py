@@ -14,7 +14,7 @@
 
 """Train an agent for MNIST classification.
 
-Example command to run this script: `python train_mnist.py --gpu-id=0`
+Example command to run this script: `python train_masking.py`
 """
 
 import argparse
