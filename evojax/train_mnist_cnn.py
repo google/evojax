@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Optional
 
 import jax
 import jax.numpy as jnp
@@ -56,7 +57,8 @@ class CNN(nn.Module):
         self.linear1 = nn.Dense(10, name=linear_layer_name)
 
     @nn.compact
-    def __call__(self, x, mask=None):
+    def __call__(self, x,
+                 mask: Optional[jnp.ndarray]):
 
         # x = nn.relu(self.bn1(self.conv1(x)))
         # x = nn.relu(self.bn2(self.conv2(x)))
@@ -102,7 +104,7 @@ class CNN(nn.Module):
         x = x.reshape((x.shape[0], -1))
 
         # TODO is this a fine way to implement the masking???
-        if mask:
+        if mask is not None:
             x = x * mask
 
         x = self.linear1(x)

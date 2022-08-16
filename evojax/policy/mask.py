@@ -48,7 +48,7 @@ class Mask(nn.Module):
 class MaskPolicy(PolicyNetwork):
     """A dense neural network for masking the MNIST classification task."""
 
-    def __init__(self, logger: logging.Logger = None, mask_size=None):
+    def __init__(self, logger: logging.Logger = None, mask_size: int = None):
         if logger is None:
             self._logger = create_logger('MaskNetPolicy')
         else:
