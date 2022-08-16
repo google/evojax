@@ -75,7 +75,7 @@ def main(config):
     # TODO currently just masking the input features to the linear layer
     mask_size = linear_weights.shape[0]
 
-    policy = MaskPolicy(logger=logger, mask_size=mask_size)
+    policy = MaskPolicy(logger=logger, mask_size=mask_size, batch_size=config.batch_size)
     train_task = Masking(batch_size=config.batch_size, test=False, mnist_params=cnn_params, mask_size=mask_size)
     test_task = Masking(batch_size=config.batch_size, test=True, mnist_params=cnn_params, mask_size=mask_size)
 

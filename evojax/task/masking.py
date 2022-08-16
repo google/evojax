@@ -91,11 +91,11 @@ class Masking(VectorizedTask):
         dataset_labels = labels[:, 1]
 
         def reset_fn(key):
-            if test:
-                batch_data, batch_class_labels, batch_dataset_labels = image_data, class_labels, dataset_labels
-            else:
-                batch_data, batch_class_labels, batch_dataset_labels = sample_batch(
-                    key, image_data, class_labels, dataset_labels, batch_size)
+            # if test:
+            #     batch_data, batch_class_labels, batch_dataset_labels = image_data, class_labels, dataset_labels
+            # else:
+            batch_data, batch_class_labels, batch_dataset_labels = sample_batch(
+                key, image_data, class_labels, dataset_labels, batch_size)
             return State(obs=batch_dataset_labels,
                          labels=batch_class_labels,
                          image_data=batch_data)

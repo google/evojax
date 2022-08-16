@@ -48,14 +48,15 @@ class Mask(nn.Module):
 class MaskPolicy(PolicyNetwork):
     """A dense neural network for masking the MNIST classification task."""
 
-    def __init__(self, logger: logging.Logger = None, mask_size: int = None):
+    def __init__(self, logger: logging.Logger = None, mask_size: int = None,
+                 batch_size: int = None):
         if logger is None:
             self._logger = create_logger('MaskNetPolicy')
         else:
             self._logger = logger
 
         model = Mask(mask_size)
-        params = model.init(random.PRNGKey(0), jnp.ones([1024, ]))
+        params = model.init(random.PRNGKey(0), jnp.ones([batch_size, ]))
         self.num_params, format_params_fn = get_params_format_fn(params)
         self._logger.info(f'Mask.num_params = {self.num_params}')
         self._format_params_fn = jax.vmap(format_params_fn)
