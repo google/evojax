@@ -74,10 +74,7 @@ def main(config):
     linear_weights = cnn_params[linear_layer_name]["kernel"]
     # mask_size = np.prod(linear_weights.shape)
     # TODO currently just masking the input features to the linear layer
-    mask_size = linear_weights[0]
-
-    import ipdb
-    ipdb.set_trace()
+    mask_size = linear_weights.shape[0]
 
     policy = MaskPolicy(logger=logger, mask_size=mask_size)
     train_task = Masking(batch_size=config.batch_size, test=False, mnist_params=cnn_params, mask_size=mask_size)
