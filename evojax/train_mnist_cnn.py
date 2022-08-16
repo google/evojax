@@ -58,7 +58,7 @@ class CNN(nn.Module):
 
     @nn.compact
     def __call__(self, x,
-                 mask: Optional[jnp.ndarray]):
+                 mask: Optional[jnp.ndarray] = None):
 
         # x = nn.relu(self.bn1(self.conv1(x)))
         # x = nn.relu(self.bn2(self.conv2(x)))
@@ -211,7 +211,7 @@ def run_mnist_training(return_model=True):
     state = create_train_state(init_rng, learning_rate)
     del init_rng  # Must not be used anymore.
 
-    num_epochs = 10
+    num_epochs = 5
     global_batch_size = 1024
 
     train_dataset = {}
