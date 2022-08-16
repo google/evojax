@@ -36,9 +36,9 @@ from evojax.datasets import digit, fashion, kuzushiji
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--pop-size', type=int, default=64, help='NE population size.')
+        '--pop-size', type=int, default=16, help='NE population size.')
     parser.add_argument(
-        '--batch-size', type=int, default=1024, help='Batch size for training.')
+        '--batch-size', type=int, default=128, help='Batch size for training.')
     parser.add_argument(
         '--max-iter', type=int, default=5000, help='Max training iterations.')
     parser.add_argument(
@@ -66,7 +66,7 @@ def main(config):
     if not os.path.exists(log_dir):
         os.makedirs(log_dir, exist_ok=True)
     logger = util.create_logger(
-        name='MNIST', log_dir=log_dir, debug=config.debug)
+        name='MASK', log_dir=log_dir, debug=config.debug)
     logger.info('EvoJAX Masking Tests')
     logger.info('=' * 30)
 
