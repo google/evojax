@@ -108,11 +108,11 @@ def main(config):
     trainer.run(demo_mode=False)
 
     # Test the final model.
-    src_file = os.path.join(log_dir, 'best.npz')
-    tar_file = os.path.join(log_dir, 'model.npz')
-    shutil.copy(src_file, tar_file)
-    trainer.model_dir = log_dir
-    trainer.run(demo_mode=True)
+    # src_file = os.path.join(log_dir, 'best.npz')
+    # tar_file = os.path.join(log_dir, 'model.npz')
+    # shutil.copy(src_file, tar_file)
+    # trainer.model_dir = log_dir
+    # trainer.run(demo_mode=True)
 
 
 if __name__ == '__main__':
@@ -121,4 +121,4 @@ if __name__ == '__main__':
         os.environ['CUDA_VISIBLE_DEVICES'] = configs.gpu_id
     main(configs)
 
-    prof.save_device_memory_profile("memory.prof")
+    # prof.save_device_memory_profile("memory.prof")
