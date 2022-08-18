@@ -10,6 +10,7 @@ if __name__ == "__main__":
     logger.info('Is it working now??')
     logger.debug('Debug test....')
 
+    logging.basicConfig(filename='test_log', encoding='utf-8', level=logging.DEBUG)
     logging.info('EvoJAX Logging Test')
     logging.info('Is it working now??')
     logging.debug('Debug test....')
