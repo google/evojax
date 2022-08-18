@@ -202,17 +202,12 @@ def eval_model(params, test_ds, batch_size):
     return epoch_metrics_np['loss'], epoch_metrics_np['accuracy']
 
 
-def run_mnist_training(return_model=True):
+def run_mnist_training(num_epochs=20, learning_rate=1e-3, cnn_batch_size=1024, return_model=True):
     rng = jax.random.PRNGKey(0)
     rng, init_rng = jax.random.split(rng)
 
-    learning_rate = 1e-3
-
     state = create_train_state(init_rng, learning_rate)
     del init_rng  # Must not be used anymore.
-
-    num_epochs = 3
-    global_batch_size = 1024
 
     train_dataset = {}
     test_dataset = {}
@@ -235,17 +230,23 @@ def run_mnist_training(return_model=True):
     train_dataset['label'] = jnp.int16(np.concatenate(y_array_train)[:, 0])
     test_dataset['label'] = jnp.int16(np.concatenate(y_array_test)[:, 0])
 
+    best_params = None
+    best_test_accuracy = 0
     for epoch in range(1, num_epochs + 1):
         # Use a separate PRNG key to permute image data during shuffling
         rng, input_rng = jax.random.split(rng)
         # Run an optimization step over a training batch
-        state = train_epoch(state, train_dataset, global_batch_size, epoch, input_rng)
+        state = train_epoch(state, train_dataset, cnn_batch_size, epoch, input_rng)
         # Evaluate on the test set after each training epoch
-        test_loss, test_accuracy = eval_model(state.params, test_dataset, global_batch_size)
+        test_loss, test_accuracy = eval_model(state.params, test_dataset, cnn_batch_size)
         print(f'test epoch: {epoch}, loss: {test_loss:.2f}, accuracy: {test_accuracy * 100:.2f}')
 
+        if test_accuracy > best_test_accuracy:
+            best_test_accuracy = test_accuracy
+            best_params = state.params
+
     if return_model:
-        return state.params
+        return best_params
 
 
 if __name__ == '__main__':

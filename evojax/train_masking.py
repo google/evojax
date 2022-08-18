@@ -18,6 +18,7 @@ Example command to run this script: `python train_masking.py`
 """
 
 import os
+import shutil
 import argparse
 
 from evojax import Trainer
@@ -102,20 +103,17 @@ def main(config):
         log_dir=log_dir,
         logger=logger,
     )
-    trainer.run(demo_mode=False)
+    best_score = trainer.run(demo_mode=False)
+
 
     # Test the final model.
-    # src_file = os.path.join(log_dir, 'best.npz')
-    # tar_file = os.path.join(log_dir, 'model.npz')
-    # shutil.copy(src_file, tar_file)
-    # trainer.model_dir = log_dir
-    # trainer.run(demo_mode=True)
+    src_file = os.path.join(log_dir, 'best.npz')
+    tar_file = os.path.join(log_dir, 'model.npz')
+    shutil.copy(src_file, tar_file)
+    trainer.model_dir = log_dir
+    trainer.run(demo_mode=True)
 
 
 if __name__ == '__main__':
     configs = parse_args()
-    if configs.gpu_id is not None:
-        os.environ['CUDA_VISIBLE_DEVICES'] = configs.gpu_id
     main(configs)
-
-    # prof.save_device_memory_profile("memory.prof")

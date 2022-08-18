@@ -117,7 +117,7 @@ class Trainer(object):
             params, obs_params = load_model(model_dir=self.model_dir)
             self.sim_mgr.obs_params = obs_params
             self._logger.info(
-                'Loaded model parameters from {}.'.format(self.model_dir))
+                f'Loaded model parameters from {self.model_dir}.')
         else:
             params = None
 
@@ -128,13 +128,12 @@ class Trainer(object):
             scores = np.array(
                 self.sim_mgr.eval_params(params=params, test=True)[0])
             self._logger.info(
-                '[TEST] #tests={0}, max={1:.4f}, avg={2:.4f}, min={3:.4f}, '
-                'std={4:.4f}'.format(scores.size, scores.max(), scores.mean(),
-                                     scores.min(), scores.std()))
+                f'[TEST] Iter={self._max_iter}, #tests={scores.size}, max={scores.max():.4f}, '
+                f'avg={scores.mean():.4f}, min={scores.min():.4f}, std={scores.std():.4f}')
             return scores.mean()
         else:
             self._logger.info(
-                'Start to train for {} iterations.'.format(self._max_iter))
+                f'Start to train for {self._max_iter} iterations.')
 
             if params is not None:
                 # Continue training from the breakpoint.
@@ -145,29 +144,24 @@ class Trainer(object):
             for i in range(self._max_iter):
                 start_time = time.perf_counter()
                 params = self.solver.ask()
-                self._logger.debug('solver.ask time: {0:.4f}s'.format(
-                    time.perf_counter() - start_time))
+                self._logger.debug(f'solver.ask time: {time.perf_counter() - start_time:.4f}s')
 
                 start_time = time.perf_counter()
                 scores, bds = self.sim_mgr.eval_params(
                     params=params, test=False)
-                self._logger.debug('sim_mgr.eval_params time: {0:.4f}s'.format(
-                    time.perf_counter() - start_time))
+                self._logger.debug(f'sim_mgr.eval_params time: {time.perf_counter() - start_time:.4f}s')
 
                 start_time = time.perf_counter()
                 if isinstance(self.solver, QualityDiversityMethod):
                     self.solver.observe_bd(bds)
                 self.solver.tell(fitness=scores)
-                self._logger.debug('solver.tell time: {0:.4f}s'.format(
-                    time.perf_counter() - start_time))
+                self._logger.debug(f'solver.tell time: {time.perf_counter() - start_time:.4f}s')
 
                 if i > 0 and i % self._log_interval == 0:
                     scores = np.array(scores)
                     self._logger.info(
-                        'Iter={0}, size={1}, max={2:.4f}, '
-                        'avg={3:.4f}, min={4:.4f}, std={5:.4f}'.format(
-                            i, scores.size, scores.max(), scores.mean(),
-                            scores.min(), scores.std()))
+                        f'[TEST] Iter={self._max_iter}, #tests={scores.size}, max={scores.max():.4f}, '
+                        f'avg={scores.mean():.4f}, min={scores.min():.4f}, std={scores.std():.4f}')
                     self._log_scores_fn(i, scores, "train")
 
                 if i > 0 and i % self._test_interval == 0:
@@ -175,16 +169,13 @@ class Trainer(object):
                     test_scores, _ = self.sim_mgr.eval_params(
                         params=best_params, test=True)
                     self._logger.info(
-                        '[TEST] Iter={0}, #tests={1}, max={2:.4f} avg={3:.4f}, '
-                        'min={4:.4f}, std={5:.4f}'.format(
-                            i, test_scores.size, test_scores.max(),
-                            test_scores.mean(), test_scores.min(),
-                            test_scores.std()))
+                        f'[TEST] Iter={self._max_iter}, #tests={test_scores.size}, max={test_scores.max():.4f}, '
+                        f'avg={test_scores.mean():.4f}, min={test_scores.min():.4f}, std={test_scores.std():.4f}')
                     self._log_scores_fn(i, test_scores, "test")
                     mean_test_score = test_scores.mean()
                     save_model(
                         model_dir=self._log_dir,
-                        model_name='iter_{}'.format(i),
+                        model_name=f'iter_{i}',
                         params=best_params,
                         obs_params=self.sim_mgr.obs_params,
                         best=mean_test_score > best_score,
@@ -196,10 +187,8 @@ class Trainer(object):
             test_scores, _ = self.sim_mgr.eval_params(
                 params=best_params, test=True)
             self._logger.info(
-                '[TEST] Iter={0}, #tests={1}, max={2:.4f}, avg={3:.4f}, '
-                'min={4:.4f}, std={5:.4f}'.format(
-                    self._max_iter, test_scores.size, test_scores.max(),
-                    test_scores.mean(), test_scores.min(), test_scores.std()))
+                f'[TEST] Iter={self._max_iter}, #tests={test_scores.size}, max={test_scores.max():.4f}, '
+                f'avg={test_scores.mean():.4f}, min={test_scores.min():.4f}, std={test_scores.std():.4f}')
             mean_test_score = test_scores.mean()
             save_model(
                 model_dir=self._log_dir,
@@ -218,6 +207,6 @@ class Trainer(object):
                     occupancy_lattice=self.solver.occupancy_lattice,
                 )
             self._logger.info(
-                'Training done, best_score={0:.4f}'.format(best_score))
+                f'Training done, best_score={best_score:.4f}')
 
             return best_score

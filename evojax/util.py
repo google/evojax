@@ -26,15 +26,6 @@ from flax.core import FrozenDict
 # Imports the Cloud Logging client library
 import google.cloud.logging
 
-# Instantiates a client
-client = google.cloud.logging.Client()
-
-# Retrieves a Cloud Logging handler based on the environment
-# you're running in and integrates the handler with the
-# Python logging module. By default this captures all logs
-# at INFO level and higher
-client.setup_logging(log_level=logging.DEBUG)
-
 
 def get_params_format_fn(init_params: FrozenDict) -> Tuple[int, Callable]:
     """Return a function that formats the parameters into a correct format."""
@@ -54,7 +45,8 @@ def get_params_format_fn(init_params: FrozenDict) -> Tuple[int, Callable]:
 
 def create_logger(name: str,
                   log_dir: str = None,
-                  debug: bool = False) -> logging.Logger:
+                  debug: bool = False,
+                  google_cloud: bool = True) -> logging.Logger:
     """Create a logger.
 
     Args:
@@ -62,10 +54,20 @@ def create_logger(name: str,
         log_dir - The logger will also log to an external file in the specified
                   directory if specified.
         debug - If we should log in DEBUG mode.
+        google_cloud - If being run in google cloud their logging client must be used.
 
     Returns:
         logging.RootLogger.
     """
+    if google_cloud:
+        # Instantiates a client
+        client = google.cloud.logging.Client()
+
+        # Retrieves a Cloud Logging handler based on the environment
+        # you're running in and integrates the handler with the
+        # Python logging module. By default this captures all logs
+        # at INFO level and higher
+        client.setup_logging(log_level=logging.DEBUG if debug else logging.INFO)
 
     if log_dir and not os.path.exists(log_dir):
         os.makedirs(log_dir)
@@ -74,7 +76,7 @@ def create_logger(name: str,
         level=logging.DEBUG if debug else logging.INFO, format=log_format)
     logger = logging.getLogger(name)
     if log_dir:
-        log_file = os.path.join(log_dir, '{}.txt'.format(name))
+        log_file = os.path.join(log_dir, f'{name}.txt')
         file_hdl = logging.FileHandler(log_file)
         formatter = logging.Formatter(fmt=log_format)
         file_hdl.setFormatter(formatter)
