@@ -34,15 +34,17 @@ class Mask(nn.Module):
 
     @nn.compact
     def __call__(self, x, round_output=True):
-        x = nn.Dense(features=10)(x)
-        x = nn.relu(x)
-        x = nn.Dense(features=100)(x)
-        x = nn.relu(x)
-        x = nn.Dense(features=self.mask_size)(x)
-        x = nn.sigmoid(x)
-        if round_output:
-            x = jnp.round(x)
-        return x
+        return jnp.ones(self.mask_size)
+        #
+        # x = nn.Dense(features=10)(x)
+        # x = nn.relu(x)
+        # x = nn.Dense(features=100)(x)
+        # x = nn.relu(x)
+        # x = nn.Dense(features=self.mask_size)(x)
+        # x = nn.sigmoid(x)
+        # if round_output:
+        #     x = jnp.round(x)
+        # return x
 
 
 class MaskPolicy(PolicyNetwork):
@@ -55,7 +57,7 @@ class MaskPolicy(PolicyNetwork):
         else:
             self._logger = logger
 
-        model = Mask(mask_size)
+        model = Mask(mask_size, no_m)
         params = model.init(random.PRNGKey(0), jnp.ones([batch_size, ]))
         self.num_params, format_params_fn = get_params_format_fn(params)
         self._logger.info(f'Mask.num_params = {self.num_params}')
