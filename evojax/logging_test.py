@@ -1,4 +1,5 @@
 from util import create_logger
+import logging
 
 
 if __name__ == "__main__":
@@ -8,5 +9,9 @@ if __name__ == "__main__":
     logger.info('EvoJAX Logging Test')
     logger.info('Is it working now??')
     logger.debug('Debug test....')
+
+    logging.info('EvoJAX Logging Test')
+    logging.info('Is it working now??')
+    logging.debug('Debug test....')
 
 
