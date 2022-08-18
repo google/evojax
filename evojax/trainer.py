@@ -160,7 +160,7 @@ class Trainer(object):
                 if i > 0 and i % self._log_interval == 0:
                     scores = np.array(scores)
                     self._logger.info(
-                        f'[TEST] Iter={self._max_iter}, #tests={scores.size}, max={scores.max():.4f}, '
+                        f'[TEST] Iter={i}, #tests={scores.size}, max={scores.max():.4f}, '
                         f'avg={scores.mean():.4f}, min={scores.min():.4f}, std={scores.std():.4f}')
                     self._log_scores_fn(i, scores, "train")
 
@@ -169,7 +169,7 @@ class Trainer(object):
                     test_scores, _ = self.sim_mgr.eval_params(
                         params=best_params, test=True)
                     self._logger.info(
-                        f'[TEST] Iter={self._max_iter}, #tests={test_scores.size}, max={test_scores.max():.4f}, '
+                        f'[TEST] Iter={i}, #tests={test_scores.size}, max={test_scores.max():.4f}, '
                         f'avg={test_scores.mean():.4f}, min={test_scores.min():.4f}, std={test_scores.std():.4f}')
                     self._log_scores_fn(i, test_scores, "test")
                     mean_test_score = test_scores.mean()
