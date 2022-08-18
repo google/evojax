@@ -17,8 +17,9 @@
 Example command to run this script: `python train_masking.py`
 """
 
-import argparse
 import os
+import logging
+import argparse
 import shutil
 import jax.profiler as prof
 
@@ -41,7 +42,7 @@ client = google.cloud.logging.Client()
 # you're running in and integrates the handler with the
 # Python logging module. By default this captures all logs
 # at INFO level and higher
-client.setup_logging()
+client.setup_logging(log_level=logging.DEBUG)
 
 
 def parse_args():
