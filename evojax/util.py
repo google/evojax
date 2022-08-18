@@ -23,6 +23,18 @@ import jax.numpy as jnp
 from jax import tree_util
 from flax.core import FrozenDict
 
+# Imports the Cloud Logging client library
+import google.cloud.logging
+
+# Instantiates a client
+client = google.cloud.logging.Client()
+
+# Retrieves a Cloud Logging handler based on the environment
+# you're running in and integrates the handler with the
+# Python logging module. By default this captures all logs
+# at INFO level and higher
+client.setup_logging(log_level=logging.DEBUG)
+
 
 def get_params_format_fn(init_params: FrozenDict) -> Tuple[int, Callable]:
     """Return a function that formats the parameters into a correct format."""

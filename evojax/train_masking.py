@@ -18,11 +18,7 @@ Example command to run this script: `python train_masking.py`
 """
 
 import os
-import logging
 import argparse
-import shutil
-import jax.profiler as prof
-
 
 from evojax import Trainer
 from evojax.task.masking import Masking
@@ -31,18 +27,6 @@ from evojax.algo import PGPE
 from evojax import util
 
 from evojax.train_mnist_cnn import run_mnist_training, linear_layer_name
-
-# Imports the Cloud Logging client library
-import google.cloud.logging
-
-# Instantiates a client
-client = google.cloud.logging.Client()
-
-# Retrieves a Cloud Logging handler based on the environment
-# you're running in and integrates the handler with the
-# Python logging module. By default this captures all logs
-# at INFO level and higher
-client.setup_logging(log_level=logging.DEBUG)
 
 
 def parse_args():
