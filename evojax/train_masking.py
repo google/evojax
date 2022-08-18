@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Train an agent for MNIST classification.
+"""Train an agent for masking MNIST classification.
 
 Example command to run this script: `python train_masking.py`
 """
@@ -30,6 +30,18 @@ from evojax.algo import PGPE
 from evojax import util
 
 from evojax.train_mnist_cnn import run_mnist_training, linear_layer_name
+
+# Imports the Cloud Logging client library
+import google.cloud.logging
+
+# Instantiates a client
+client = google.cloud.logging.Client()
+
+# Retrieves a Cloud Logging handler based on the environment
+# you're running in and integrates the handler with the
+# Python logging module. By default this captures all logs
+# at INFO level and higher
+client.setup_logging()
 
 
 def parse_args():
