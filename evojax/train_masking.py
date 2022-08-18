@@ -64,10 +64,10 @@ def main(config):
         os.makedirs(log_dir, exist_ok=True)
     logger = util.create_logger(
         name='MASK', log_dir=log_dir, debug=config.debug)
-    logger.info('EvoJAX Masking Tests')
+    logger.info('\nEvoJAX Masking Tests\n')
     logger.info('=' * 30)
 
-    cnn_params = run_mnist_training(return_model=True)
+    cnn_params = run_mnist_training(logger=logger, return_model=True)
     linear_weights = cnn_params[linear_layer_name]["kernel"]
     # mask_size = np.prod(linear_weights.shape)
     # TODO currently just masking the input features to the linear layer

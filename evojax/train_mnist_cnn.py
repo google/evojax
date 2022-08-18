@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 from typing import Optional
 
@@ -157,7 +159,7 @@ def eval_step(params, batch):
     return compute_metrics(logits=logits, labels=batch['label'])
 
 
-def train_epoch(state, train_ds, batch_size, epoch, rng):
+def train_epoch(state, train_ds, batch_size, epoch, rng, logger: logging.Logger=None):
     """Train for a single epoch."""
     train_ds_size = len(train_ds['image'])
     steps_per_epoch = train_ds_size // batch_size
@@ -178,8 +180,11 @@ def train_epoch(state, train_ds, batch_size, epoch, rng):
       k: np.mean([metrics[k] for metrics in batch_metrics_np])
       for k in batch_metrics_np[0]}
 
-    print('train epoch: %d, loss: %.4f, accuracy: %.2f' % (
-      epoch, epoch_metrics_np['loss'], epoch_metrics_np['accuracy'] * 100))
+    if logger:
+        logger.debug(f'TRAIN, epoch={epoch}, loss={epoch_metrics_np["loss"]}, accuracy={epoch_metrics_np["accuracy"]}')
+    else:
+        print('train epoch: %d, loss: %.4f, accuracy: %.2f' % (
+            epoch, epoch_metrics_np['loss'], epoch_metrics_np['accuracy'] * 100))
 
     return state
 
@@ -202,7 +207,9 @@ def eval_model(params, test_ds, batch_size):
     return epoch_metrics_np['loss'], epoch_metrics_np['accuracy']
 
 
-def run_mnist_training(num_epochs=20, learning_rate=1e-3, cnn_batch_size=1024, return_model=True):
+def run_mnist_training(logger: logging.Logger, num_epochs=20, learning_rate=1e-3, cnn_batch_size=1024, return_model=True):
+    logger.info('Starting training MNIST CNN')
+
     rng = jax.random.PRNGKey(0)
     rng, init_rng = jax.random.split(rng)
 
@@ -233,17 +240,24 @@ def run_mnist_training(num_epochs=20, learning_rate=1e-3, cnn_batch_size=1024, r
     best_params = None
     best_test_accuracy = 0
     for epoch in range(1, num_epochs + 1):
+        logger.debug(f'Starting epoch {epoch} of CNN training')
         # Use a separate PRNG key to permute image data during shuffling
         rng, input_rng = jax.random.split(rng)
         # Run an optimization step over a training batch
-        state = train_epoch(state, train_dataset, cnn_batch_size, epoch, input_rng)
+        state = train_epoch(state, train_dataset, cnn_batch_size, epoch, input_rng, logger=logger)
         # Evaluate on the test set after each training epoch
         test_loss, test_accuracy = eval_model(state.params, test_dataset, cnn_batch_size)
-        print(f'test epoch: {epoch}, loss: {test_loss:.2f}, accuracy: {test_accuracy * 100:.2f}')
+        if logger:
+            logger.debug(
+                f'TEST, epoch={epoch}, loss={test_loss}, accuracy={test_accuracy}')
+        else:
+            print(f'test epoch: {epoch}, loss: {test_loss:.2f}, accuracy: {test_accuracy:.2f}')
 
         if test_accuracy > best_test_accuracy:
             best_test_accuracy = test_accuracy
             best_params = state.params
+
+    logger.info(f'Best test accuracy for unmasked CNN is {best_test_accuracy:.4f}')
 
     if return_model:
         return best_params

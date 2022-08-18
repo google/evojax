@@ -128,7 +128,7 @@ class Trainer(object):
             scores = np.array(
                 self.sim_mgr.eval_params(params=params, test=True)[0])
             self._logger.info(
-                f'[TEST] Iter={self._max_iter}, #tests={scores.size}, max={scores.max():.4f}, '
+                f'[TEST] #tests={scores.size}, max={scores.max():.4f}, '
                 f'avg={scores.mean():.4f}, min={scores.min():.4f}, std={scores.std():.4f}')
             return scores.mean()
         else:
