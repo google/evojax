@@ -46,6 +46,7 @@ setup(
         "cma",
         "matplotlib",
         "pyyaml",
+        "google-cloud-logging"
     ],
     extras_require={
         "extra": ['evosax', 'torchvision', 'pandas', 'procgen', 'brax'],

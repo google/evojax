@@ -33,11 +33,11 @@ class Mask(nn.Module):
     mask_size: int
     dataset_number: int = 3
     round_output: bool = True
-    test_baselines: bool = False
+    test_no_mask: bool = False
 
     @nn.compact
     def __call__(self, x):
-        if self.test_baseline:
+        if self.test_no_mask:
             x = jnp.ones((x.shape[0], self.mask_size))
 
         x = nn.one_hot(x, self.dataset_number)
@@ -62,7 +62,7 @@ class MaskPolicy(PolicyNetwork):
         else:
             self._logger = logger
 
-        model = Mask(mask_size, test_baselines=True)
+        model = Mask(mask_size=mask_size, test_no_mask=True)
         params = model.init(random.PRNGKey(0), jnp.ones([batch_size, ]))
         self.num_params, format_params_fn = get_params_format_fn(params)
         self._logger.info(f'Mask.num_params = {self.num_params}')
