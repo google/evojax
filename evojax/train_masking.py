@@ -54,6 +54,8 @@ def parse_args():
         '--gpu-id', type=str, help='GPU(s) to use.')
     parser.add_argument(
         '--debug', action='store_true', help='Debug mode.')
+    parser.add_argument(
+        '--test-no-mask', action='store_true', help='Whether to test a mask of all ones.')
     config, _ = parser.parse_known_args()
     return config
 
@@ -73,7 +75,8 @@ def main(config):
     # TODO currently just masking the input features to the linear layer
     mask_size = linear_weights.shape[0]
 
-    policy = MaskPolicy(logger=logger, mask_size=mask_size, batch_size=config.batch_size)
+    policy = MaskPolicy(logger=logger, mask_size=mask_size, batch_size=config.batch_size,
+                        test_no_mask=config.test_no_mask)
     train_task = Masking(batch_size=config.batch_size, test=False, mnist_params=cnn_params, mask_size=mask_size)
     test_task = Masking(batch_size=config.batch_size, test=True, mnist_params=cnn_params, mask_size=mask_size)
 
