@@ -164,7 +164,8 @@ class Trainer(object):
                         f'avg={scores.mean():.4f}, min={scores.min():.4f}, std={scores.std():.4f}')
                     self._log_scores_fn(i, scores, "train")
 
-                if i > 0 and i % self._test_interval == 0:
+                # if i > 0 and i % self._test_interval == 0:
+                if i % self._test_interval == 0:
                     best_params = self.solver.best_params
                     test_scores, _ = self.sim_mgr.eval_params(
                         params=best_params, test=True)

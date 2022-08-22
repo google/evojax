@@ -79,12 +79,6 @@ class Masking(VectorizedTask):
             x_array.append(x)
             y_array.append(y)
 
-        # # TODO remove this once the memory issues have been fixed
-        # if not test:
-        #     random_sample = np.random.permutation(range(180000))[:2**13]
-        # else:
-        #     random_sample = np.random.permutation(range(30000))[:2**11]
-
         image_data = jnp.float32(np.concatenate(x_array)) / 255.
         labels = jnp.int16(np.concatenate(y_array))
         class_labels = labels[:, 0]

@@ -20,6 +20,7 @@ import jax.numpy as jnp
 from jax import random
 
 from flax import linen as nn
+from flax.core import freeze, unfreeze
 
 from evojax.policy.base import PolicyNetwork
 from evojax.policy.base import PolicyState
@@ -27,6 +28,7 @@ from evojax.task.base import TaskState
 from evojax.util import create_logger
 from evojax.util import get_params_format_fn
 
+final_layer_name = "DENSE-FINAL"
 
 class Mask(nn.Module):
     """Mask network for MNIST."""
@@ -41,11 +43,11 @@ class Mask(nn.Module):
             x = jnp.ones((x.shape[0], self.mask_size))
 
         x = nn.one_hot(x, self.dataset_number)
-        x = nn.Dense(features=10)(x)
+        x = nn.Dense(features=10, name="DENSE1")(x)
         x = nn.relu(x)
-        x = nn.Dense(features=100)(x)
+        x = nn.Dense(features=100, name="DENSE2")(x)
         x = nn.relu(x)
-        x = nn.Dense(features=self.mask_size)(x)
+        x = nn.Dense(features=self.mask_size, name=final_layer_name)(x)
         x = nn.sigmoid(x)
         if self.round_output:
             x = jnp.round(x)
@@ -64,6 +66,16 @@ class MaskPolicy(PolicyNetwork):
 
         model = Mask(mask_size=mask_size, test_no_mask=test_no_mask)
         params = model.init(random.PRNGKey(0), jnp.ones([batch_size, ]))
+
+        # I want to start with no masking, then move away from this
+        # Try having all weights in the final layer be zero with a bias of ones
+        params = unfreeze(params)
+        final_mask_weights = params["params"][final_layer_name]["kernel"]
+        final_mask_bias = params["params"][final_layer_name]["bias"]
+        params["params"][final_layer_name]["kernel"] = jnp.zeros_like(final_mask_weights)
+        params["params"][final_layer_name]["bias"] = jnp.ones_like(final_mask_bias)
+        params = freeze(params)
+
         self.num_params, format_params_fn = get_params_format_fn(params)
         self._logger.info(f'Mask.num_params = {self.num_params}')
         self._format_params_fn = jax.vmap(format_params_fn)
