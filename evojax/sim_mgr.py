@@ -30,6 +30,9 @@ from evojax.policy.base import PolicyState
 from evojax.policy.base import PolicyNetwork
 from evojax.util import create_logger
 
+from evojax.task.masking import State
+from evojax.policy.mask import Mask
+
 
 @partial(jax.jit, static_argnums=(1, 2, 3, 4, 5))
 def get_task_reset_keys(key: jnp.ndarray,
@@ -314,6 +317,16 @@ class SimManager(object):
         """Rollout using jax.lax.scan."""
         policy_reset_func = self._policy_reset_fn
         if test:
+            dummy_task_state = State()
+            dummy_task_state.obs = jnp.ndarray([1, 2, 3])
+
+            dummy_policy_state = self._policy_reset_fn(dummy_task_state)
+
+            example_masks, _ = self._policy_act_fn(
+                dummy_task_state, params, dummy_policy_state)
+
+            self._logger.debug(f'Masks sum: {jnp.sum(example_masks, axis=1)}')
+
             n_repeats = self._test_n_repeats
             task_reset_func = self._valid_reset_fn
             rollout_func = self._valid_rollout_fn

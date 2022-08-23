@@ -10,7 +10,7 @@ from evojax.datasets import DATASET_LABELS
 from evojax.train_mnist_cnn import run_mnist_training, linear_layer_name, CNN
 
 
-logger = create_logger('masking-tests', debug=True)
+logger = create_logger('masking-tests', debug=False)
 
 
 def test_initial_setup():
@@ -44,7 +44,7 @@ def test_mask_of_ones():
     """
     Test that a mask of ones doesn't change the CNN output, but that a binary mask will.
     """
-    cnn_params = run_mnist_training(logger=logger, return_model=True)
+    cnn_params = run_mnist_training(logger=logger, return_model=True, num_epochs=3)
 
     linear_weights = cnn_params[linear_layer_name]["kernel"]
     unity_mask = jnp.ones((linear_weights.shape[0],))

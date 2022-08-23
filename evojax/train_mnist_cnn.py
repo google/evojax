@@ -210,8 +210,8 @@ def eval_model(params, test_ds, batch_size):
 def run_mnist_training(logger: logging.Logger, num_epochs=20, learning_rate=1e-3, cnn_batch_size=1024, return_model=True):
     logger.info('Starting training MNIST CNN')
 
-    rng = jax.random.PRNGKey(0)
-    rng, init_rng = jax.random.split(rng)
+    rng = random.PRNGKey(0)
+    rng, init_rng = random.split(rng)
 
     state = create_train_state(init_rng, learning_rate)
     del init_rng  # Must not be used anymore.
@@ -240,7 +240,7 @@ def run_mnist_training(logger: logging.Logger, num_epochs=20, learning_rate=1e-3
     best_params = None
     best_test_accuracy = 0
     for epoch in range(1, num_epochs + 1):
-        logger.debug(f'Starting epoch {epoch} of CNN training')
+        logger.info(f'Starting epoch {epoch} of CNN training')
         # Use a separate PRNG key to permute image data during shuffling
         rng, input_rng = jax.random.split(rng)
         # Run an optimization step over a training batch
@@ -248,7 +248,7 @@ def run_mnist_training(logger: logging.Logger, num_epochs=20, learning_rate=1e-3
         # Evaluate on the test set after each training epoch
         test_loss, test_accuracy = eval_model(state.params, test_dataset, cnn_batch_size)
         if logger:
-            logger.debug(
+            logger.info(
                 f'TEST, epoch={epoch}, loss={test_loss}, accuracy={test_accuracy}')
         else:
             print(f'test epoch: {epoch}, loss: {test_loss:.2f}, accuracy: {test_accuracy:.2f}')
@@ -265,5 +265,5 @@ def run_mnist_training(logger: logging.Logger, num_epochs=20, learning_rate=1e-3
 
 if __name__ == '__main__':
 
-    log = logging.Logger(level=logging.DEBUG, name='mnist_logger')
+    log = logging.Logger(level=logging.INFO, name='mnist_logger')
     run_mnist_training(logger=log, return_model=False)

@@ -30,8 +30,8 @@ from evojax.train_mnist_cnn import CNN, linear_layer_name
 
 @dataclass
 class State(TaskState):
-    obs: jnp.ndarray  # This will be the dataset label for now as this is the input for the
-    labels: jnp.ndarray
+    obs: jnp.ndarray  # This will be the dataset label for now as this is the input for the masker
+    labels: jnp.ndarray  # This is the class label
     image_data: jnp.ndarray
 
 
@@ -114,13 +114,8 @@ class Masking(VectorizedTask):
             return state, reward, jnp.ones(())
         self._step_fn = jax.jit(jax.vmap(step_fn))
 
-    def reset(self, key: jnp.ndarray, mask_test=False) -> State:
-        if mask_test:
-            return State(obs=jnp.ndarray(DATASET_LABELS.values()),
-                         labels=None,
-                         image_data=None)
-        else:
-            return self._reset_fn(key)
+    def reset(self, key: jnp.ndarray) -> State:
+        return self._reset_fn(key)
 
     def step(self,
              state: TaskState,
