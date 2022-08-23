@@ -29,7 +29,7 @@ def test_initial_setup():
     # batch_size = 8
     mask_params = model.init(random.PRNGKey(0), jnp.ones([1, ]))
 
-    model_output = model.apply({"params": mask_params["params"]}, jnp.ndarray(DATASET_LABELS.values()))
+    model_output = model.apply({"params": mask_params["params"]}, jnp.array(list(DATASET_LABELS.values())))
     assert not jnp.array_equal(model_output[0], model_output[1])
     assert not jnp.array_equal(model_output[0], model_output[2])
     assert not jnp.array_equal(model_output[1], model_output[2])
@@ -37,7 +37,7 @@ def test_initial_setup():
     # Now set the final bias and weights
     mask_params = set_bias_and_weights(mask_params)
 
-    model_output = model.apply({"params": mask_params["params"]}, jnp.ndarray(DATASET_LABELS.values()))
+    model_output = model.apply({"params": mask_params["params"]}, jnp.array(list(DATASET_LABELS.values())))
 
     assert jnp.array_equal(model_output, jnp.ones_like(model_output))
 
@@ -50,9 +50,9 @@ def test_mask_of_ones():
 
     linear_weights = cnn_params[linear_layer_name]["kernel"]
     unity_mask = jnp.ones((linear_weights.shape[0],))
-    binary_mask = jnp.ndarray(np.random.randint(1, size=linear_weights.shape[0]))
+    binary_mask = jnp.array(np.random.randint(1, size=linear_weights.shape[0]))
 
-    pretend_images = jnp.ndarray(np.random.uniform(size=(5, 28, 28, 1)))
+    pretend_images = jnp.array(np.random.uniform(size=(5, 28, 28, 1)))
 
     unity_masked_output = CNN().apply({'params': cnn_params}, pretend_images, unity_mask)
     binary_masked_output = CNN().apply({'params': cnn_params}, pretend_images, binary_mask)
