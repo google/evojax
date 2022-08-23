@@ -1,18 +1,16 @@
-import logging
 import numpy as np
 
 from jax import random
 import jax.numpy as jnp
 
-from evojax import Trainer
-from evojax.task.masking import Masking
+from evojax.util import create_logger
 from evojax.policy.mask import Mask, set_bias_and_weights
 
 from evojax.datasets import DATASET_LABELS
 from evojax.train_mnist_cnn import run_mnist_training, linear_layer_name, CNN
 
 
-logger = logging.Logger(level=logging.DEBUG, name='test_logger')
+logger = create_logger('masking-tests', debug=True)
 
 
 def test_initial_setup():
