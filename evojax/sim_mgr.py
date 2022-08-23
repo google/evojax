@@ -317,15 +317,15 @@ class SimManager(object):
         """Rollout using jax.lax.scan."""
         policy_reset_func = self._policy_reset_fn
         if test:
-            dummy_task_state = State()
-            dummy_task_state.obs = jnp.ndarray([1, 2, 3])
+            dummy_task_state = State(obs=jnp.ndarray([1, 2, 3]), labels=None, image_data=None)
+            # dummy_task_state.obs = jnp.ndarray([1, 2, 3])
 
             dummy_policy_state = self._policy_reset_fn(dummy_task_state)
 
             example_masks, _ = self._policy_act_fn(
                 dummy_task_state, params, dummy_policy_state)
 
-            self._logger.debug(f'Masks sum: {jnp.sum(example_masks, axis=1)}')
+            self._logger.info(f'Masks sum: {jnp.sum(example_masks, axis=1)}')
 
             n_repeats = self._test_n_repeats
             task_reset_func = self._valid_reset_fn
