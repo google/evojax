@@ -264,4 +264,6 @@ def run_mnist_training(logger: logging.Logger, num_epochs=20, learning_rate=1e-3
 
 
 if __name__ == '__main__':
-    run_mnist_training(return_model=False)
+
+    log = logging.Logger(level=logging.DEBUG)
+    run_mnist_training(logger=log, return_model=False)

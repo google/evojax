@@ -24,7 +24,7 @@ from flax.struct import dataclass
 from evojax.task.base import VectorizedTask
 from evojax.task.base import TaskState
 
-from evojax.datasets import read_data_files, digit, fashion, kuzushiji
+from evojax.datasets import read_data_files, digit, fashion, kuzushiji, DATASET_LABELS
 from evojax.train_mnist_cnn import CNN, linear_layer_name
 
 
@@ -114,8 +114,13 @@ class Masking(VectorizedTask):
             return state, reward, jnp.ones(())
         self._step_fn = jax.jit(jax.vmap(step_fn))
 
-    def reset(self, key: jnp.ndarray) -> State:
-        return self._reset_fn(key)
+    def reset(self, key: jnp.ndarray, mask_test=False) -> State:
+        if mask_test:
+            return State(obs=jnp.ndarray(DATASET_LABELS.values()),
+                         labels=None,
+                         image_data=None)
+        else:
+            return self._reset_fn(key)
 
     def step(self,
              state: TaskState,

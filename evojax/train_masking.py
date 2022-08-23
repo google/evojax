@@ -108,7 +108,6 @@ def main(config):
     )
     best_score = trainer.run(demo_mode=False)
 
-
     # Test the final model.
     src_file = os.path.join(log_dir, 'best.npz')
     tar_file = os.path.join(log_dir, 'model.npz')
