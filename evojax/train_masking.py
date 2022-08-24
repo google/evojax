@@ -81,7 +81,12 @@ def main(config):
     train_task = Masking(batch_size=config.batch_size, test=False, mnist_params=cnn_params, mask_size=mask_size)
     test_task = Masking(batch_size=config.batch_size, test=True, mnist_params=cnn_params, mask_size=mask_size)
 
+    # Need to initialise the solver with the right parameters
+    _, params_format_function = util.get_params_format_fn(policy.initial_params)
+    processed_params = params_format_function(policy.initial_params)
+
     solver = PGPE(
+        init_params=processed_params,
         pop_size=config.pop_size,
         param_size=policy.num_params,
         optimizer='adam',

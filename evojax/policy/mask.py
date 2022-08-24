@@ -87,6 +87,8 @@ class MaskPolicy(PolicyNetwork):
         dummy_output = model.apply({"params": params["params"]}, self.dummy_data)
         assert jnp.array_equal(jnp.ones((len(DATASET_LABELS), mask_size)), dummy_output)
 
+        self.initial_params = params
+
         self.num_params, format_params_fn = get_params_format_fn(params)
         self._logger.info(f'Mask.num_params = {self.num_params}')
         self._format_params_fn = jax.vmap(format_params_fn)
