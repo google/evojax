@@ -62,7 +62,7 @@ def set_bias_and_weights(params):
     final_mask_weights = params["params"][final_layer_name]["kernel"]
     final_mask_bias = params["params"][final_layer_name]["bias"]
     params["params"][final_layer_name]["kernel"] = jnp.zeros_like(final_mask_weights)
-    params["params"][final_layer_name]["bias"] = jnp.ones_like(final_mask_bias)
+    params["params"][final_layer_name]["bias"] = jnp.ones_like(final_mask_bias) * 0.51
     return freeze(params)
 
 
