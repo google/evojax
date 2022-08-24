@@ -23,11 +23,12 @@ import argparse
 
 from evojax import Trainer
 from evojax.task.masking import Masking
-from evojax.policy.mask import MaskPolicy
+from evojax.policy.mask import MaskPolicy, Mask
 from evojax.algo import PGPE
 from evojax import util
 
 from evojax.train_mnist_cnn import run_mnist_training, linear_layer_name
+from evojax.datasets import DATASET_LABELS
 
 
 def parse_args():
@@ -105,6 +106,8 @@ def main(config):
         seed=config.seed,
         log_dir=log_dir,
         logger=logger,
+        base_network=Mask(),
+        dataset_labels=DATASET_LABELS
     )
     best_score = trainer.run(demo_mode=False)
 

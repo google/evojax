@@ -18,6 +18,7 @@ from typing import Optional, Callable
 
 import jax.numpy as jnp
 import numpy as np
+from flax import linen as nn
 
 from evojax.task.base import VectorizedTask
 from evojax.policy import PolicyNetwork
@@ -52,7 +53,9 @@ class Trainer(object):
                  model_dir: str = None,
                  log_dir: str = None,
                  logger: logging.Logger = None,
-                 log_scores_fn: Optional[Callable[[int, jnp.ndarray, str], None]] = None):
+                 log_scores_fn: Optional[Callable[[int, jnp.ndarray, str], None]] = None,
+                 base_network: nn.Module = None,
+                 dataset_labels: dict = None):
         """Initialization.
 
         Args:
@@ -109,6 +112,10 @@ class Trainer(object):
             use_for_loop=use_for_loop,
             logger=self._logger,
         )
+
+        # This will store the masking network, so masks can be checked throughout training
+        self.base_network = base_network
+        self.dataset_labels = dataset_labels
 
     def run(self, demo_mode: bool = False) -> float:
         """Start the training / test process."""
@@ -167,6 +174,14 @@ class Trainer(object):
                 # if i > 0 and i % self._test_interval == 0:
                 if i % self._test_interval == 0:
                     best_params = self.solver.best_params
+
+                    current_masks = self.base_network.apply({"params": best_params["params"]},
+                                                            jnp.array(list(self.dataset_labels.values())))
+
+                    mean_mask = jnp.mean(current_masks, axis=1)
+                    for k, v in self.dataset_labels.items():
+                        self._logger.info(f'Mean mask value for {k}: {mean_mask[v-1]}')
+
                     test_scores, _ = self.sim_mgr.eval_params(
                         params=best_params, test=True)
                     self._logger.info(
