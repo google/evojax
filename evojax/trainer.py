@@ -175,6 +175,8 @@ class Trainer(object):
                 if i % self._test_interval == 0:
                     best_params = self.solver.best_params
 
+                    import ipdb
+                    ipdb.set_trace()
                     current_masks = self.base_network.apply({"params": best_params["params"]},
                                                             jnp.array(list(self.dataset_labels.values())))
 
