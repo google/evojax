@@ -21,9 +21,11 @@ import os
 import shutil
 import argparse
 
+from jax import tree_util
+
 from evojax import Trainer
 from evojax.task.masking import Masking
-from evojax.policy.mask import MaskPolicy, Mask
+from evojax.policy.mask import MaskPolicy
 from evojax.algo import PGPE
 from evojax import util
 
@@ -82,8 +84,12 @@ def main(config):
     test_task = Masking(batch_size=config.batch_size, test=True, mnist_params=cnn_params, mask_size=mask_size)
 
     # Need to initialise the solver with the right parameters
-    _, params_format_function = util.get_params_format_fn(policy.initial_params)
-    processed_params = params_format_function(policy.initial_params)
+    # _, params_format_function = util.get_params_format_fn(policy.initial_params)
+    # processed_params = params_format_function(policy.initial_params)
+    import ipdb
+    ipdb.set_trace()
+    
+    processed_params = tree_util.tree_flatten(policy.initial_params)
 
     solver = PGPE(
         init_params=processed_params,
