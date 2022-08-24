@@ -120,8 +120,4 @@ class Masking(VectorizedTask):
     def step(self,
              state: TaskState,
              action: jnp.ndarray) -> Tuple[TaskState, jnp.ndarray, jnp.ndarray]:
-        # if state is None:
-        #     state = State(obs=jnp.array(list(DATASET_LABELS.values())),
-        #                   labels=None,
-        #                   image_data=None)
         return self._step_fn(state, action)

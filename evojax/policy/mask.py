@@ -94,8 +94,7 @@ class MaskPolicy(PolicyNetwork):
                     t_states: Optional[TaskState],
                     params: jnp.ndarray,
                     p_states: PolicyState) -> Tuple[jnp.ndarray, Optional[PolicyState]]:
-        # import ipdb
-        # ipdb.set_trace()
+        # Use this to test what masks are generated for each dataset
         if t_states is None:
             params = self._format_params_fn_no_vmap(params)
             return self._forward_fn_no_vmap(params, jnp.array(list(DATASET_LABELS.values()))), None

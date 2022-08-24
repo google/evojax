@@ -174,12 +174,11 @@ class Trainer(object):
                 if i % self._test_interval == 0:
                     best_params = self.solver.best_params
 
-                    import ipdb
-                    ipdb.set_trace()
+                    # Test and save the mask used for each dataset
                     current_masks, _ = self.policy_network.get_actions(None, best_params, None)
                     mean_mask = jnp.mean(current_masks, axis=1)
                     for k, v in self.dataset_labels.items():
-                        self._logger.info(f'Mean mask value for {k}: {mean_mask[v-1]}')
+                        self._logger.info(f'[MASK] Mean mask value for {k}: {mean_mask[v]}')
 
                     test_scores, _ = self.sim_mgr.eval_params(
                         params=best_params, test=True)
