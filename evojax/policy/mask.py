@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import logging
-from typing import Tuple
+from typing import Tuple, Optional
 
 import jax
 import jax.numpy as jnp
@@ -28,6 +28,7 @@ from evojax.task.base import TaskState
 from evojax.util import create_logger
 from evojax.util import get_params_format_fn
 
+from evojax.datasets import DATASET_LABELS
 final_layer_name = "DENSE-FINAL"
 
 
@@ -88,8 +89,11 @@ class MaskPolicy(PolicyNetwork):
         self._forward_fn = jax.vmap(model.apply)
 
     def get_actions(self,
-                    t_states: TaskState,
+                    t_states: Optional[TaskState],
                     params: jnp.ndarray,
-                    p_states: PolicyState) -> Tuple[jnp.ndarray, PolicyState]:
+                    p_states: PolicyState) -> Tuple[jnp.ndarray, Optional[PolicyState]]:
         params = self._format_params_fn(params)
-        return self._forward_fn(params, t_states.obs), p_states
+        if t_states is None:
+            return self._forward_fn(params, jnp.array(list(DATASET_LABELS.values()))), None
+        else:
+            return self._forward_fn(params, t_states.obs), p_states

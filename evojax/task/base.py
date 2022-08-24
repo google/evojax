@@ -18,6 +18,7 @@ from typing import Dict
 from typing import List
 from typing import Tuple
 from typing import TypeVar
+from typing import Optional
 import dataclasses
 
 import jax.numpy as jnp
@@ -26,7 +27,7 @@ from flax.struct import dataclass
 
 class TaskState(ABC):
     """A template of the task state."""
-    obs: jnp.ndarray
+    obs: Optional[jnp.ndarray]
 
 
 class VectorizedTask(ABC):

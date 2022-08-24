@@ -14,7 +14,7 @@
 
 from abc import ABC
 from abc import abstractmethod
-from typing import Tuple
+from typing import Tuple, Optional
 import jax.numpy as jnp
 import jax.random
 from flax.struct import dataclass
@@ -47,9 +47,9 @@ class PolicyNetwork(ABC):
 
     @abstractmethod
     def get_actions(self,
-                    t_states: TaskState,
+                    t_states: Optional[TaskState],
                     params: jnp.ndarray,
-                    p_states: PolicyState) -> Tuple[jnp.ndarray, PolicyState]:
+                    p_states: Optional[PolicyState]) -> Tuple[jnp.ndarray, PolicyState]:
         """Get vectorized actions.
 
         Args:

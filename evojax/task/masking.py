@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Tuple
+from typing import Tuple, Optional
 import numpy as np
 
 import jax
@@ -30,9 +30,9 @@ from evojax.train_mnist_cnn import CNN, linear_layer_name
 
 @dataclass
 class State(TaskState):
-    obs: jnp.ndarray  # This will be the dataset label for now as this is the input for the masker
-    labels: jnp.ndarray  # This is the class label
-    image_data: jnp.ndarray
+    obs: Optional[jnp.ndarray]  # This will be the dataset label for now as this is the input for the masker
+    labels: Optional[jnp.ndarray]  # This is the class label
+    image_data: Optional[jnp.ndarray]
 
 
 def sample_batch(key: jnp.ndarray,
@@ -120,4 +120,8 @@ class Masking(VectorizedTask):
     def step(self,
              state: TaskState,
              action: jnp.ndarray) -> Tuple[TaskState, jnp.ndarray, jnp.ndarray]:
+        # if state is None:
+        #     state = State(obs=jnp.array(list(DATASET_LABELS.values())),
+        #                   labels=None,
+        #                   image_data=None)
         return self._step_fn(state, action)

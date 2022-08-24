@@ -54,7 +54,6 @@ class Trainer(object):
                  log_dir: str = None,
                  logger: logging.Logger = None,
                  log_scores_fn: Optional[Callable[[int, jnp.ndarray, str], None]] = None,
-                 base_network: nn.Module = None,
                  dataset_labels: dict = None):
         """Initialization.
 
@@ -114,7 +113,7 @@ class Trainer(object):
         )
 
         # This will store the masking network, so masks can be checked throughout training
-        self.base_network = base_network
+        self.policy_network = policy
         self.dataset_labels = dataset_labels
 
     def run(self, demo_mode: bool = False) -> float:
@@ -177,9 +176,10 @@ class Trainer(object):
 
                     import ipdb
                     ipdb.set_trace()
-                    current_masks = self.base_network.apply({"params": best_params["params"]},
-                                                            jnp.array(list(self.dataset_labels.values())))
+                    # current_masks = self.policy_network.apply({"params": best_params["params"]},
+                    #                                           jnp.array(list(self.dataset_labels.values())))
 
+                    current_masks, _ = self.policy_network.get_actions(None, best_params, None)
                     mean_mask = jnp.mean(current_masks, axis=1)
                     for k, v in self.dataset_labels.items():
                         self._logger.info(f'Mean mask value for {k}: {mean_mask[v-1]}')
