@@ -18,6 +18,7 @@ Example command to run this script: `python train_masking.py`
 """
 
 import os
+import time
 import shutil
 import argparse
 
@@ -67,13 +68,14 @@ def parse_args():
 
 
 def main(config):
+    start_time = time.time()
     log_dir = './log/masking'
     if not os.path.exists(log_dir):
         os.makedirs(log_dir, exist_ok=True)
     logger = util.create_logger(
         name='MASK', log_dir=log_dir, debug=config.debug)
-    logger.info('\nEvoJAX Masking Tests\n')
-    logger.info('=' * 30)
+    logger.info('\n\nEvoJAX Masking Tests\n')
+    logger.info('=' * 50)
 
     cnn_params = run_mnist_training(logger=logger, return_model=True, num_epochs=config.cnn_epochs)
     linear_weights = cnn_params[linear_layer_name]["kernel"]
@@ -126,6 +128,11 @@ def main(config):
     shutil.copy(src_file, tar_file)
     trainer.model_dir = log_dir
     trainer.run(demo_mode=True)
+
+    end_time = time.time()
+    logger.info(f'Total time taken: {end_time-start_time:.2f}s')
+    logger.info('RUN COMPLETE\n')
+    logger.info('=' * 50)
 
 
 if __name__ == '__main__':
