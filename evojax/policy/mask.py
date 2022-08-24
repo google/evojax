@@ -83,6 +83,10 @@ class MaskPolicy(PolicyNetwork):
         # Try having all weights in the final layer be zero with a bias of ones
         params = set_bias_and_weights(params)
 
+        self.dummy_data = jnp.array(list(DATASET_LABELS.values()))
+        dummy_output = model.apply({"params": params["params"]}, self.dummy_data)
+        assert jnp.array_equal(jnp.ones((len(DATASET_LABELS), mask_size)), dummy_output)
+
         self.num_params, format_params_fn = get_params_format_fn(params)
         self._logger.info(f'Mask.num_params = {self.num_params}')
         self._format_params_fn = jax.vmap(format_params_fn)
@@ -97,7 +101,7 @@ class MaskPolicy(PolicyNetwork):
         # Use this to test what masks are generated for each dataset
         if t_states is None:
             params = self._format_params_fn_no_vmap(params)
-            return self._forward_fn_no_vmap(params, jnp.array(list(DATASET_LABELS.values()))), None
+            return self._forward_fn_no_vmap(params, self.dummy_data), None
         else:
             params = self._format_params_fn(params)
             return self._forward_fn(params, t_states.obs), p_states
