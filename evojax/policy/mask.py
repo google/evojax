@@ -87,13 +87,18 @@ class MaskPolicy(PolicyNetwork):
         self._logger.info(f'Mask.num_params = {self.num_params}')
         self._format_params_fn = jax.vmap(format_params_fn)
         self._forward_fn = jax.vmap(model.apply)
+        self._format_params_fn_no_vmap = format_params_fn
+        self._forward_fn_no_vmap = model.apply
 
     def get_actions(self,
                     t_states: Optional[TaskState],
                     params: jnp.ndarray,
                     p_states: PolicyState) -> Tuple[jnp.ndarray, Optional[PolicyState]]:
-        params = self._format_params_fn(params)
+        # import ipdb
+        # ipdb.set_trace()
         if t_states is None:
-            return self._forward_fn(params, jnp.array(list(DATASET_LABELS.values()))), None
+            params = self._format_params_fn_no_vmap(params)
+            return self._forward_fn_no_vmap(params, jnp.array(list(DATASET_LABELS.values()))), None
         else:
+            params = self._format_params_fn(params)
             return self._forward_fn(params, t_states.obs), p_states

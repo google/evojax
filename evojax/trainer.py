@@ -176,9 +176,6 @@ class Trainer(object):
 
                     import ipdb
                     ipdb.set_trace()
-                    # current_masks = self.policy_network.apply({"params": best_params["params"]},
-                    #                                           jnp.array(list(self.dataset_labels.values())))
-
                     current_masks, _ = self.policy_network.get_actions(None, best_params, None)
                     mean_mask = jnp.mean(current_masks, axis=1)
                     for k, v in self.dataset_labels.items():
