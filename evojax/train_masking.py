@@ -106,7 +106,6 @@ def main(config):
         seed=config.seed,
         log_dir=log_dir,
         logger=logger,
-        base_network=Mask(mask_size),
         dataset_labels=DATASET_LABELS
     )
     best_score = trainer.run(demo_mode=False)
