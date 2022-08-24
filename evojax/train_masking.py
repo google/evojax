@@ -43,6 +43,8 @@ def parse_args():
     parser.add_argument(
         '--max-iter', type=int, default=5000, help='Max training iterations.')
     parser.add_argument(
+        '--cnn-epochs', type=int, default=20, help='Number of epochs to train the CNN for.')
+    parser.add_argument(
         '--test-interval', type=int, default=1000, help='Test interval.')
     parser.add_argument(
         '--log-interval', type=int, default=100, help='Logging interval.')
@@ -73,7 +75,7 @@ def main(config):
     logger.info('\nEvoJAX Masking Tests\n')
     logger.info('=' * 30)
 
-    cnn_params = run_mnist_training(logger=logger, return_model=True, num_epochs=5)
+    cnn_params = run_mnist_training(logger=logger, return_model=True, num_epochs=config.cnn_epochs)
     linear_weights = cnn_params[linear_layer_name]["kernel"]
     # mask_size = np.prod(linear_weights.shape)
     # TODO currently just masking the input features to the linear layer
@@ -85,11 +87,6 @@ def main(config):
     test_task = Masking(batch_size=config.batch_size, test=True, mnist_params=cnn_params, mask_size=mask_size)
 
     # Need to initialise the solver with the right parameters
-    # _, params_format_function = util.get_params_format_fn(policy.initial_params)
-    # processed_params = params_format_function(policy.initial_params)
-    # import ipdb
-    # ipdb.set_trace()
-
     flat, tree = tree_util.tree_flatten(policy.initial_params)
     processed_params = jnp.concatenate([i.ravel() for i in flat])
 
