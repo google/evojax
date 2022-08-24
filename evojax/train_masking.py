@@ -22,6 +22,7 @@ import shutil
 import argparse
 
 from jax import tree_util
+import jax.numpy as jnp
 
 from evojax import Trainer
 from evojax.task.masking import Masking
@@ -86,10 +87,11 @@ def main(config):
     # Need to initialise the solver with the right parameters
     # _, params_format_function = util.get_params_format_fn(policy.initial_params)
     # processed_params = params_format_function(policy.initial_params)
-    import ipdb
-    ipdb.set_trace()
-    
-    processed_params = tree_util.tree_flatten(policy.initial_params)
+    # import ipdb
+    # ipdb.set_trace()
+
+    flat, tree = tree_util.tree_flatten(policy.initial_params)
+    processed_params = jnp.concatenate([i.ravel() for i in flat])
 
     solver = PGPE(
         init_params=processed_params,
