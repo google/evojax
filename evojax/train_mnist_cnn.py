@@ -10,7 +10,7 @@ from jax import random
 from flax import linen as nn
 from flax.training import train_state
 
-from evojax.datasets import read_data_files, digit, fashion, kuzushiji
+from evojax.datasets import read_data_files, digit, fashion, kuzushiji, cifar
 
 import optax
 
@@ -189,22 +189,48 @@ def train_epoch(state, train_ds, batch_size, epoch, rng, logger: logging.Logger=
     return state
 
 
-def eval_model(params, test_ds, batch_size):
-    test_ds_size = len(test_ds['image'])
-    steps_per_epoch = test_ds_size // batch_size
+def eval_model(params, test_dataset_class, batch_size):
 
-    batch_metrics = []
-    for i in range(steps_per_epoch):
-        batch = {k: v[i*batch_size: (i+1)*batch_size, ...] for k, v in test_ds.items()}
-        metrics = eval_step(params, batch)
-        batch_metrics.append(metrics)
+    for dataset_name, test_ds in test_dataset_class.dataset_holder:
+        test_ds_size = len(test_ds['image'])
+        steps_per_epoch = test_ds_size // batch_size
 
-    batch_metrics_np = jax.device_get(batch_metrics)
-    epoch_metrics_np = {
-      k: np.mean([metrics[k] for metrics in batch_metrics_np])
-      for k in batch_metrics_np[0]}
+        batch_metrics = []
+        for i in range(steps_per_epoch):
+            batch = {k: v[i*batch_size: (i+1)*batch_size, ...] for k, v in test_ds.items()}
+            metrics = eval_step(params, batch)
+            batch_metrics.append(metrics)
 
-    return epoch_metrics_np['loss'], epoch_metrics_np['accuracy']
+        batch_metrics_np = jax.device_get(batch_metrics)
+        epoch_metrics_np = {
+          k: np.mean([metrics[k] for metrics in batch_metrics_np])
+          for k in batch_metrics_np[0]}
+
+        test_dataset_class.metrics_holder[dataset_name] = epoch_metrics_np['loss'], epoch_metrics_np['accuracy']
+
+    return test_dataset_class
+
+
+class TestDatasetUtil:
+    def __init__(self, dataset_names: list):
+        self.dataset_holder = {}
+        self.metrics_holder = {}
+
+        for dataset_name in dataset_names:
+            self.setup_dataset(dataset_name)
+
+    def setup_dataset(self, dataset_name):
+        test_dataset = {}
+        x_array_test, y_array_test = [], []
+
+        x_test, y_test = read_data_files(dataset_name, 'test')
+        x_array_test.append(x_test)
+        y_array_test.append(y_test)
+
+        test_dataset['image'] = jnp.float32(np.concatenate(x_array_test)) / 255.
+        test_dataset['label'] = jnp.int16(np.concatenate(y_array_test)[:, 0])
+
+        self.dataset_holder[dataset_name] = test_dataset
 
 
 def run_mnist_training(logger: logging.Logger, num_epochs=20, learning_rate=1e-3, cnn_batch_size=1024, return_model=True):
@@ -217,25 +243,19 @@ def run_mnist_training(logger: logging.Logger, num_epochs=20, learning_rate=1e-3
     del init_rng  # Must not be used anymore.
 
     train_dataset = {}
-    test_dataset = {}
     x_array_train, y_array_train = [], []
-    x_array_test, y_array_test = [], []
 
-    for dataset_name in [digit, fashion, kuzushiji]:
+    dataset_names = [digit, fashion, kuzushiji, cifar]
+    for dataset_name in dataset_names:
         x_train, y_train = read_data_files(dataset_name, 'train')
         x_array_train.append(x_train)
         y_array_train.append(y_train)
 
-        x_test, y_test = read_data_files(dataset_name, 'test')
-        x_array_test.append(x_test)
-        y_array_test.append(y_test)
-
     train_dataset['image'] = jnp.float32(np.concatenate(x_array_train)) / 255.
-    test_dataset['image'] = jnp.float32(np.concatenate(x_array_test)) / 255.
-
     # Only use the class label, not dataset label here
     train_dataset['label'] = jnp.int16(np.concatenate(y_array_train)[:, 0])
-    test_dataset['label'] = jnp.int16(np.concatenate(y_array_test)[:, 0])
+
+    test_dataset_class = TestDatasetUtil(dataset_names)
 
     best_params = None
     best_test_accuracy = 0
@@ -243,13 +263,21 @@ def run_mnist_training(logger: logging.Logger, num_epochs=20, learning_rate=1e-3
         logger.info(f'Starting epoch {epoch} of CNN training')
         # Use a separate PRNG key to permute image data during shuffling
         rng, input_rng = jax.random.split(rng)
+
         # Run an optimization step over a training batch
         state = train_epoch(state, train_dataset, cnn_batch_size, epoch, input_rng, logger=logger)
+
         # Evaluate on the test set after each training epoch
-        test_loss, test_accuracy = eval_model(state.params, test_dataset, cnn_batch_size)
+        test_dataset_class = eval_model(state.params, test_dataset_class, cnn_batch_size)
+        test_loss = np.mean(i[1] for i in test_dataset_class.metrics_holder.values())
+        test_accuracy = np.mean(i[1] for i in test_dataset_class.metrics_holder.values())
+
         if logger:
             logger.info(
                 f'TEST, epoch={epoch}, loss={test_loss}, accuracy={test_accuracy}')
+            for dataset_name in dataset_names:
+                logger.info(
+                    f'TEST, {dataset_name} accuracy={test_dataset_class.metrics_holder[dataset_name]:.2f}')
         else:
             print(f'test epoch: {epoch}, loss: {test_loss:.2f}, accuracy: {test_accuracy:.2f}')
 
