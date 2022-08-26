@@ -29,12 +29,13 @@ def read_data_files(dataset_name, split):
     assert split in {'train', 'test'}
 
     folder_name = FOLDER_NAMES[dataset_name]
-    base_folder_path = os.path.join(dirname, 'data', folder_name)
+    folder_path = os.path.join(dirname, 'data', folder_name, 'raw')
 
     if dataset_name == cifar:
-        xs, ys = np.load(f'{split}X.npy'), np.load(f'{split}y.npy')
+        file_name = os.path.join(folder_path, f'{split}.npz')
+        loaded = np.load(file_name)
+        xs, ys = loaded['X'], loaded['y']
     else:
-        folder_path = os.path.join(base_folder_path, 'raw')
         file_prefix = 't10k' if split == 'test' else split
 
         image_file = f'{file_prefix}-images-idx3-ubyte'
