@@ -3,6 +3,9 @@
 /data/
 /local/
 
+# Files from image tests
+*.jpg
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

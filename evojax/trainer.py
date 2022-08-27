@@ -230,8 +230,9 @@ class Trainer(object):
                 f'Training done, best_score={best_score:.4f}')
 
             # Save all the masks for the run
-            save_path = os.path.join(self._log_dir, f'masks_for_run')
+            timestr = time.strftime("%Y%m%d_%H%M%S")
+            save_path = os.path.join(self._log_dir, f'masks_for_run_{timestr}')
             stacked_masks = np.stack(self.masks_array).astype('b')
-            np.savez_compressed(save_path, stacked_masks)
+            np.savez_compressed(save_path, masks=stacked_masks)
 
             return best_score
