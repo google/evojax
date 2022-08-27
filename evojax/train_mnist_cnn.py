@@ -277,8 +277,8 @@ def run_mnist_training(
 
         # Evaluate on the test set after each training epoch
         test_dataset_class = eval_model(state.params, test_dataset_class, cnn_batch_size)
-        test_loss = np.mean(i['loss'] for i in test_dataset_class.metrics_holder.values())
-        test_accuracy = np.mean(i['accuracy'] for i in test_dataset_class.metrics_holder.values())
+        test_loss = np.mean([i['loss'] for i in test_dataset_class.metrics_holder.values()])
+        test_accuracy = np.mean([i['accuracy'] for i in test_dataset_class.metrics_holder.values()])
 
         if logger:
             logger.info(
