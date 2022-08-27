@@ -24,7 +24,7 @@ from flax.struct import dataclass
 from evojax.task.base import VectorizedTask
 from evojax.task.base import TaskState
 
-from evojax.datasets import read_data_files, digit, fashion, kuzushiji, DATASET_LABELS
+from evojax.datasets import read_data_files, DATASET_LABELS
 from evojax.train_mnist_cnn import CNN, linear_layer_name
 
 
@@ -74,7 +74,7 @@ class Masking(VectorizedTask):
         self.act_shape = tuple([mask_size, ])
 
         x_array, y_array = [], []
-        for dataset_name in [digit, fashion, kuzushiji]:
+        for dataset_name in list(DATASET_LABELS.keys()):
             x, y = read_data_files(dataset_name, 'test' if test else 'train')
             x_array.append(x)
             y_array.append(y)
