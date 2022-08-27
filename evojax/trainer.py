@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import logging
 import time
 from typing import Optional, Callable
@@ -176,6 +177,9 @@ class Trainer(object):
 
                     # Test and save the mask used for each dataset
                     current_masks, _ = self.policy_network.get_actions(None, best_params, None)
+                    save_path = os.path.join(self._log_dir, f'masks_iter_{i}')
+                    np.savez_compressed(save_path, current_masks)
+
                     mean_mask = jnp.mean(current_masks, axis=1)
                     for k, v in self.dataset_labels.items():
                         self._logger.info(f'[MASK] Mean mask value for {k}: {mean_mask[v]}')
