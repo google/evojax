@@ -123,8 +123,8 @@ def compute_metrics(*, logits, labels):
     loss = cross_entropy_loss(logits=logits, labels=labels)
     accuracy = jnp.mean(jnp.argmax(logits, -1) == labels)
     metrics = {
-      'loss': loss,
-      'accuracy': accuracy,
+        'loss': loss,
+        'accuracy': accuracy,
     }
     return metrics
 
@@ -135,7 +135,7 @@ def create_train_state(rng, learning_rate):
     params = cnn.init(rng, jnp.ones([1, 28, 28, 1]))['params']
     tx = optax.adam(learning_rate)
     return train_state.TrainState.create(
-      apply_fn=cnn.apply, params=params, tx=tx)
+        apply_fn=cnn.apply, params=params, tx=tx)
 
 
 @jax.jit
@@ -177,8 +177,8 @@ def train_epoch(state, train_ds, batch_size, epoch, rng, logger: logging.Logger=
     # compute mean of metrics across each batch in epoch.
     batch_metrics_np = jax.device_get(batch_metrics)
     epoch_metrics_np = {
-      k: np.mean([metrics[k] for metrics in batch_metrics_np])
-      for k in batch_metrics_np[0]}
+        k: np.mean([metrics[k] for metrics in batch_metrics_np])
+        for k in batch_metrics_np[0]}
 
     if logger:
         logger.debug(f'TRAIN, epoch={epoch}, loss={epoch_metrics_np["loss"]}, accuracy={epoch_metrics_np["accuracy"]}')
@@ -191,7 +191,7 @@ def train_epoch(state, train_ds, batch_size, epoch, rng, logger: logging.Logger=
 
 def eval_model(params, test_dataset_class, batch_size):
 
-    for dataset_name, test_ds in test_dataset_class.dataset_holder:
+    for dataset_name, test_ds in test_dataset_class.dataset_holder.items():
         test_ds_size = len(test_ds['image'])
         steps_per_epoch = test_ds_size // batch_size
 
@@ -203,10 +203,11 @@ def eval_model(params, test_dataset_class, batch_size):
 
         batch_metrics_np = jax.device_get(batch_metrics)
         epoch_metrics_np = {
-          k: np.mean([metrics[k] for metrics in batch_metrics_np])
-          for k in batch_metrics_np[0]}
+            k: np.mean([metrics[k] for metrics in batch_metrics_np])
+            for k in batch_metrics_np[0]}
 
-        test_dataset_class.metrics_holder[dataset_name] = epoch_metrics_np['loss'], epoch_metrics_np['accuracy']
+        test_dataset_class.metrics_holder[dataset_name] = {'loss': epoch_metrics_np['loss'],
+                                                           'accuracy': epoch_metrics_np['accuracy']}
 
     return test_dataset_class
 
@@ -233,7 +234,14 @@ class TestDatasetUtil:
         self.dataset_holder[dataset_name] = test_dataset
 
 
-def run_mnist_training(logger: logging.Logger, num_epochs=20, learning_rate=1e-3, cnn_batch_size=1024, return_model=True):
+def run_mnist_training(
+        logger: logging.Logger,
+        num_epochs=20,
+        learning_rate=1e-3,
+        cnn_batch_size=1024,
+        return_model=True
+):
+
     logger.info('Starting training MNIST CNN')
 
     rng = random.PRNGKey(0)
@@ -269,15 +277,16 @@ def run_mnist_training(logger: logging.Logger, num_epochs=20, learning_rate=1e-3
 
         # Evaluate on the test set after each training epoch
         test_dataset_class = eval_model(state.params, test_dataset_class, cnn_batch_size)
-        test_loss = np.mean(i[1] for i in test_dataset_class.metrics_holder.values())
-        test_accuracy = np.mean(i[1] for i in test_dataset_class.metrics_holder.values())
+        test_loss = np.mean(i['loss'] for i in test_dataset_class.metrics_holder.values())
+        test_accuracy = np.mean(i['accuracy'] for i in test_dataset_class.metrics_holder.values())
 
         if logger:
             logger.info(
                 f'TEST, epoch={epoch}, loss={test_loss}, accuracy={test_accuracy}')
             for dataset_name in dataset_names:
                 logger.info(
-                    f'TEST, {dataset_name} accuracy={test_dataset_class.metrics_holder[dataset_name]:.2f}')
+                    f'TEST, {dataset_name} '
+                    f'accuracy={test_dataset_class.metrics_holder[dataset_name].get("accuracy"):.2f}')
         else:
             print(f'test epoch: {epoch}, loss: {test_loss:.2f}, accuracy: {test_accuracy:.2f}')
 
