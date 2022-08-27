@@ -36,7 +36,8 @@ def read_data_files(dataset_name, split):
     label_file = f'{file_prefix}-labels-idx1-ubyte'
 
     with open(os.path.join(folder_path, image_file), 'rb') as f:
-        xs = np.array(np.frombuffer(f.read(), np.uint8, offset=16))
+        # TODO unclear why the offset for CIFAR is different, just fix this way for now
+        xs = np.array(np.frombuffer(f.read(), np.uint8, offset=8 if dataset_name == cifar else 16))
 
     with open(os.path.join(folder_path, label_file), 'rb') as f:
         ys = np.array(np.frombuffer(f.read(), np.uint8, offset=8))
