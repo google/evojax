@@ -116,6 +116,7 @@ class Trainer(object):
         # This will store the masking network, so masks can be checked throughout training
         self.policy_network = policy
         self.dataset_labels = dataset_labels
+        self.masks_array = []
 
     def run(self, demo_mode: bool = False) -> float:
         """Start the training / test process."""
@@ -177,8 +178,9 @@ class Trainer(object):
 
                     # Test and save the mask used for each dataset
                     current_masks, _ = self.policy_network.get_actions(None, best_params, None)
-                    save_path = os.path.join(self._log_dir, f'masks_iter_{i}')
-                    np.savez_compressed(save_path, current_masks)
+                    self.masks_array.append(current_masks)
+                    # save_path = os.path.join(self._log_dir, f'masks_iter_{i}')
+                    # np.savez_compressed(save_path, current_masks)
 
                     mean_mask = jnp.mean(current_masks, axis=1)
                     for k, v in self.dataset_labels.items():
@@ -226,5 +228,10 @@ class Trainer(object):
                 )
             self._logger.info(
                 f'Training done, best_score={best_score:.4f}')
+
+            # Save all the masks for the run
+            save_path = os.path.join(self._log_dir, f'masks_for_run')
+            stacked_masks = np.stack(self.masks_array).astype('b')
+            np.savez_compressed(save_path, stacked_masks)
 
             return best_score
