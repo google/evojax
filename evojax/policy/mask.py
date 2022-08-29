@@ -42,10 +42,10 @@ class Mask(nn.Module):
     @nn.compact
     def __call__(self, x):
         x = nn.one_hot(x, self.dataset_number)
-        x = nn.Dense(features=10, name="DENSE1")(x)
-        x = nn.relu(x)
-        x = nn.Dense(features=100, name="DENSE2")(x)
-        x = nn.relu(x)
+        # x = nn.Dense(features=10, name="DENSE1")(x)
+        # x = nn.relu(x)
+        # x = nn.Dense(features=100, name="DENSE2")(x)
+        # x = nn.relu(x)
         x = nn.Dense(features=self.mask_size, name=final_layer_name)(x)
         x = nn.sigmoid(x)
         if self.round_output:

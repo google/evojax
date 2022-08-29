@@ -110,7 +110,8 @@ class Masking(VectorizedTask):
             if test:
                 reward = accuracy(output_logits, state.labels)
             else:
-                reward = -loss(output_logits, state.labels)
+                reward = accuracy(output_logits, state.labels)
+                # reward = -loss(output_logits, state.labels)
             return state, reward, jnp.ones(())
         self._step_fn = jax.jit(jax.vmap(step_fn))
 
