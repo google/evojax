@@ -58,6 +58,7 @@ class Mask(nn.Module):
 
 
 def set_bias_and_weights(params):
+    """ Sets the bias and weights such that initial outputs of the Mask will all be one. """
     params = unfreeze(params)
     final_mask_weights = params["params"][final_layer_name]["kernel"]
     final_mask_bias = params["params"][final_layer_name]["bias"]

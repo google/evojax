@@ -96,7 +96,6 @@ class Masking(VectorizedTask):
         self._reset_fn = jax.jit(jax.vmap(reset_fn))
 
         def step_fn(state, action):
-            # TODO is this state the dataclass or state of the masking model???
 
             # Action should be the mask which will be applied to the linear weights
             # TODO Should the weights be masked or just the input to the linear layer
