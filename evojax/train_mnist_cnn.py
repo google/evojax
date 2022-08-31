@@ -137,11 +137,15 @@ def create_train_state(rng, learning_rate):
         apply_fn=cnn.apply, params=params, tx=tx)
 
 
+model_mapping = {'CNN': CNN(),
+                 'RESNET': None}
+
+
 @jax.jit
 def train_step(state, batch, model_class):
     """Train for a single step."""
     def loss_fn(params):
-        output_logits = model_class.apply({'params': params}, batch['image'])
+        output_logits = model_mapping[model_class].apply({'params': params}, batch['image'])
         loss = cross_entropy_loss(logits=output_logits, labels=batch['label'])
         return loss, output_logits
 
@@ -154,7 +158,7 @@ def train_step(state, batch, model_class):
 
 @jax.jit
 def eval_step(params, batch, model_class):
-    logits = model_class.apply({'params': params}, batch['image'])
+    logits = model_mapping[model_class].apply({'params': params}, batch['image'])
     return compute_metrics(logits=logits, labels=batch['label'])
 
 
@@ -265,7 +269,7 @@ def run_mnist_training(
 
     test_dataset_class = TestDatasetUtil(dataset_names)
 
-    model_class = CNN()
+    model_class = "CNN"
 
     best_params = None
     best_test_accuracy = 0
