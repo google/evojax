@@ -137,7 +137,8 @@ def create_train_state(rng, learning_rate):
         apply_fn=cnn.apply, params=params, tx=tx)
 
 
-chosen_model = CNN()
+# chosen_model = CNN()
+chosen_model = ResNet18(num_classes=10)
 
 
 @jax.jit
