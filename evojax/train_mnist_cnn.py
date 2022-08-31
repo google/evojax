@@ -141,7 +141,7 @@ chosen_model = CNN()
 
 
 @jax.jit
-def train_step(state, batch, model_class):
+def train_step(state, batch):
     """Train for a single step."""
     def loss_fn(params):
         output_logits = chosen_model.apply({'params': params}, batch['image'])
@@ -173,7 +173,7 @@ def train_epoch(state, train_ds, batch_size, epoch, rng, logger: logging.Logger 
 
     for perm in perms:
         batch = {k: v[perm, ...] for k, v in train_ds.items()}
-        state, metrics = train_step(state, batch, model_class)
+        state, metrics = train_step(state, batch)
         batch_metrics.append(metrics)
 
     # compute mean of metrics across each batch in epoch.
@@ -200,7 +200,7 @@ def eval_model(params, test_dataset_class, batch_size):
         batch_metrics = []
         for i in range(steps_per_epoch):
             batch = {k: v[i*batch_size: (i+1)*batch_size, ...] for k, v in test_ds.items()}
-            metrics = eval_step(params, batch, model_class)
+            metrics = eval_step(params, batch)
             batch_metrics.append(metrics)
 
         batch_metrics_np = jax.device_get(batch_metrics)
