@@ -128,17 +128,17 @@ def compute_metrics(*, logits, labels):
     return metrics
 
 
+# chosen_model = CNN()
+chosen_model = ResNet18(num_classes=10,
+                        pretrained=None)
+
+
 def create_train_state(rng, learning_rate):
     """Creates initial `TrainState`."""
-    cnn = CNN()
-    params = cnn.init(rng, jnp.ones([1, 28, 28, 1]))['params']
+    params = chosen_model.init(rng, jnp.ones([1, 28, 28, 1]))['params']
     tx = optax.adam(learning_rate)
     return train_state.TrainState.create(
-        apply_fn=cnn.apply, params=params, tx=tx)
-
-
-# chosen_model = CNN()
-chosen_model = ResNet18(num_classes=10)
+        apply_fn=chosen_model.apply, params=params, tx=tx)
 
 
 @jax.jit
@@ -268,7 +268,6 @@ def run_mnist_training(
 
     test_dataset_class = TestDatasetUtil(dataset_names)
 
-    model_class = "CNN"
 
     best_params = None
     best_test_accuracy = 0
