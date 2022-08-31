@@ -1,18 +1,17 @@
 import logging
-
 import numpy as np
 from typing import Optional
 
 import jax
-import jax.numpy as jnp
 from jax import random
-
+import jax.numpy as jnp
+import optax
 from flax import linen as nn
 from flax.training import train_state
 
 from evojax.datasets import read_data_files, digit, fashion, kuzushiji, cifar
+from flaxmodels.flaxmodels.resnet import ResNet18
 
-import optax
 
 linear_layer_name = 'DENSE'
 
@@ -139,10 +138,10 @@ def create_train_state(rng, learning_rate):
 
 
 @jax.jit
-def train_step(state, batch):
+def train_step(state, batch, model_class):
     """Train for a single step."""
     def loss_fn(params):
-        output_logits = CNN().apply({'params': params}, batch['image'])
+        output_logits = model_class.apply({'params': params}, batch['image'])
         loss = cross_entropy_loss(logits=output_logits, labels=batch['label'])
         return loss, output_logits
 
@@ -154,12 +153,13 @@ def train_step(state, batch):
 
 
 @jax.jit
-def eval_step(params, batch):
-    logits = CNN().apply({'params': params}, batch['image'])
+def eval_step(params, batch, model_class):
+    logits = model_class.apply({'params': params}, batch['image'])
     return compute_metrics(logits=logits, labels=batch['label'])
 
 
-def train_epoch(state, train_ds, batch_size, epoch, rng, logger: logging.Logger=None):
+def train_epoch(state, train_ds, batch_size, epoch, rng, logger: logging.Logger = None,
+                model_class=None):
     """Train for a single epoch."""
     train_ds_size = len(train_ds['image'])
     steps_per_epoch = train_ds_size // batch_size
@@ -171,7 +171,7 @@ def train_epoch(state, train_ds, batch_size, epoch, rng, logger: logging.Logger=
 
     for perm in perms:
         batch = {k: v[perm, ...] for k, v in train_ds.items()}
-        state, metrics = train_step(state, batch)
+        state, metrics = train_step(state, batch, model_class)
         batch_metrics.append(metrics)
 
     # compute mean of metrics across each batch in epoch.
@@ -189,7 +189,7 @@ def train_epoch(state, train_ds, batch_size, epoch, rng, logger: logging.Logger=
     return state
 
 
-def eval_model(params, test_dataset_class, batch_size):
+def eval_model(params, test_dataset_class, batch_size, model_class):
 
     for dataset_name, test_ds in test_dataset_class.dataset_holder.items():
         test_ds_size = len(test_ds['image'])
@@ -198,7 +198,7 @@ def eval_model(params, test_dataset_class, batch_size):
         batch_metrics = []
         for i in range(steps_per_epoch):
             batch = {k: v[i*batch_size: (i+1)*batch_size, ...] for k, v in test_ds.items()}
-            metrics = eval_step(params, batch)
+            metrics = eval_step(params, batch, model_class)
             batch_metrics.append(metrics)
 
         batch_metrics_np = jax.device_get(batch_metrics)
@@ -265,6 +265,8 @@ def run_mnist_training(
 
     test_dataset_class = TestDatasetUtil(dataset_names)
 
+    model_class = CNN()
+
     best_params = None
     best_test_accuracy = 0
     for epoch in range(1, num_epochs + 1):
@@ -273,10 +275,12 @@ def run_mnist_training(
         rng, input_rng = jax.random.split(rng)
 
         # Run an optimization step over a training batch
-        state = train_epoch(state, train_dataset, cnn_batch_size, epoch, input_rng, logger=logger)
+        state = train_epoch(state, train_dataset, cnn_batch_size, epoch, input_rng, logger=logger,
+                            model_class=model_class)
 
         # Evaluate on the test set after each training epoch
-        test_dataset_class = eval_model(state.params, test_dataset_class, cnn_batch_size)
+        test_dataset_class = eval_model(state.params, test_dataset_class, cnn_batch_size,
+                                        model_class=model_class)
         test_loss = np.mean([i['loss'] for i in test_dataset_class.metrics_holder.values()])
         test_accuracy = np.mean([i['accuracy'] for i in test_dataset_class.metrics_holder.values()])
 

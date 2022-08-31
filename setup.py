@@ -46,7 +46,16 @@ setup(
         "cma",
         "matplotlib",
         "pyyaml",
-        "google-cloud-logging"
+        "google-cloud-logging",
+        # The following are for flaxmodels
+        'h5py>=2.10.0',
+        'numpy>=1.19.5',
+        'requests>=2.23.0',
+        'packaging>=20.9',
+        'dataclasses>=0.6',
+        'filelock>=3.0.12',
+        'regex>=2021.4.4',
+        'tqdm>=4.60.0'
     ],
     extras_require={
         "extra": ['evosax', 'torchvision', 'pandas', 'procgen', 'brax'],
