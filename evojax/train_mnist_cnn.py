@@ -137,15 +137,14 @@ def create_train_state(rng, learning_rate):
         apply_fn=cnn.apply, params=params, tx=tx)
 
 
-model_mapping = {'CNN': CNN(),
-                 'RESNET': None}
+chosen_model = CNN()
 
 
 @jax.jit
 def train_step(state, batch, model_class):
     """Train for a single step."""
     def loss_fn(params):
-        output_logits = model_mapping[model_class].apply({'params': params}, batch['image'])
+        output_logits = chosen_model.apply({'params': params}, batch['image'])
         loss = cross_entropy_loss(logits=output_logits, labels=batch['label'])
         return loss, output_logits
 
@@ -157,13 +156,12 @@ def train_step(state, batch, model_class):
 
 
 @jax.jit
-def eval_step(params, batch, model_class):
-    logits = model_mapping[model_class].apply({'params': params}, batch['image'])
+def eval_step(params, batch):
+    logits = chosen_model.apply({'params': params}, batch['image'])
     return compute_metrics(logits=logits, labels=batch['label'])
 
 
-def train_epoch(state, train_ds, batch_size, epoch, rng, logger: logging.Logger = None,
-                model_class=None):
+def train_epoch(state, train_ds, batch_size, epoch, rng, logger: logging.Logger = None):
     """Train for a single epoch."""
     train_ds_size = len(train_ds['image'])
     steps_per_epoch = train_ds_size // batch_size
@@ -193,7 +191,7 @@ def train_epoch(state, train_ds, batch_size, epoch, rng, logger: logging.Logger 
     return state
 
 
-def eval_model(params, test_dataset_class, batch_size, model_class):
+def eval_model(params, test_dataset_class, batch_size):
 
     for dataset_name, test_ds in test_dataset_class.dataset_holder.items():
         test_ds_size = len(test_ds['image'])
@@ -279,12 +277,10 @@ def run_mnist_training(
         rng, input_rng = jax.random.split(rng)
 
         # Run an optimization step over a training batch
-        state = train_epoch(state, train_dataset, cnn_batch_size, epoch, input_rng, logger=logger,
-                            model_class=model_class)
+        state = train_epoch(state, train_dataset, cnn_batch_size, epoch, input_rng, logger=logger)
 
         # Evaluate on the test set after each training epoch
-        test_dataset_class = eval_model(state.params, test_dataset_class, cnn_batch_size,
-                                        model_class=model_class)
+        test_dataset_class = eval_model(state.params, test_dataset_class, cnn_batch_size)
         test_loss = np.mean([i['loss'] for i in test_dataset_class.metrics_holder.values()])
         test_accuracy = np.mean([i['accuracy'] for i in test_dataset_class.metrics_holder.values()])
 
