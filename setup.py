@@ -47,6 +47,7 @@ setup(
         "matplotlib",
         "pyyaml",
         "google-cloud-logging",
+        "ipdb",
         # The following are for flaxmodels
         'h5py>=2.10.0',
         'numpy>=1.19.5',

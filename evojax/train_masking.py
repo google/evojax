@@ -78,6 +78,10 @@ def main(config):
     logger.info('=' * 50)
 
     cnn_params = run_mnist_training(logger=logger, return_model=True, num_epochs=config.cnn_epochs)
+
+    import ipdb
+    ipdb.set_trace()
+
     linear_weights = cnn_params[linear_layer_name]["kernel"]
     # mask_size = np.prod(linear_weights.shape)
     # TODO currently just masking the input features to the linear layer
