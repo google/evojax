@@ -26,6 +26,7 @@ from evojax.task.base import TaskState
 
 from evojax.datasets import read_data_files, DATASET_LABELS
 from evojax.train_mnist_cnn import CNN, linear_layer_name
+from flaxmodels.flaxmodels.resnet import ResNet18
 
 
 @dataclass
@@ -104,7 +105,9 @@ class Masking(VectorizedTask):
             # params[linear_layer_name]["kernel"] = masked_weights
             # params = freeze(params)
 
-            output_logits = CNN().apply({'params': self.mnist_params}, state.image_data, action)
+            # output_logits = CNN().apply({'params': self.mnist_params}, state.image_data, action)
+            output_logits = ResNet18(num_classes=10,
+                                     pretrained='').apply({'params': self.mnist_params}, state.image_data, action)
 
             if test:
                 reward = accuracy(output_logits, state.labels)
