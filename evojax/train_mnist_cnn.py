@@ -13,7 +13,7 @@ from evojax.datasets import read_data_files, digit, fashion, kuzushiji, cifar
 from flaxmodels.flaxmodels.resnet import ResNet18
 
 
-linear_layer_name = 'DENSE'
+linear_layer_name = 'Dense_0'
 
 
 class CNN(nn.Module):

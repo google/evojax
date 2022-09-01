@@ -29,7 +29,7 @@ from evojax.util import create_logger
 from evojax.util import get_params_format_fn
 
 from evojax.datasets import DATASET_LABELS
-final_layer_name = 'Dense_0'
+mask_final_layer_name = 'DENSE'
 
 
 class Mask(nn.Module):
@@ -46,7 +46,7 @@ class Mask(nn.Module):
         # x = nn.relu(x)
         # x = nn.Dense(features=100, name="DENSE2")(x)
         # x = nn.relu(x)
-        x = nn.Dense(features=self.mask_size, name=final_layer_name)(x)
+        x = nn.Dense(features=self.mask_size, name=mask_final_layer_name)(x)
         x = nn.sigmoid(x)
         if self.round_output:
             x = jnp.round(x)
@@ -60,10 +60,10 @@ class Mask(nn.Module):
 def set_bias_and_weights(params):
     """ Sets the bias and weights such that initial outputs of the Mask will all be one. """
     params = unfreeze(params)
-    final_mask_weights = params["params"][final_layer_name]["kernel"]
-    final_mask_bias = params["params"][final_layer_name]["bias"]
-    params["params"][final_layer_name]["kernel"] = jnp.zeros_like(final_mask_weights)
-    params["params"][final_layer_name]["bias"] = jnp.ones_like(final_mask_bias) * 0.51
+    final_mask_weights = params["params"][mask_final_layer_name]["kernel"]
+    final_mask_bias = params["params"][mask_final_layer_name]["bias"]
+    params["params"][mask_final_layer_name]["kernel"] = jnp.zeros_like(final_mask_weights)
+    params["params"][mask_final_layer_name]["bias"] = jnp.ones_like(final_mask_bias) * 0.51
     return freeze(params)
 
 
