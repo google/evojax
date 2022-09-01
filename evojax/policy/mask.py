@@ -29,7 +29,7 @@ from evojax.util import create_logger
 from evojax.util import get_params_format_fn
 
 from evojax.datasets import DATASET_LABELS
-final_layer_name = "DENSE-FINAL"
+final_layer_name = 'Dense_0'
 
 
 class Mask(nn.Module):
