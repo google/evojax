@@ -105,9 +105,18 @@ def main(config):
     #     seed=config.seed,
     # )
 
-    solver = CMA_ES(
+    # solver = CMA_ES(
+    #     pop_size=config.pop_size,
+    #     param_size=policy.num_params,
+    #     init_stdev=config.init_std,
+    #     logger=logger,
+    #     seed=config.seed,
+    # )
+
+    solver = OpenES(
         pop_size=config.pop_size,
         param_size=policy.num_params,
+        optimizer='adam',
         init_stdev=config.init_std,
         logger=logger,
         seed=config.seed,
