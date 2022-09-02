@@ -6,56 +6,58 @@ from typing import Union
 
 class ARS_native(NEAlgorithm):
 	
-	def __init__(self, param_size, pop_size, top_k, noise_stddev=0.1, seed=0, step_size=1e-2, version=1):
-		assert pop_size % 2 == 0, "pop size needs to be even for the symmetric sampling "  
+	def __init__(self, param_size, pop_size, elite_ratio, decay_stdev=0.999, limit_stdev=0.01, init_stdev=0.03, seed=0, step_size=1e-2, version=1):
+		assert pop_size % 2 == 0   # total perturbations considering positive and negative directions 
 		self.pop_size = pop_size
+		assert 0 < elite_ratio <= 1
+		self.elite_ratio = elite_ratio
+		self.elite_pop_size = int(self.pop_size / 2 * self.elite_ratio)
+		self.directions = pop_size // 2
 		self.params_population = None
-		self._best_params = jnp.zeros(param_size)
 		self.param_size = param_size
 
 		self.noise = None
-		self.stddev = noise_stddev
-		self.rand_key = jax.random.PRNGKey(seed=seed)
+		self.stdev = init_stdev 
+		self.rand_key, _key = jax.random.split(key=jax.random.PRNGKey(seed=seed), num=2)
+		init_min, init_max = 0, 0
+		self.mean_params = jax.random.uniform(_key, (param_size,), minval=init_min, maxval=init_max) 
 		self.step_size = step_size
-		self.top_k = top_k
-		self.diag_cov = jnp.ones(param_size)
-		self.mu = jnp.ones(param_size)
+
 		self.version = version
+		self.decay_stdev = decay_stdev
+		self.limit_stdev = limit_stdev
 
 	def ask(self):
 		self.rand_key, _key = jax.random.split(key=self.rand_key, num=2)
-		self.noise = self.stddev*jax.random.normal(key=_key, shape=(self.pop_size//2, self.param_size))
-		# evaluate each perturbation in both directions 
-		self.noise = jnp.concatenate([self.noise, -self.noise], axis=0)   
+		self.noise = jax.random.normal(key=_key, shape=(self.directions, self.param_size))
+		perturbation = jnp.concatenate([self.noise, -self.noise], axis=0)
 
-		self.params_population = jnp.tile(self._best_params, (self.pop_size, 1)) + self.noise 
+		# evaluate each perturbation in both directions 
+		self.params_population = self.mean_params + self.stdev * perturbation
 		return self.params_population
 
 	def tell(self, fitness):
-		n = self.pop_size//2    # splitting positive and negative direction perturbations 
-		pos = fitness[:n]
-		neg = fitness[n:]
-		dir_fitnesses = jnp.maximum(pos, neg)
-		selected_dirs = jnp.argsort(dir_fitnesses)[-self.top_k:]
-		pos, neg = pos[selected_dirs], neg[selected_dirs]
+		pos = fitness[:self.directions]
+		neg = fitness[self.directions:]
 
-		# take from the end because we want the highest scores 
-		pos = pos[jnp.argsort(pos)[-self.top_k:]]
-		neg = neg[jnp.argsort(neg)[-self.top_k:]] 
+		selected_dir_ids = jnp.minimum(pos, neg).argsort()[:self.elite_pop_size]
+		selected_fitness_stdev = jnp.std(
+			jnp.concatenate(
+				[pos[selected_dir_ids], neg[selected_dir_ids]]
+			)
+		) + 1e-05
+		fitness_diff = pos[selected_dir_ids]-neg[selected_dir_ids]
+		selected_noise = self.noise[selected_dir_ids]
+		update = 1 / (self.elite_pop_size*selected_fitness_stdev) * jnp.dot(selected_noise.T, fitness_diff) 
+		self.mean_params = (self.mean_params+ self.step_size * update)
 
-		stddev = max(1e-2, jnp.std(fitness))   ## NOTE: in some tasks sdddev ~ 0 this causes bad updates obviously 
-		update = self.step_size / (self.top_k*stddev) * jnp.einsum('i,ij->j', (pos-neg), self.noise[selected_dirs])
-		self._best_params = (self._best_params + update)
-
-		# TODO no state normalising for now 
-		# if self.version == 2:
-		# 	self._best_params = self._best_params * jnp.diag(self.diag_cov)
+		self.stdev = jnp.maximum(self.stdev*self.decay_stdev, self.limit_stdev)
 
 	@property
 	def best_params(self) -> jnp.ndarray:	
-		return self._best_params
+		return self.mean_params
 	
 	@best_params.setter
 	def best_params(self, params: Union[np.ndarray, jnp.ndarray]) -> None:
-		self._best_params = params 
+		self.mean_params = params 
 

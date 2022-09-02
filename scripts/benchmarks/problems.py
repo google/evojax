@@ -3,7 +3,7 @@ import re
 import yaml
 import json
 import numpy as np
-from evojax.policy import MLPPolicy
+from evojax.policy import MLPPolicy, LinearPolicy
 from evojax.policy.convnet import ConvNetPolicy
 
 
@@ -27,11 +27,18 @@ def setup_cartpole(config, hard=False):
 
     train_task = CartPoleSwingUp(test=False, harder=hard)
     test_task = CartPoleSwingUp(test=True, harder=hard)
-    policy = MLPPolicy(
-        input_dim=train_task.obs_shape[0],
-        hidden_dims=[config["hidden_size"]] * 2,
-        output_dim=train_task.act_shape[0],
-    )
+    if config['es_name'] == 'ARS_native':
+        policy = LinearPolicy(
+            input_dim=train_task.obs_shape[0],
+            output_dim=train_task.act_shape[0],
+            seed=config['seed']
+        )
+    else:
+        policy = MLPPolicy(
+            input_dim=train_task.obs_shape[0],
+            hidden_dims=[config["hidden_size"]] * 2,
+            output_dim=train_task.act_shape[0],
+        )
     return train_task, test_task, policy
 
 
@@ -40,11 +47,18 @@ def setup_brax(config):
 
     train_task = BraxTask(env_name=config["env_name"], test=False)
     test_task = BraxTask(env_name=config["env_name"], test=True)
-    policy = MLPPolicy(
-        input_dim=train_task.obs_shape[0],
-        output_dim=train_task.act_shape[0],
-        hidden_dims=[32, 32, 32, 32],
-    )
+    if config['es_name'] == 'ARS_native':
+        policy = LinearPolicy(
+            input_dim=train_task.obs_shape[0],
+            output_dim=train_task.act_shape[0],
+            seed=config['seed']
+        )
+    else:
+        policy = MLPPolicy(
+            input_dim=train_task.obs_shape[0],
+            output_dim=train_task.act_shape[0],
+            hidden_dims=[32, 32, 32, 32],
+        )
     return train_task, test_task, policy
 
 
