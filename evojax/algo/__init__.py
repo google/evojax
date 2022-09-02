@@ -17,6 +17,7 @@ from .base import QualityDiversityMethod
 from .cma_wrapper import CMA
 from .pgpe import PGPE
 from .ars import ARS
+from .ars_native import ARS_native
 from .simple_ga import SimpleGA
 from .open_es import OpenES
 from .cma_evosax import CMA_ES
@@ -30,6 +31,7 @@ Strategies = {
     "PGPE": PGPE,
     "SimpleGA": SimpleGA,
     "ARS": ARS,
+    "ARS_native": ARS_native,
     "OpenES": OpenES,
     "CMA_ES": CMA_ES,
     "Sep_CMA_ES": Sep_CMA_ES,
@@ -44,6 +46,7 @@ __all__ = [
     "CMA",
     "PGPE",
     "ARS",
+    "ARS_native"
     "SimpleGA",
     "OpenES",
     "CMA_ES",
