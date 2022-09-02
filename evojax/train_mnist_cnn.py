@@ -128,9 +128,9 @@ def compute_metrics(*, logits, labels):
     return metrics
 
 
-# chosen_model = CNN()
-chosen_model = ResNet18(num_classes=10,
-                        pretrained='')
+chosen_model = CNN()
+# chosen_model = ResNet18(num_classes=10,
+#                         pretrained='')
 
 
 def create_train_state(rng, learning_rate):

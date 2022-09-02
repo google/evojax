@@ -28,7 +28,7 @@ import jax.numpy as jnp
 from evojax import Trainer
 from evojax.task.masking import Masking
 from evojax.policy.mask import MaskPolicy
-from evojax.algo import PGPE
+from evojax.algo import PGPE, OpenES, CMA_ES
 from evojax import util
 
 from evojax.train_mnist_cnn import run_mnist_training, linear_layer_name
@@ -93,17 +93,26 @@ def main(config):
     flat, tree = tree_util.tree_flatten(policy.initial_params)
     processed_params = jnp.concatenate([i.ravel() for i in flat])
 
-    solver = PGPE(
-        init_params=processed_params,
+    # solver = PGPE(
+    #     init_params=processed_params,
+    #     pop_size=config.pop_size,
+    #     param_size=policy.num_params,
+    #     optimizer='adam',
+    #     center_learning_rate=config.center_lr,
+    #     stdev_learning_rate=config.std_lr,
+    #     init_stdev=config.init_std,
+    #     logger=logger,
+    #     seed=config.seed,
+    # )
+
+    solver = CMA_ES(
         pop_size=config.pop_size,
         param_size=policy.num_params,
-        optimizer='adam',
-        center_learning_rate=config.center_lr,
-        stdev_learning_rate=config.std_lr,
         init_stdev=config.init_std,
         logger=logger,
         seed=config.seed,
     )
+
 
     # Train.
     trainer = Trainer(
