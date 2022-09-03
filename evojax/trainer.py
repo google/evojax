@@ -38,7 +38,7 @@ from evojax.util import save_lattices
 def log_scores(score_array: jnp.ndarray, logger: logging.Logger, test: bool):
     best_score = score_array.max(initial=0)
     mean_score = score_array.mean()
-    worst_score = score_array.min(initial=0)
+    worst_score = score_array.min(initial=1)
     std_score = score_array.std()
 
     logger.info(
