@@ -46,9 +46,11 @@ setup(
         "cma",
         "matplotlib",
         "pyyaml",
+        # My additions
         "google-cloud-logging",
         "ipdb",
         "evosax",  # Needed for some evolutionary algorithms
+        "wandb",
         # The following are for flaxmodels
         'h5py>=2.10.0',
         'numpy>=1.19.5',

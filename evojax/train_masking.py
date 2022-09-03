@@ -21,6 +21,7 @@ import os
 import time
 import shutil
 import argparse
+import wandb
 
 from jax import tree_util
 import jax.numpy as jnp
@@ -68,13 +69,25 @@ def parse_args():
 
 
 def main(config):
-    start_time = time.time()
+
     log_dir = './log/masking'
     if not os.path.exists(log_dir):
         os.makedirs(log_dir, exist_ok=True)
     logger = util.create_logger(
         name='MASK', log_dir=log_dir, debug=config.debug)
+
+    time_str = time.strftime("%Y%m%d_%H%M%S")
+    run_name = f'evojax_masking_{time_str}'
+    wandb.init(name=run_name,
+               project="evojax-masking",
+               entity="ucl-dark",
+               dir=log_dir,
+               reinit=True,
+               config=config)
+
+    start_time = time.time()
     logger.info('\n\nEvoJAX Masking Tests\n')
+    logger.info(f'Start Time - {time.strftime("%H:%M")}')
     logger.info('=' * 50)
 
     cnn_params = run_mnist_training(logger=logger, return_model=True, num_epochs=config.cnn_epochs)
@@ -89,7 +102,7 @@ def main(config):
     train_task = Masking(batch_size=config.batch_size, test=False, mnist_params=cnn_params, mask_size=mask_size)
     test_task = Masking(batch_size=config.batch_size, test=True, mnist_params=cnn_params, mask_size=mask_size)
 
-    # Need to initialise the solver with the right parameters
+    # Need to initialise PGPE with the right parameters
     flat, tree = tree_util.tree_flatten(policy.initial_params)
     processed_params = jnp.concatenate([i.ravel() for i in flat])
 
@@ -122,7 +135,6 @@ def main(config):
         seed=config.seed,
     )
 
-
     # Train.
     trainer = Trainer(
         policy=policy,
@@ -152,6 +164,8 @@ def main(config):
     logger.info(f'Total time taken: {end_time-start_time:.2f}s')
     logger.info('RUN COMPLETE\n')
     logger.info('=' * 50)
+
+    wandb.finish()
 
 
 if __name__ == '__main__':

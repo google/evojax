@@ -21,6 +21,8 @@ import jax.numpy as jnp
 import numpy as np
 from flax import linen as nn
 
+import wandb
+
 from evojax.task.base import VectorizedTask
 from evojax.policy import PolicyNetwork
 from evojax.algo import NEAlgorithm
@@ -31,6 +33,22 @@ from evojax.util import create_logger
 from evojax.util import load_model
 from evojax.util import save_model
 from evojax.util import save_lattices
+
+
+def log_scores(score_array: jnp.ndarray, logger: logging.Logger, test: bool):
+    best_score = score_array.max(initial=0)
+    mean_score = score_array.mean()
+    worst_score = score_array.min(initial=0)
+    std_score = score_array.std()
+
+    logger.info(
+        f'[{"TEST" if test else "TRAIN"}] #tests={score_array.size}, max={best_score:.4f}, '
+        f'avg={mean_score:.4f}, min={worst_score:.4f}, std={std_score:.4f}')
+
+    wandb.log({f'Best {"Test" if test else "TRAIN"} Accuracy': best_score,
+               f'Mean {"Test" if test else "TRAIN"} Accuracy': mean_score,
+               f'Worst {"Test" if test else "TRAIN"} Accuracy': worst_score,
+               f'{"Test" if test else "TRAIN"} Accuracy STD': std_score})
 
 
 class Trainer(object):
@@ -135,9 +153,9 @@ class Trainer(object):
             self._logger.info('Start to test the parameters.')
             scores = np.array(
                 self.sim_mgr.eval_params(params=params, test=True)[0])
-            self._logger.info(
-                f'[TEST] #tests={scores.size}, max={scores.max():.4f}, '
-                f'avg={scores.mean():.4f}, min={scores.min():.4f}, std={scores.std():.4f}')
+
+            log_scores(scores, self._logger, test=True)
+
             return scores.mean()
         else:
             self._logger.info(
@@ -167,9 +185,8 @@ class Trainer(object):
 
                 if i > 0 and i % self._log_interval == 0:
                     scores = np.array(scores)
-                    self._logger.info(
-                        f'[TEST] Iter={i}, #tests={scores.size}, max={scores.max():.4f}, '
-                        f'avg={scores.mean():.4f}, min={scores.min():.4f}, std={scores.std():.4f}')
+                    log_scores(scores, self._logger, test=False)
+
                     self._log_scores_fn(i, scores, "train")
 
                 # if i > 0 and i % self._test_interval == 0:
@@ -183,12 +200,13 @@ class Trainer(object):
                     mean_mask = jnp.mean(current_masks, axis=1)
                     for k, v in self.dataset_labels.items():
                         self._logger.info(f'[MASK] Mean mask value for {k}: {mean_mask[v]}')
+                        wandb.log({f'Mean mask {k}': mean_mask[v]})
 
                     test_scores, _ = self.sim_mgr.eval_params(
                         params=best_params, test=True)
-                    self._logger.info(
-                        f'[TEST] Iter={i}, #tests={test_scores.size}, max={test_scores.max():.4f}, '
-                        f'avg={test_scores.mean():.4f}, min={test_scores.min():.4f}, std={test_scores.std():.4f}')
+
+                    log_scores(test_scores, self._logger, test=True)
+
                     self._log_scores_fn(i, test_scores, "test")
                     mean_test_score = test_scores.mean()
                     save_model(
@@ -228,8 +246,8 @@ class Trainer(object):
                 f'Training done, best_score={best_score:.4f}')
 
             # Save all the masks for the run
-            timestr = time.strftime("%Y%m%d_%H%M%S")
-            save_path = os.path.join(self._log_dir, f'masks_for_run_{timestr}')
+            time_str = time.strftime("%Y%m%d_%H%M%S")
+            save_path = os.path.join(self._log_dir, f'masks_for_run_{time_str}')
             stacked_masks = np.stack(self.masks_array).astype('b')
             np.savez_compressed(save_path, masks=stacked_masks)
 
