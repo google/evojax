@@ -106,6 +106,7 @@ class OpenES(NEAlgorithm):
         self.rand_key, init_key = jax.random.split(self.rand_key)
         self.es_state = self.es.initialize(init_key, self.es_params)
         self.es_state.mean = custom_init_params
+        self.es_state.best_member = custom_init_params
 
         # By default evojax assumes maximization of fitness score!
         # Evosax, on the other hand, minimizes!
