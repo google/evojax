@@ -39,6 +39,7 @@ class OpenES(NEAlgorithm):
         w_decay: float = 0.0,
         seed: int = 0,
         logger: logging.Logger = None,
+        custom_init_params = None
     ):
         """Initialization function.
 
@@ -104,6 +105,7 @@ class OpenES(NEAlgorithm):
         # Initialize the evolution strategy state
         self.rand_key, init_key = jax.random.split(self.rand_key)
         self.es_state = self.es.initialize(init_key, self.es_params)
+        self.es_state.mean = custom_init_params
 
         # By default evojax assumes maximization of fitness score!
         # Evosax, on the other hand, minimizes!

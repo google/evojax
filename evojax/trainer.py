@@ -35,22 +35,6 @@ from evojax.util import save_model
 from evojax.util import save_lattices
 
 
-def log_scores(score_array: jnp.ndarray, logger: logging.Logger, test: bool):
-    best_score = score_array.max(initial=0)
-    mean_score = score_array.mean()
-    worst_score = score_array.min(initial=1)
-    std_score = score_array.std()
-
-    logger.info(
-        f'[{"TEST" if test else "TRAIN"}] #tests={score_array.size}, max={best_score:.4f}, '
-        f'avg={mean_score:.4f}, min={worst_score:.4f}, std={std_score:.4f}')
-
-    wandb.log({f'Best {"Test" if test else "TRAIN"} Accuracy': best_score,
-               f'Mean {"Test" if test else "TRAIN"} Accuracy': mean_score,
-               f'Worst {"Test" if test else "TRAIN"} Accuracy': worst_score,
-               f'{"Test" if test else "TRAIN"} Accuracy STD': std_score})
-
-
 class Trainer(object):
     """A trainer that organizes the training logistics."""
 
@@ -73,7 +57,8 @@ class Trainer(object):
                  log_dir: str = None,
                  logger: logging.Logger = None,
                  log_scores_fn: Optional[Callable[[int, jnp.ndarray, str], None]] = None,
-                 dataset_labels: dict = None):
+                 dataset_labels: dict = None,
+                 best_unmasked_accuracy: float = None):
         """Initialization.
 
         Args:
@@ -135,6 +120,26 @@ class Trainer(object):
         self.policy_network = policy
         self.dataset_labels = dataset_labels
         self.masks_array = []
+        self.best_unmasked_accuracy = best_unmasked_accuracy
+
+    def wand_log_scores(self, score_array: jnp.ndarray, test: bool):
+        best_score = score_array.max(initial=0)
+        mean_score = score_array.mean()
+        worst_score = score_array.min(initial=1)
+        std_score = score_array.std()
+
+        self._logger.info(
+            f'[{"TEST" if test else "TRAIN"}] #tests={score_array.size}, max={best_score:.4f}, '
+            f'avg={mean_score:.4f}, min={worst_score:.4f}, std={std_score:.4f}')
+
+        wandb.log({f'Best {"Test" if test else "TRAIN"} Accuracy': best_score,
+                   f'Mean {"Test" if test else "TRAIN"} Accuracy': mean_score,
+                   f'Worst {"Test" if test else "TRAIN"} Accuracy': worst_score,
+                   f'{"Test" if test else "TRAIN"} Accuracy STD': std_score})
+
+        if test:
+            best_score_delta = best_score - self.best_unmasked_accuracy
+            wandb.log({'Masked vs Unmasked Delta': best_score_delta})
 
     def run(self, demo_mode: bool = False) -> float:
         """Start the training / test process."""
@@ -154,7 +159,7 @@ class Trainer(object):
             scores = np.array(
                 self.sim_mgr.eval_params(params=params, test=True)[0])
 
-            log_scores(scores, self._logger, test=True)
+            self.wand_log_scores(scores, test=True)
 
             return scores.mean()
         else:
@@ -185,7 +190,7 @@ class Trainer(object):
 
                 if i > 0 and i % self._log_interval == 0:
                     scores = np.array(scores)
-                    log_scores(scores, self._logger, test=False)
+                    self.wand_log_scores(scores, test=False)
 
                     self._log_scores_fn(i, scores, "train")
 
@@ -205,7 +210,7 @@ class Trainer(object):
                     test_scores, _ = self.sim_mgr.eval_params(
                         params=best_params, test=True)
 
-                    log_scores(test_scores, self._logger, test=True)
+                    self.wand_log_scores(test_scores, test=True)
 
                     self._log_scores_fn(i, test_scores, "test")
                     mean_test_score = test_scores.mean()

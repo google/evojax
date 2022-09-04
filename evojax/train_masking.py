@@ -90,7 +90,9 @@ def main(config):
     logger.info(f'Start Time - {time.strftime("%H:%M")}')
     logger.info('=' * 50)
 
-    cnn_params = run_mnist_training(logger=logger, return_model=True, num_epochs=config.cnn_epochs)
+    cnn_output = run_mnist_training(logger=logger, return_model=True, num_epochs=config.cnn_epochs)
+    cnn_params = cnn_output["params"]
+    cnn_best_test_accuracy = cnn_output["best_accuracy"]
 
     linear_weights = cnn_params[linear_layer_name]["kernel"]
     # mask_size = np.prod(linear_weights.shape)
@@ -133,6 +135,7 @@ def main(config):
         init_stdev=config.init_std,
         logger=logger,
         seed=config.seed,
+        custom_init_params=processed_params
     )
 
     # Train.
@@ -149,7 +152,8 @@ def main(config):
         seed=config.seed,
         log_dir=log_dir,
         logger=logger,
-        dataset_labels=DATASET_LABELS
+        dataset_labels=DATASET_LABELS,
+        best_unmasked_accuracy=cnn_best_test_accuracy
     )
     best_score = trainer.run(demo_mode=False)
 

@@ -301,7 +301,8 @@ def run_mnist_training(
     logger.info(f'Best test accuracy for unmasked CNN is {best_test_accuracy:.4f}')
 
     if return_model:
-        return best_params
+        return {"params": best_params,
+                "best_accuracy": best_test_accuracy}
 
 
 if __name__ == '__main__':
