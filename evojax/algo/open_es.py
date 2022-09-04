@@ -9,6 +9,7 @@ import chex
 
 from evojax.algo.base import NEAlgorithm
 from evojax.util import create_logger
+from evosax.strategies.open_es import EvoState
 
 
 class OpenES(NEAlgorithm):
@@ -108,8 +109,15 @@ class OpenES(NEAlgorithm):
         self.es_state = self.es.initialize(init_key, self.es_params)
 
         if custom_init_params is not None:
-            self.es_state.replace(mean=chex.Array(custom_init_params),
-                                  best_member=chex.Array(custom_init_params))
+            # self.es_state = EvoState(
+            #     mean=custom_init_params,
+            #     sigma=self.es_params.sigma_init,
+            #     opt_state=self.es.optimizer.initialize(self.es_params.opt_params),
+            #     best_member=custom_init_params,
+            # )
+
+            self.es_state.replace(mean=custom_init_params,
+                                  best_member=custom_init_params)
 
         # By default evojax assumes maximization of fitness score!
         # Evosax, on the other hand, minimizes!

@@ -76,7 +76,7 @@ def main(config):
     logger = util.create_logger(
         name='MASK', log_dir=log_dir, debug=config.debug)
 
-    time_str = time.strftime("%Y%m%d_%H%M%S")
+    time_str = time.strftime("%m%d_%H%M")
     run_name = f'evojax_masking_{time_str}'
     wandb.init(name=run_name,
                project="evojax-masking",
