@@ -5,6 +5,7 @@ from typing import Union
 import numpy as np
 import jax
 import jax.numpy as jnp
+import chex
 
 from evojax.algo.base import NEAlgorithm
 from evojax.util import create_logger
@@ -106,11 +107,9 @@ class OpenES(NEAlgorithm):
         self.rand_key, init_key = jax.random.split(self.rand_key)
         self.es_state = self.es.initialize(init_key, self.es_params)
 
-        import ipdb
-        ipdb.set_trace()
-
-        # self.es_state.mean = custom_init_params
-        # self.es_state.best_member = custom_init_params
+        if custom_init_params is not None:
+            self.es_state.replace(mean=chex.Array(custom_init_params),
+                                  best_member=chex.Array(custom_init_params))
 
         # By default evojax assumes maximization of fitness score!
         # Evosax, on the other hand, minimizes!
@@ -134,7 +133,7 @@ class OpenES(NEAlgorithm):
 
     @property
     def best_params(self) -> jnp.ndarray:
-        return jnp.array(self.es_state.mean, copy=True)
+        return jnp.array(self.es_state.best_member, copy=True)
 
     @best_params.setter
     def best_params(self, params: Union[np.ndarray, jnp.ndarray]) -> None:

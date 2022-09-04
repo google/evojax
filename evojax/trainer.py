@@ -139,7 +139,7 @@ class Trainer(object):
 
         if test:
             best_score_delta = best_score - self.best_unmasked_accuracy
-            self._logger.info(f'[TEST] Masked vs Unmasked Delta = {best_score_delta}')
+            self._logger.info(f'[TEST] Masked vs Unmasked Delta = {best_score_delta:.4f}')
             wandb.log({'Masked vs Unmasked Delta': best_score_delta})
 
     def run(self, demo_mode: bool = False) -> float:
