@@ -167,7 +167,8 @@ class CMA_ES_JAX(NEAlgorithm):
             1 - c1 - 1e-8,  # 1e-8 is for large pop_size.
             alpha_cov
             * (mu_eff - 2 + 1 / mu_eff)
-            / ((n_dim + 2) ** 2 + alpha_cov * mu_eff / 2),
+            # / ((n_dim + 2) ** 2 + alpha_cov * mu_eff / 2),
+            / ((n_dim + 2) + alpha_cov * mu_eff / 2),
         )
         assert c1 + cmu <= 1, "invalid learning rate for the rank-one and/or rank-μ update"
 

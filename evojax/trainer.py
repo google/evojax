@@ -123,9 +123,9 @@ class Trainer(object):
         self.best_unmasked_accuracy = best_unmasked_accuracy
 
     def wand_log_scores(self, score_array: jnp.ndarray, test: bool):
-        best_score = score_array.max(initial=0)
+        best_score = score_array.max()
         mean_score = score_array.mean()
-        worst_score = score_array.min(initial=1)
+        worst_score = score_array.min()
         std_score = score_array.std()
 
         self._logger.info(
