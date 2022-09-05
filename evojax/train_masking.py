@@ -29,7 +29,7 @@ import jax.numpy as jnp
 from evojax import Trainer
 from evojax.task.masking import Masking
 from evojax.policy.mask import MaskPolicy
-from evojax.algo import PGPE, OpenES, CMA_ES
+from evojax.algo import PGPE, OpenES, CMA_ES, CMA_ES_JAX
 from evojax import util
 
 from evojax.train_mnist_cnn import run_mnist_training, linear_layer_name
@@ -64,6 +64,8 @@ def parse_args():
         '--debug', action='store_true', help='Debug mode.')
     parser.add_argument(
         '--test-no-mask', action='store_true', help='Whether to test a mask of all ones.')
+    parser.add_argument('--algo', type=str, help='Evolutionary algorithm to use.',
+                        choices=['PGPE', 'CMA', 'OpenES'])
     config, _ = parser.parse_known_args()
     return config
 
@@ -77,7 +79,7 @@ def main(config):
         name='MASK', log_dir=log_dir, debug=config.debug)
 
     time_str = time.strftime("%m%d_%H%M")
-    run_name = f'evojax_masking_{time_str}'
+    run_name = f'evojax_masking_{config.algo}_{time_str}'
     wandb.init(name=run_name,
                project="evojax-masking",
                entity="ucl-dark",
@@ -108,35 +110,39 @@ def main(config):
     flat, tree = tree_util.tree_flatten(policy.initial_params)
     processed_params = jnp.concatenate([i.ravel() for i in flat])
 
-    # solver = PGPE(
-    #     init_params=processed_params,
-    #     pop_size=config.pop_size,
-    #     param_size=policy.num_params,
-    #     optimizer='adam',
-    #     center_learning_rate=config.center_lr,
-    #     stdev_learning_rate=config.std_lr,
-    #     init_stdev=config.init_std,
-    #     logger=logger,
-    #     seed=config.seed,
-    # )
-
-    # solver = CMA_ES(
-    #     pop_size=config.pop_size,
-    #     param_size=policy.num_params,
-    #     init_stdev=config.init_std,
-    #     logger=logger,
-    #     seed=config.seed,
-    # )
-
-    solver = OpenES(
-        pop_size=config.pop_size,
-        param_size=policy.num_params,
-        optimizer='adam',
-        init_stdev=config.init_std,
-        logger=logger,
-        seed=config.seed,
-        custom_init_params=processed_params
-    )
+    if config.algo == 'PGPE':
+        solver = PGPE(
+            init_params=processed_params,
+            pop_size=config.pop_size,
+            param_size=policy.num_params,
+            optimizer='adam',
+            center_learning_rate=config.center_lr,
+            stdev_learning_rate=config.std_lr,
+            init_stdev=config.init_std,
+            logger=logger,
+            seed=config.seed,
+        )
+    elif config.algo == 'CMA':
+        solver = CMA_ES_JAX(
+            pop_size=config.pop_size,
+            param_size=policy.num_params,
+            init_stdev=config.init_std,
+            logger=logger,
+            seed=config.seed,
+            mean=processed_params
+        )
+    elif config.algo == 'OpenES':
+        solver = OpenES(
+            pop_size=config.pop_size,
+            param_size=policy.num_params,
+            optimizer='adam',
+            init_stdev=config.init_std,
+            logger=logger,
+            seed=config.seed,
+            custom_init_params=processed_params
+        )
+    else:
+        raise NotImplementedError
 
     # Train.
     trainer = Trainer(
