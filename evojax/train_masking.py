@@ -100,6 +100,7 @@ def main(config):
     # mask_size = np.prod(linear_weights.shape)
     # TODO currently just masking the input features to the linear layer
     mask_size = linear_weights.shape[0]
+    logger.info(f'Mask Size = {mask_size}')
 
     policy = MaskPolicy(logger=logger, mask_size=mask_size, batch_size=config.batch_size,
                         test_no_mask=config.test_no_mask)

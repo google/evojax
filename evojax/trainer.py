@@ -129,13 +129,13 @@ class Trainer(object):
         std_score = score_array.std()
 
         self._logger.info(
-            f'[{"TEST" if test else "TRAIN"}] #tests={score_array.size}, max={best_score:.4f}, '
+            f'[{"TEST" if test else "Train"}] #tests={score_array.size}, max={best_score:.4f}, '
             f'avg={mean_score:.4f}, min={worst_score:.4f}, std={std_score:.4f}')
 
-        wandb.log({f'Best {"Test" if test else "TRAIN"} Accuracy': best_score,
-                   f'Mean {"Test" if test else "TRAIN"} Accuracy': mean_score,
-                   f'Worst {"Test" if test else "TRAIN"} Accuracy': worst_score,
-                   f'{"Test" if test else "TRAIN"} Accuracy STD': std_score})
+        wandb.log({f'Best {"Test" if test else "Train"} Accuracy': best_score,
+                   f'Mean {"Test" if test else "Train"} Accuracy': mean_score,
+                   f'Worst {"Test" if test else "Train"} Accuracy': worst_score,
+                   f'{"Test" if test else "Train"} Accuracy STD': std_score})
 
         if test:
             best_score_delta = best_score - self.best_unmasked_accuracy

@@ -5,11 +5,9 @@ from typing import Union
 import numpy as np
 import jax
 import jax.numpy as jnp
-import chex
 
 from evojax.algo.base import NEAlgorithm
 from evojax.util import create_logger
-from evosax.strategies.open_es import EvoState
 
 
 class OpenES(NEAlgorithm):
@@ -115,7 +113,6 @@ class OpenES(NEAlgorithm):
             #     opt_state=self.es.optimizer.initialize(self.es_params.opt_params),
             #     best_member=custom_init_params,
             # )
-
             self.es_state.replace(mean=custom_init_params,
                                   best_member=custom_init_params)
 
