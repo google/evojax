@@ -66,6 +66,7 @@ def parse_args():
         '--test-no-mask', action='store_true', help='Whether to test a mask of all ones.')
     parser.add_argument('--algo', type=str, help='Evolutionary algorithm to use.',
                         choices=['PGPE', 'CMA', 'OpenES'])
+    parser.add_argument('--mask-input', type=str, default='dataset_label')
     config, _ = parser.parse_known_args()
     return config
 
@@ -94,7 +95,7 @@ def main(config):
 
     cnn_output = run_mnist_training(logger=logger, return_model=True, num_epochs=config.cnn_epochs)
     cnn_params = cnn_output["params"]
-    cnn_best_test_accuracy = cnn_output["best_accuracy"]
+    cnn_best_test_accuracy = cnn_output["best_test_accuracy"]
 
     linear_weights = cnn_params[linear_layer_name]["kernel"]
     # mask_size = np.prod(linear_weights.shape)

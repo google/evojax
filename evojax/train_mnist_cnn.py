@@ -220,12 +220,18 @@ def eval_model(params, test_dataset_class, batch_size):
 
 
 class TestDatasetUtil:
-    def __init__(self, dataset_names: list):
+    """
+    Class to facilitate having separate test sets for the multiple datasets.
+    """
+    def __init__(self, dataset_names: list, dataset_dicts: list = None):
         self.dataset_holder = {}
         self.metrics_holder = {}
 
-        for dataset_name in dataset_names:
-            self.setup_dataset(dataset_name)
+        if dataset_dicts:
+            self.dataset_holder = dict(zip(dataset_names, dataset_dicts))
+        else:
+            for dataset_name in dataset_names:
+                self.setup_dataset(dataset_name)
 
     def setup_dataset(self, dataset_name):
         test_dataset = {}
@@ -257,23 +263,41 @@ def run_mnist_training(
     state = create_train_state(init_rng, learning_rate)
     del init_rng  # Must not be used anymore.
 
-    train_dataset = {}
     x_array_train, y_array_train = [], []
-
     dataset_names = [digit, fashion, kuzushiji, cifar]
     for dataset_name in dataset_names:
         x_train, y_train = read_data_files(dataset_name, 'train')
         x_array_train.append(x_train)
         y_array_train.append(y_train)
 
+    full_train_images = jnp.float32(np.concatenate(x_array_train)) / 255.
+    full_train_labels = jnp.int16(np.concatenate(y_array_train)[:, 0])
+
+    number_of_points = full_train_images.shape[0]
+    number_for_validation = number_of_points // 5
+
+    ix = random.permutation(key=random.PRNGKey(0), x=number_of_points)
+    validation_ix = ix[:number_for_validation]
+    train_ix = ix[number_for_validation:]
+
+    train_dataset = {'image': jnp.take(full_train_images, indices=train_ix, axis=0),
+                     'label': jnp.take(full_train_labels, indices=train_ix, axis=0)}
+
+    validation_dataset = {'image': jnp.take(full_train_images, indices=validation_ix, axis=0),
+                          'label': jnp.take(full_train_labels, indices=validation_ix, axis=0)}
+
+    validation_dataset_class = TestDatasetUtil(['combined'], [validation_dataset])
+
     train_dataset['image'] = jnp.float32(np.concatenate(x_array_train)) / 255.
     # Only use the class label, not dataset label here
     train_dataset['label'] = jnp.int16(np.concatenate(y_array_train)[:, 0])
 
+    # Sets up a separate test set for each of the datasets
     test_dataset_class = TestDatasetUtil(dataset_names)
 
     best_params = None
     best_test_accuracy = 0
+    previous_validation_accuracy = 0
     for epoch in range(1, num_epochs + 1):
         logger.info(f'Starting epoch {epoch} of CNN training')
         # Use a separate PRNG key to permute image data during shuffling
@@ -282,10 +306,22 @@ def run_mnist_training(
         # Run an optimization step over a training batch
         state = train_epoch(state, train_dataset, cnn_batch_size, epoch, input_rng, logger=logger)
 
+        # Check the validation dataset
+        validation_dataset_class = eval_model(state.params, validation_dataset_class, cnn_batch_size)
+        current_validation_accuracy = np.mean([i['accuracy'] for i in validation_dataset_class.metrics_holder.values()])
+
+        if current_validation_accuracy > previous_validation_accuracy:
+            previous_validation_accuracy = current_validation_accuracy
+            best_params = state.params
+        else:
+            logger.info(f'Validation accuracy decreased on epoch {epoch}, stopping early')
+            break
+
         # Evaluate on the test set after each training epoch
         test_dataset_class = eval_model(state.params, test_dataset_class, cnn_batch_size)
         test_loss = np.mean([i['loss'] for i in test_dataset_class.metrics_holder.values()])
         test_accuracy = np.mean([i['accuracy'] for i in test_dataset_class.metrics_holder.values()])
+        best_test_accuracy = max(best_test_accuracy, test_accuracy)
 
         if logger:
             logger.info(
@@ -297,15 +333,11 @@ def run_mnist_training(
         else:
             print(f'test epoch: {epoch}, loss: {test_loss:.2f}, accuracy: {test_accuracy:.2f}')
 
-        if test_accuracy > best_test_accuracy:
-            best_test_accuracy = test_accuracy
-            best_params = state.params
-
     logger.info(f'Best test accuracy for unmasked CNN is {best_test_accuracy:.4f}')
 
     if return_model:
         return {"params": best_params,
-                "best_accuracy": best_test_accuracy}
+                "best_test_accuracy": best_test_accuracy}
 
 
 if __name__ == '__main__':
