@@ -53,8 +53,12 @@ class CNN(nn.Module):
         #
         # self.linear = nn.Dense(10, name='linear')
 
-        self.conv1 = nn.Conv(features=32, kernel_size=(3, 3), padding="SAME", name="CONV1")
-        self.conv2 = nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")
+        # self.conv1 = nn.Conv(features=32, kernel_size=(3, 3), padding="SAME", name="CONV1")
+        # self.conv2 = nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")
+
+        self.conv1 = nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV1")
+        self.conv2 = nn.Conv(features=8, kernel_size=(3, 3), padding="SAME", name="CONV2")
+
         self.linear1 = nn.Dense(features=10, name=linear_layer_name)
 
     @nn.compact
@@ -113,6 +117,11 @@ class CNN(nn.Module):
         return x
 
 
+chosen_model = CNN()
+# chosen_model = ResNet18(num_classes=10,
+#                         pretrained='')
+
+
 def cross_entropy_loss(*, logits, labels):
     labels_onehot = jax.nn.one_hot(labels, num_classes=10)
     return optax.softmax_cross_entropy(logits=logits, labels=labels_onehot).sum()
@@ -126,11 +135,6 @@ def compute_metrics(*, logits, labels):
         'accuracy': accuracy,
     }
     return metrics
-
-
-chosen_model = CNN()
-# chosen_model = ResNet18(num_classes=10,
-#                         pretrained='')
 
 
 def create_train_state(rng, learning_rate):
@@ -267,7 +271,6 @@ def run_mnist_training(
     train_dataset['label'] = jnp.int16(np.concatenate(y_array_train)[:, 0])
 
     test_dataset_class = TestDatasetUtil(dataset_names)
-
 
     best_params = None
     best_test_accuracy = 0
