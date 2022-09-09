@@ -115,6 +115,7 @@ class SimManager(object):
                  policy_net: PolicyNetwork,
                  train_vec_task: VectorizedTask,
                  valid_vec_task: VectorizedTask,
+                 test_vec_task: VectorizedTask,
                  seed: int = 0,
                  obs_normalizer: ObsNormalizer = None,
                  use_for_loop: bool = False,
@@ -246,80 +247,102 @@ class SimManager(object):
             self._valid_rollout_fn = jax.jit(jax.pmap(
                 self._valid_rollout_fn, in_axes=(0, 0, 0, None)))
 
+        # Set up test functions.
+        self._test_reset_fn = test_vec_task.reset
+        self._test_step_fn = test_vec_task.step
+        self._test_max_steps = test_vec_task.max_steps
+        self._test_rollout_fn = partial(
+            rollout,
+            step_once_fn=partial(step_once, task=test_vec_task),
+            max_steps=test_vec_task.max_steps)
+        if self._num_device > 1:
+            self._test_rollout_fn = jax.jit(jax.pmap(
+                self._test_rollout_fn, in_axes=(0, 0, 0, None)))
+
     def eval_params(self,
                     params: jnp.ndarray,
-                    test: bool) -> Tuple[jnp.ndarray, TaskState]:
+                    test: bool,
+                    validation: bool = False) -> Tuple[jnp.ndarray, TaskState]:
         """Evaluate population parameters or test the best parameter.
 
         Args:
             params - Parameters to be evaluated.
             test - Whether we are testing the best parameter
+            val - Whether we are testing against the validation set
         Returns:
             An array of fitness scores.
         """
         if self._use_for_loop:
-            return self._for_loop_eval(params, test)
+            raise NotImplementedError
+            # return self._for_loop_eval(params, test)
         else:
-            return self._scan_loop_eval(params, test)
+            return self._scan_loop_eval(params, test, validation)
 
-    def _for_loop_eval(self,
-                       params: jnp.ndarray,
-                       test: bool) -> Tuple[jnp.ndarray, TaskState]:
-        """Rollout using for loop (no multi-device or ma_training yet)."""
-        policy_reset_func = self._policy_reset_fn
-        policy_act_func = self._policy_act_fn
-        if test:
-            n_repeats = self._test_n_repeats
-            task_reset_func = self._valid_reset_fn
-            task_step_func = self._valid_step_fn
-            task_max_steps = self._valid_max_steps
-            params = duplicate_params(
-                params[None, :], self._n_evaluations, False)
-        else:
-            n_repeats = self._n_repeats
-            task_reset_func = self._train_reset_fn
-            task_step_func = self._train_step_fn
-            task_max_steps = self._train_max_steps
-
-        params = duplicate_params(params, n_repeats, self._ma_training)
-
-        # Start rollout.
-        self._key, reset_keys = get_task_reset_keys(
-            self._key, test, self._pop_size, self._n_evaluations, n_repeats,
-            self._ma_training)
-        task_state = task_reset_func(reset_keys)
-        policy_state = policy_reset_func(task_state)
-        scores = jnp.zeros(params.shape[0])
-        valid_mask = jnp.ones(params.shape[0])
-        start_time = time.perf_counter()
-        rollout_steps = 0
-        sim_steps = 0
-        for i in range(task_max_steps):
-            actions, policy_state = policy_act_func(
-                task_state, params, policy_state)
-            task_state, reward, done = task_step_func(task_state, actions)
-            scores, valid_mask = update_score_and_mask(
-                scores, reward, valid_mask, done)
-            rollout_steps += 1
-            sim_steps = sim_steps + valid_mask
-            if all_done(valid_mask):
-                break
-        time_cost = time.perf_counter() - start_time
-        self._logger.debug('{} steps/s, mean.steps={}'.format(
-            int(rollout_steps * task_state.obs.shape[0] / time_cost),
-            sim_steps.sum() / task_state.obs.shape[0]))
-
-        return report_score(scores, n_repeats), task_state
+    # def _for_loop_eval(self,
+    #                    params: jnp.ndarray,
+    #                    test: bool) -> Tuple[jnp.ndarray, TaskState]:
+    #     """Rollout using for loop (no multi-device or ma_training yet)."""
+    #     policy_reset_func = self._policy_reset_fn
+    #     policy_act_func = self._policy_act_fn
+    #     if test:
+    #         n_repeats = self._test_n_repeats
+    #         task_reset_func = self._valid_reset_fn
+    #         task_step_func = self._valid_step_fn
+    #         task_max_steps = self._valid_max_steps
+    #         params = duplicate_params(
+    #             params[None, :], self._n_evaluations, False)
+    #     else:
+    #         n_repeats = self._n_repeats
+    #         task_reset_func = self._train_reset_fn
+    #         task_step_func = self._train_step_fn
+    #         task_max_steps = self._train_max_steps
+    #
+    #     params = duplicate_params(params, n_repeats, self._ma_training)
+    #
+    #     # Start rollout.
+    #     self._key, reset_keys = get_task_reset_keys(
+    #         self._key, test, self._pop_size, self._n_evaluations, n_repeats,
+    #         self._ma_training)
+    #     task_state = task_reset_func(reset_keys)
+    #     policy_state = policy_reset_func(task_state)
+    #     scores = jnp.zeros(params.shape[0])
+    #     valid_mask = jnp.ones(params.shape[0])
+    #     start_time = time.perf_counter()
+    #     rollout_steps = 0
+    #     sim_steps = 0
+    #     for i in range(task_max_steps):
+    #         actions, policy_state = policy_act_func(
+    #             task_state, params, policy_state)
+    #         task_state, reward, done = task_step_func(task_state, actions)
+    #         scores, valid_mask = update_score_and_mask(
+    #             scores, reward, valid_mask, done)
+    #         rollout_steps += 1
+    #         sim_steps = sim_steps + valid_mask
+    #         if all_done(valid_mask):
+    #             break
+    #     time_cost = time.perf_counter() - start_time
+    #     self._logger.debug('{} steps/s, mean.steps={}'.format(
+    #         int(rollout_steps * task_state.obs.shape[0] / time_cost),
+    #         sim_steps.sum() / task_state.obs.shape[0]))
+    #
+    #     return report_score(scores, n_repeats), task_state
 
     def _scan_loop_eval(self,
                         params: jnp.ndarray,
-                        test: bool) -> Tuple[jnp.ndarray, TaskState]:
+                        test: bool,
+                        validation: bool = False) -> Tuple[jnp.ndarray, TaskState]:
         """Rollout using jax.lax.scan."""
         policy_reset_func = self._policy_reset_fn
-        if test:
+        if test and validation:
             n_repeats = self._test_n_repeats
             task_reset_func = self._valid_reset_fn
             rollout_func = self._valid_rollout_fn
+            params = duplicate_params(
+                params[None, :], self._n_evaluations, False)
+        elif test:
+            n_repeats = self._test_n_repeats
+            task_reset_func = self._test_reset_fn
+            rollout_func = self._test_rollout_fn
             params = duplicate_params(
                 params[None, :], self._n_evaluations, False)
         else:

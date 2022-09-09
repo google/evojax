@@ -42,6 +42,7 @@ class Trainer(object):
                  policy: PolicyNetwork,
                  solver: NEAlgorithm,
                  train_task: VectorizedTask,
+                 validation_task: VectorizedTask,
                  test_task: VectorizedTask,
                  max_iter: int = 1000,
                  log_interval: int = 20,
@@ -172,6 +173,8 @@ class Trainer(object):
                 self.solver.best_params = params
 
             best_score = -float('Inf')
+            validation_best_score = -float('Inf')
+            validation_best_params = None
 
             for i in range(self._max_iter):
                 start_time = time.perf_counter()
@@ -179,8 +182,7 @@ class Trainer(object):
                 self._logger.debug(f'solver.ask time: {time.perf_counter() - start_time:.4f}s')
 
                 start_time = time.perf_counter()
-                scores, bds = self.sim_mgr.eval_params(
-                    params=params, test=False)
+                scores, bds = self.sim_mgr.eval_params(params=params, test=False)
                 self._logger.debug(f'sim_mgr.eval_params time: {time.perf_counter() - start_time:.4f}s')
 
                 start_time = time.perf_counter()
@@ -188,6 +190,13 @@ class Trainer(object):
                     self.solver.observe_bd(bds)
                 self.solver.tell(fitness=scores)
                 self._logger.debug(f'solver.tell time: {time.perf_counter() - start_time:.4f}s')
+
+                val_scores, _ = self.sim_mgr.eval_params(params=params, test=True, validation=True)
+                if val_scores.max() < validation_best_score:
+                    self.solver.best_params = validation_best_params
+                else:
+                    validation_best_params = params
+                    validation_best_score = val_scores.max()
 
                 if i > 0 and i % self._log_interval == 0:
                     scores = np.array(scores)

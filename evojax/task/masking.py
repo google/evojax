@@ -64,6 +64,7 @@ class Masking(VectorizedTask):
     def __init__(self,
                  batch_size: int = 1024,
                  test: bool = False,
+                 validation: bool = False,
                  mnist_params=None,
                  mask_size: int = None):
 
@@ -80,15 +81,35 @@ class Masking(VectorizedTask):
             x_array.append(x)
             y_array.append(y)
 
-        image_data = jnp.float32(np.concatenate(x_array)) / 255.
-        labels = jnp.int16(np.concatenate(y_array))
+        # A validation set will be split out from the train set
+        if not test:
+            full_train_images = jnp.float32(np.concatenate(x_array)) / 255.
+            full_train_labels = jnp.int16(np.concatenate(y_array)[:, 0])
+
+            number_of_points = full_train_images.shape[0]
+            number_for_validation = number_of_points // 5
+
+            # Use these indices every time for consistency
+            ix = random.permutation(key=random.PRNGKey(0), x=number_of_points)
+            validation_ix = ix[:number_for_validation]
+            train_ix = ix[number_for_validation:]
+
+            # Just select the section of the data corresponding to train/val indices
+            if not validation:
+                image_data = jnp.take(full_train_images, indices=train_ix, axis=0)
+                labels = jnp.take(full_train_labels, indices=train_ix, axis=0)
+            else:
+                image_data = jnp.take(full_train_images, indices=validation_ix, axis=0)
+                labels = jnp.take(full_train_labels, indices=validation_ix, axis=0)
+
+        else:
+            image_data = jnp.float32(np.concatenate(x_array)) / 255.
+            labels = jnp.int16(np.concatenate(y_array))
+
         class_labels = labels[:, 0]
         dataset_labels = labels[:, 1]
 
         def reset_fn(key):
-            # if test:
-            #     batch_data, batch_class_labels, batch_dataset_labels = image_data, class_labels, dataset_labels
-            # else:
             batch_data, batch_class_labels, batch_dataset_labels = sample_batch(
                 key, image_data, class_labels, dataset_labels, batch_size)
             return State(obs=batch_dataset_labels,

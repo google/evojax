@@ -56,8 +56,8 @@ class CNN(nn.Module):
         # self.conv1 = nn.Conv(features=32, kernel_size=(3, 3), padding="SAME", name="CONV1")
         # self.conv2 = nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")
 
-        self.conv1 = nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV1")
-        self.conv2 = nn.Conv(features=8, kernel_size=(3, 3), padding="SAME", name="CONV2")
+        self.conv1 = nn.Conv(features=32, kernel_size=(3, 3), padding="SAME", name="CONV1")
+        self.conv2 = nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")
 
         self.linear1 = nn.Dense(features=10, name=linear_layer_name)
 
@@ -309,6 +309,7 @@ def run_mnist_training(
         # Check the validation dataset
         validation_dataset_class = eval_model(state.params, validation_dataset_class, cnn_batch_size)
         current_validation_accuracy = np.mean([i['accuracy'] for i in validation_dataset_class.metrics_holder.values()])
+        logger.info(f'VALIDATION, epoch={epoch}, accuracy={current_validation_accuracy}')
 
         if current_validation_accuracy > previous_validation_accuracy:
             previous_validation_accuracy = current_validation_accuracy

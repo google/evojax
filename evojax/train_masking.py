@@ -106,6 +106,8 @@ def main(config):
     policy = MaskPolicy(logger=logger, mask_size=mask_size, batch_size=config.batch_size,
                         test_no_mask=config.test_no_mask)
     train_task = Masking(batch_size=config.batch_size, test=False, mnist_params=cnn_params, mask_size=mask_size)
+    validation_task = Masking(batch_size=config.batch_size, test=False, validation=True,
+                              mnist_params=cnn_params, mask_size=mask_size)
     test_task = Masking(batch_size=config.batch_size, test=True, mnist_params=cnn_params, mask_size=mask_size)
 
     # Need to initialise PGPE with the right parameters
@@ -151,6 +153,7 @@ def main(config):
         policy=policy,
         solver=solver,
         train_task=train_task,
+        validation_task=validation_task,
         test_task=test_task,
         max_iter=config.max_iter,
         log_interval=config.log_interval,
