@@ -208,8 +208,9 @@ class Trainer(object):
                         validation_best_params = self.solver.best_params
                         validation_best_score = val_scores.max()
 
-                    val_scores = np.array(val_scores)
-                    self.wand_log_scores(val_scores, split='val')
+                    if i % self._log_interval == 0:
+                        val_scores = np.array(val_scores)
+                        self.wand_log_scores(val_scores, split='val')
 
                 # if i > 0 and i % self._test_interval == 0:
                 if i % self._test_interval == 0:
