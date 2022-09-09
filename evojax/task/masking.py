@@ -84,7 +84,7 @@ class Masking(VectorizedTask):
         # A validation set will be split out from the train set
         if not test:
             full_train_images = jnp.float32(np.concatenate(x_array)) / 255.
-            full_train_labels = jnp.int16(np.concatenate(y_array)[:, 0])
+            full_train_labels = jnp.int16(np.concatenate(y_array))
 
             number_of_points = full_train_images.shape[0]
             number_for_validation = number_of_points // 5
@@ -101,10 +101,6 @@ class Masking(VectorizedTask):
             else:
                 image_data = jnp.take(full_train_images, indices=validation_ix, axis=0)
                 labels = jnp.take(full_train_labels, indices=validation_ix, axis=0)
-
-            import ipdb
-            ipdb.set_trace()
-
         else:
             image_data = jnp.float32(np.concatenate(x_array)) / 255.
             labels = jnp.int16(np.concatenate(y_array))
