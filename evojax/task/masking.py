@@ -102,6 +102,9 @@ class Masking(VectorizedTask):
                 image_data = jnp.take(full_train_images, indices=validation_ix, axis=0)
                 labels = jnp.take(full_train_labels, indices=validation_ix, axis=0)
 
+            import ipdb
+            ipdb.set_trace()
+
         else:
             image_data = jnp.float32(np.concatenate(x_array)) / 255.
             labels = jnp.int16(np.concatenate(y_array))
