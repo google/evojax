@@ -19,7 +19,6 @@ from typing import Optional, Callable
 
 import jax.numpy as jnp
 import numpy as np
-from flax import linen as nn
 
 import wandb
 
@@ -46,6 +45,7 @@ class Trainer(object):
                  test_task: VectorizedTask,
                  max_iter: int = 1000,
                  log_interval: int = 20,
+                 val_interval: int = 10,
                  test_interval: int = 100,
                  n_repeats: int = 1,
                  test_n_repeats: int = 1,
@@ -90,6 +90,7 @@ class Trainer(object):
             self._logger = logger
 
         self._log_interval = log_interval
+        self._val_interval = val_interval
         self._test_interval = test_interval
         self._max_iter = max_iter
         self.model_dir = model_dir
@@ -192,21 +193,23 @@ class Trainer(object):
                 self.solver.tell(fitness=scores)
                 self._logger.debug(f'solver.tell time: {time.perf_counter() - start_time:.4f}s')
 
-                # Test the new best params on the validation set
-                val_scores, _ = self.sim_mgr.eval_params(params=self.solver.best_params, test=True, validation=True)
-                if validation_best_params is not None and val_scores.max() < validation_best_score:
-                    self.solver.best_params = validation_best_params
-                else:
-                    validation_best_params = self.solver.best_params
-                    validation_best_score = val_scores.max()
-
                 if i > 0 and i % self._log_interval == 0:
                     scores = np.array(scores)
                     self.wand_log_scores(scores, split='train')
-                    val_scores = np.array(val_scores)
-                    self.wand_log_scores(val_scores, split='val')
 
                     self._log_scores_fn(i, scores, "train")
+
+                # Test the new best params on the validation set
+                if i and i % self._val_interval == 0:
+                    val_scores, _ = self.sim_mgr.eval_params(params=self.solver.best_params, test=True, validation=True)
+                    if validation_best_params is not None and val_scores.max() < validation_best_score:
+                        self.solver.best_params = validation_best_params
+                    else:
+                        validation_best_params = self.solver.best_params
+                        validation_best_score = val_scores.max()
+
+                    val_scores = np.array(val_scores)
+                    self.wand_log_scores(val_scores, split='val')
 
                 # if i > 0 and i % self._test_interval == 0:
                 if i % self._test_interval == 0:
