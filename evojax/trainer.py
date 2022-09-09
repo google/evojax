@@ -192,7 +192,7 @@ class Trainer(object):
                 self.solver.tell(fitness=scores)
                 self._logger.debug(f'solver.tell time: {time.perf_counter() - start_time:.4f}s')
 
-                val_scores, _ = self.sim_mgr.eval_params(params=params, test=True, validation=True)
+                val_scores, _ = self.sim_mgr.eval_params(params=self.solver.best_params, test=True, validation=True)
                 if val_scores.max() < validation_best_score:
                     self.solver.best_params = validation_best_params
                 else:
