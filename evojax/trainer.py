@@ -124,22 +124,22 @@ class Trainer(object):
         self.masks_array = []
         self.best_unmasked_accuracy = best_unmasked_accuracy
 
-    def wand_log_scores(self, score_array: jnp.ndarray, test: bool):
+    def wand_log_scores(self, score_array: jnp.ndarray, split: str):
         best_score = score_array.max()
         mean_score = score_array.mean()
         worst_score = score_array.min()
         std_score = score_array.std()
 
         self._logger.info(
-            f'[{"TEST" if test else "Train"}] #tests={score_array.size}, max={best_score:.4f}, '
+            f'[{split.upper()}] #tests={score_array.size}, max={best_score:.4f}, '
             f'avg={mean_score:.4f}, min={worst_score:.4f}, std={std_score:.4f}')
 
-        wandb.log({f'Best {"Test" if test else "Train"} Accuracy': best_score,
-                   f'Mean {"Test" if test else "Train"} Accuracy': mean_score,
-                   f'Worst {"Test" if test else "Train"} Accuracy': worst_score,
-                   f'{"Test" if test else "Train"} Accuracy STD': std_score})
+        wandb.log({f'Best {split} accuracy': best_score,
+                   f'Mean {split} accuracy': mean_score,
+                   f'Worst {split} accuracy': worst_score,
+                   f'{split} STD': std_score})
 
-        if test:
+        if split == 'test':
             best_score_delta = best_score - self.best_unmasked_accuracy
             self._logger.info(f'[TEST] Masked vs Unmasked Delta = {best_score_delta:.4f}')
             wandb.log({'Masked vs Unmasked Delta': best_score_delta})
@@ -162,7 +162,7 @@ class Trainer(object):
             scores = np.array(
                 self.sim_mgr.eval_params(params=params, test=True)[0])
 
-            self.wand_log_scores(scores, test=True)
+            self.wand_log_scores(scores, split='test')
 
             return scores.mean()
         else:
@@ -192,6 +192,7 @@ class Trainer(object):
                 self.solver.tell(fitness=scores)
                 self._logger.debug(f'solver.tell time: {time.perf_counter() - start_time:.4f}s')
 
+                # Test the new best params on the validation set
                 val_scores, _ = self.sim_mgr.eval_params(params=self.solver.best_params, test=True, validation=True)
                 if validation_best_params is not None and val_scores.max() < validation_best_score:
                     self.solver.best_params = validation_best_params
@@ -201,7 +202,9 @@ class Trainer(object):
 
                 if i > 0 and i % self._log_interval == 0:
                     scores = np.array(scores)
-                    self.wand_log_scores(scores, test=False)
+                    self.wand_log_scores(scores, split='train')
+                    val_scores = np.array(val_scores)
+                    self.wand_log_scores(val_scores, split='val')
 
                     self._log_scores_fn(i, scores, "train")
 
@@ -221,7 +224,7 @@ class Trainer(object):
                     test_scores, _ = self.sim_mgr.eval_params(
                         params=best_params, test=True)
 
-                    self.wand_log_scores(test_scores, test=True)
+                    self.wand_log_scores(test_scores, split='test')
 
                     self._log_scores_fn(i, test_scores, "test")
                     mean_test_score = test_scores.mean()
