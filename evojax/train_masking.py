@@ -32,7 +32,7 @@ from evojax.policy.mask import MaskPolicy
 from evojax.algo import PGPE, OpenES, CMA_ES, CMA_ES_JAX
 from evojax import util
 
-from evojax.train_mnist_cnn import run_mnist_training, linear_layer_name
+from evojax.train_mnist_cnn import run_mnist_training, linear_layer_name, full_data_loader
 from evojax.datasets import DATASET_LABELS
 
 
@@ -46,6 +46,8 @@ def parse_args():
         '--max-iter', type=int, default=5000, help='Max training iterations.')
     parser.add_argument(
         '--cnn-epochs', type=int, default=20, help='Number of epochs to train the CNN for.')
+    parser.add_argument(
+        '--evo-epochs', type=int, default=1, help='Number of epochs to run the evolutionary process for.')
     parser.add_argument(
         '--test-interval', type=int, default=1000, help='Test interval.')
     parser.add_argument(
@@ -93,80 +95,94 @@ def main(config):
     logger.info(f'Start Time - {time.strftime("%H:%M")}')
     logger.info('=' * 50)
 
-    cnn_output = run_mnist_training(logger=logger, return_model=True, num_epochs=config.cnn_epochs)
-    cnn_params = cnn_output["params"]
-    cnn_best_test_accuracy = cnn_output["best_test_accuracy"]
+    datasets_tuple = full_data_loader()
+    masks = None
+    cnn_state = processed_params = None
+    train_task = validation_task = test_task = None
+    for i in range(config.evo_epochs):
+        cnn_state, cnn_best_test_accuracy = run_mnist_training(logger=logger,
+                                                               datasets_tuple=datasets_tuple,
+                                                               return_model=True,
+                                                               num_epochs=config.cnn_epochs,
+                                                               state=cnn_state,
+                                                               masks=masks)
+        cnn_params = cnn_state.params
+        linear_weights = cnn_params[linear_layer_name]["kernel"]
+        mask_size = linear_weights.shape[0]
 
-    linear_weights = cnn_params[linear_layer_name]["kernel"]
-    # mask_size = np.prod(linear_weights.shape)
-    # TODO currently just masking the input features to the linear layer
-    mask_size = linear_weights.shape[0]
-    logger.info(f'Mask Size = {mask_size}')
+        policy = MaskPolicy(logger=logger, mask_size=mask_size, batch_size=config.batch_size,
+                            test_no_mask=config.test_no_mask)
 
-    policy = MaskPolicy(logger=logger, mask_size=mask_size, batch_size=config.batch_size,
-                        test_no_mask=config.test_no_mask)
-    train_task = Masking(batch_size=config.batch_size, test=False, mnist_params=cnn_params, mask_size=mask_size)
-    validation_task = Masking(batch_size=config.batch_size, test=False, validation=True,
-                              mnist_params=cnn_params, mask_size=mask_size)
-    test_task = Masking(batch_size=config.batch_size, test=True, mnist_params=cnn_params, mask_size=mask_size)
+        if not i:
+            train_task = Masking(batch_size=config.batch_size, test=False, mnist_params=cnn_params, mask_size=mask_size)
+            validation_task = Masking(batch_size=config.batch_size, test=False, validation=True,
+                                      mnist_params=cnn_params, mask_size=mask_size)
+            test_task = Masking(batch_size=config.batch_size, test=True, mnist_params=cnn_params, mask_size=mask_size)
 
-    # Need to initialise PGPE with the right parameters
-    flat, tree = tree_util.tree_flatten(policy.initial_params)
-    processed_params = jnp.concatenate([i.ravel() for i in flat])
+            # Need to initialise PGPE with the right parameters
+            flat, tree = tree_util.tree_flatten(policy.initial_params)
+            processed_params = jnp.concatenate([i.ravel() for i in flat])
+        else:
+            train_task.mnist_params = cnn_params
+            validation_task.mnist_params = cnn_params
+            test_task.mnist_params = cnn_params
 
-    if config.algo == 'PGPE':
-        solver = PGPE(
-            init_params=processed_params,
-            pop_size=config.pop_size,
-            param_size=policy.num_params,
-            optimizer='adam',
-            center_learning_rate=config.center_lr,
-            stdev_learning_rate=config.std_lr,
-            init_stdev=config.init_std,
-            logger=logger,
+        if config.algo == 'PGPE':
+            solver = PGPE(
+                init_params=processed_params,
+                pop_size=config.pop_size,
+                param_size=policy.num_params,
+                optimizer='adam',
+                center_learning_rate=config.center_lr,
+                stdev_learning_rate=config.std_lr,
+                init_stdev=config.init_std,
+                logger=logger,
+                seed=config.seed,
+            )
+        elif config.algo == 'CMA':
+            solver = CMA_ES_JAX(
+                pop_size=config.pop_size,
+                param_size=policy.num_params,
+                init_stdev=config.init_std,
+                logger=logger,
+                seed=config.seed,
+                mean=processed_params
+            )
+        elif config.algo == 'OpenES':
+            solver = OpenES(
+                pop_size=config.pop_size,
+                param_size=policy.num_params,
+                optimizer='adam',
+                init_stdev=config.init_std,
+                logger=logger,
+                seed=config.seed,
+                custom_init_params=processed_params
+            )
+        else:
+            raise NotImplementedError
+
+        # Train.
+        trainer = Trainer(
+            policy=policy,
+            solver=solver,
+            train_task=train_task,
+            validation_task=validation_task,
+            test_task=test_task,
+            max_iter=config.max_iter,
+            log_interval=config.log_interval,
+            test_interval=config.test_interval,
+            n_repeats=1,
+            n_evaluations=1,
             seed=config.seed,
-        )
-    elif config.algo == 'CMA':
-        solver = CMA_ES_JAX(
-            pop_size=config.pop_size,
-            param_size=policy.num_params,
-            init_stdev=config.init_std,
+            log_dir=log_dir,
             logger=logger,
-            seed=config.seed,
-            mean=processed_params
+            dataset_labels=DATASET_LABELS,
+            best_unmasked_accuracy=cnn_best_test_accuracy
         )
-    elif config.algo == 'OpenES':
-        solver = OpenES(
-            pop_size=config.pop_size,
-            param_size=policy.num_params,
-            optimizer='adam',
-            init_stdev=config.init_std,
-            logger=logger,
-            seed=config.seed,
-            custom_init_params=processed_params
-        )
-    else:
-        raise NotImplementedError
+        best_score, processed_params = trainer.run(demo_mode=False)
+        current_masks, _ = policy.get_actions(None, processed_params, None)
 
-    # Train.
-    trainer = Trainer(
-        policy=policy,
-        solver=solver,
-        train_task=train_task,
-        validation_task=validation_task,
-        test_task=test_task,
-        max_iter=config.max_iter,
-        log_interval=config.log_interval,
-        test_interval=config.test_interval,
-        n_repeats=1,
-        n_evaluations=1,
-        seed=config.seed,
-        log_dir=log_dir,
-        logger=logger,
-        dataset_labels=DATASET_LABELS,
-        best_unmasked_accuracy=cnn_best_test_accuracy
-    )
-    best_score = trainer.run(demo_mode=False)
+        logger.info(f'Best test score from evo epoch {i} = {best_score:.4f}')
 
     # Test the final model.
     src_file = os.path.join(log_dir, 'best.npz')

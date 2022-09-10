@@ -100,7 +100,7 @@ class MaskPolicy(PolicyNetwork):
     def get_actions(self,
                     t_states: Optional[TaskState],
                     params: jnp.ndarray,
-                    p_states: PolicyState) -> Tuple[jnp.ndarray, Optional[PolicyState]]:
+                    p_states: Optional[PolicyState]) -> Tuple[jnp.ndarray, Optional[PolicyState]]:
         # Use this to test what masks are generated for each dataset
         if t_states is None:
             params = self._format_params_fn_no_vmap(params)

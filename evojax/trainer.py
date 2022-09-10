@@ -15,7 +15,7 @@
 import os
 import logging
 import time
-from typing import Optional, Callable
+from typing import Optional, Callable, Tuple
 
 import jax.numpy as jnp
 import numpy as np
@@ -145,7 +145,7 @@ class Trainer(object):
             self._logger.info(f'[TEST] Masked vs Unmasked Delta = {best_score_delta:.4f}')
             wandb.log({'Masked vs Unmasked Delta': best_score_delta})
 
-    def run(self, demo_mode: bool = False) -> float:
+    def run(self, demo_mode: bool = False) -> Tuple[float, jnp.ndarray]:
         """Start the training / test process."""
 
         if self.model_dir is not None:
@@ -274,4 +274,4 @@ class Trainer(object):
             stacked_masks = np.stack(self.masks_array).astype('b')
             np.savez_compressed(save_path, masks=stacked_masks)
 
-            return best_score
+            return best_score, validation_best_params
