@@ -252,16 +252,20 @@ def run_mnist_training(
         num_epochs=20,
         learning_rate=1e-3,
         cnn_batch_size=1024,
-        return_model=True
+        return_model=True,
+        state=None,
+        mask=None
 ):
 
     logger.info('Starting training MNIST CNN')
 
     rng = random.PRNGKey(0)
-    rng, init_rng = random.split(rng)
 
-    state = create_train_state(init_rng, learning_rate)
-    del init_rng  # Must not be used anymore.
+    # Allow passing of a state, so only init if this is none
+    if state is None:
+        rng, init_rng = random.split(rng)
+        state = create_train_state(init_rng, learning_rate)
+        del init_rng  # Must not be used anymore.
 
     x_array_train, y_array_train = [], []
     dataset_names = [digit, fashion, kuzushiji, cifar]
