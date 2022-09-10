@@ -163,7 +163,7 @@ def train_step(state, batch, masks):
     grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
     (_, logits), grads = grad_fn(state.params)
     state = state.apply_gradients(grads=grads)
-    metrics = compute_metrics(logits=logits, labels=batch['label'])
+    metrics = compute_metrics(logits=logits, labels=class_labels)
     return state, metrics
 
 
