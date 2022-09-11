@@ -239,9 +239,9 @@ def run_mnist_training(
     for epoch in range(1, num_epochs + 1):
 
         # Since there can be multiple evo epochs count from the start of them
-        relative_epoch = evo_epoch * num_epochs + epoch
+        relative_epoch = evo_epoch * num_epochs + epoch - 1
 
-        logger.info(f'Starting epoch {epoch} of CNN training')
+        logger.info(f'Starting epoch {relative_epoch} of CNN training')
         # Use a separate PRNG key to permute image data during shuffling
         rng, input_rng = jax.random.split(rng)
 
@@ -249,14 +249,13 @@ def run_mnist_training(
         state, train_metrics = train_epoch(state, train_dataset, cnn_batch_size, epoch, input_rng, logger=logger,
                                            mask_params=mask_params, pixel_input=pixel_input)
 
-        logger.debug(
-            f'TRAIN, epoch={epoch}, loss={train_metrics["loss"]}, accuracy={train_metrics["accuracy"]}')
+        logger.debug(f'TRAIN, epoch={epoch}, loss={train_metrics["loss"]}, accuracy={train_metrics["accuracy"]}')
 
         # Check the validation dataset
         validation_dataset_class = eval_model(state.params, validation_dataset_class, cnn_batch_size,
                                               mask_params=mask_params, pixel_input=pixel_input)
         current_validation_accuracy = np.mean([i['accuracy'] for i in validation_dataset_class.metrics_holder.values()])
-        logger.info(f'VALIDATION, epoch={epoch}, accuracy={current_validation_accuracy}')
+        logger.debug(f'VALIDATION, epoch={epoch}, accuracy={current_validation_accuracy}')
 
         if current_validation_accuracy > previous_validation_accuracy:
             previous_validation_accuracy = current_validation_accuracy
@@ -271,11 +270,11 @@ def run_mnist_training(
         test_accuracy = np.mean([i['accuracy'] for i in test_dataset_class.metrics_holder.values()])
         best_test_accuracy = max(best_test_accuracy, test_accuracy)
 
-        logger.info(f'TEST, epoch={epoch}, loss={test_loss}, accuracy={test_accuracy}')
+        logger.debug(f'TEST, epoch={epoch}, loss={test_loss}, accuracy={test_accuracy}')
 
         for dataset_name in dataset_names:
             ds_test_accuracy = test_dataset_class.metrics_holder[dataset_name].get("accuracy")
-            logger.info(f'TEST, {dataset_name} 'f'accuracy={ds_test_accuracy:.2f}')
+            logger.debug(f'TEST, {dataset_name} 'f'accuracy={ds_test_accuracy:.2f}')
 
             wandb.log({f'{dataset_name} Test Accuracy': ds_test_accuracy}, step=relative_epoch, commit=False)
 
