@@ -274,12 +274,10 @@ def run_mnist_training(
         logger.info(f'TEST, epoch={epoch}, loss={test_loss}, accuracy={test_accuracy}')
 
         for dataset_name in dataset_names:
-            ds_validation_accuracy = validation_dataset_class.metrics_holder[dataset_name].get("accuracy")
             ds_test_accuracy = test_dataset_class.metrics_holder[dataset_name].get("accuracy")
             logger.info(f'TEST, {dataset_name} 'f'accuracy={test_accuracy:.2f}')
 
-            wandb.log({f'{dataset_name} Validation Accuracy': ds_validation_accuracy,
-                       f'{dataset_name} Test Accuracy': ds_test_accuracy}, step=relative_epoch, commit=False)
+            wandb.log({f'{dataset_name} Test Accuracy': ds_test_accuracy}, step=relative_epoch, commit=False)
 
         wandb.log({'Combined Train Accuracy': train_metrics['accuracy'],
                    'Combined Validation Accuracy': current_validation_accuracy,
