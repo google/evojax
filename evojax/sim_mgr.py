@@ -30,9 +30,6 @@ from evojax.policy.base import PolicyState
 from evojax.policy.base import PolicyNetwork
 from evojax.util import create_logger
 
-from evojax.task.masking import State
-from evojax.policy.mask import Mask
-
 
 @partial(jax.jit, static_argnums=(1, 2, 3, 4, 5))
 def get_task_reset_keys(key: jnp.ndarray,
