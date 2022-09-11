@@ -135,10 +135,10 @@ class Trainer(object):
             f'[{split.upper()}] #tests={score_array.size}, max={best_score:.4f}, '
             f'avg={mean_score:.4f}, min={worst_score:.4f}, std={std_score:.4f}')
 
-        wandb.log({f'Evo Best {split} accuracy': best_score,
-                   f'Evo Mean {split} accuracy': mean_score,
-                   f'Evo Worst {split} accuracy': worst_score,
-                   f'Evo {split} STD': std_score})
+        wandb.log({f'Evo Best {split.capitalize()} accuracy': best_score,
+                   f'Evo Mean {split.capitalize()} accuracy': mean_score,
+                   f'Evo Worst {split.capitalize()} accuracy': worst_score,
+                   f'Evo {split.capitalize()} STD': std_score})
 
         if split == 'test':
             best_score_delta = best_score - self.best_unmasked_accuracy
