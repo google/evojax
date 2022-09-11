@@ -2,6 +2,8 @@ import logging
 import numpy as np
 from typing import Tuple
 
+import wandb
+
 import optax
 import jax
 from jax import random
@@ -114,13 +116,7 @@ def train_epoch(state, train_ds, batch_size, epoch, rng, logger: logging.Logger 
         k: np.mean([metrics[k] for metrics in batch_metrics_np])
         for k in batch_metrics_np[0]}
 
-    if logger:
-        logger.debug(f'TRAIN, epoch={epoch}, loss={epoch_metrics_np["loss"]}, accuracy={epoch_metrics_np["accuracy"]}')
-    else:
-        print('train epoch: %d, loss: %.4f, accuracy: %.2f' % (
-            epoch, epoch_metrics_np['loss'], epoch_metrics_np['accuracy'] * 100))
-
-    return state
+    return state, epoch_metrics_np
 
 
 def eval_model(params, test_dataset_class, batch_size, mask_params=None, pixel_input=False):
@@ -218,7 +214,8 @@ def run_mnist_training(
         state=None,
         mask_params=None,
         pixel_input=False,
-        datasets_tuple=None
+        datasets_tuple=None,
+        evo_epoch=0
 ):
 
     logger.info('Starting training MNIST CNN')
@@ -240,13 +237,20 @@ def run_mnist_training(
     best_test_accuracy = 0
     previous_validation_accuracy = 0
     for epoch in range(1, num_epochs + 1):
+
+        # Since there can be multiple evo epochs count from the start of them
+        relative_epoch = evo_epoch * num_epochs + epoch
+
         logger.info(f'Starting epoch {epoch} of CNN training')
         # Use a separate PRNG key to permute image data during shuffling
         rng, input_rng = jax.random.split(rng)
 
         # Run an optimization step over a training batch
-        state = train_epoch(state, train_dataset, cnn_batch_size, epoch, input_rng, logger=logger,
-                            mask_params=mask_params, pixel_input=pixel_input)
+        state, train_metrics = train_epoch(state, train_dataset, cnn_batch_size, epoch, input_rng, logger=logger,
+                                           mask_params=mask_params, pixel_input=pixel_input)
+
+        logger.debug(
+            f'TRAIN, epoch={epoch}, loss={train_metrics["loss"]}, accuracy={train_metrics["accuracy"]}')
 
         # Check the validation dataset
         validation_dataset_class = eval_model(state.params, validation_dataset_class, cnn_batch_size,
@@ -267,15 +271,19 @@ def run_mnist_training(
         test_accuracy = np.mean([i['accuracy'] for i in test_dataset_class.metrics_holder.values()])
         best_test_accuracy = max(best_test_accuracy, test_accuracy)
 
-        if logger:
-            logger.info(
-                f'TEST, epoch={epoch}, loss={test_loss}, accuracy={test_accuracy}')
-            for dataset_name in dataset_names:
-                logger.info(
-                    f'TEST, {dataset_name} '
-                    f'accuracy={test_dataset_class.metrics_holder[dataset_name].get("accuracy"):.2f}')
-        else:
-            print(f'test epoch: {epoch}, loss: {test_loss:.2f}, accuracy: {test_accuracy:.2f}')
+        logger.info(f'TEST, epoch={epoch}, loss={test_loss}, accuracy={test_accuracy}')
+
+        for dataset_name in dataset_names:
+            ds_validation_accuracy = validation_dataset_class.metrics_holder[dataset_name].get("accuracy")
+            ds_test_accuracy = test_dataset_class.metrics_holder[dataset_name].get("accuracy")
+            logger.info(f'TEST, {dataset_name} 'f'accuracy={test_accuracy:.2f}')
+
+            wandb.log({f'{dataset_name} Validation Accuracy': ds_validation_accuracy,
+                       f'{dataset_name} Test Accuracy': ds_test_accuracy}, step=relative_epoch, commit=False)
+
+        wandb.log({'Combined Train Accuracy': train_metrics['accuracy'],
+                   'Combined Validation Accuracy': current_validation_accuracy,
+                   'Combined Test Accuracy': test_accuracy}, step=relative_epoch)
 
     logger.info(f'Best test accuracy for unmasked CNN is {best_test_accuracy:.4f}')
 

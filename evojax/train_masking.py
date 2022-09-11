@@ -66,7 +66,7 @@ def parse_args():
     parser.add_argument(
         '--debug', action='store_true', help='Debug mode.')
     parser.add_argument(
-        '--test-no-mask', action='store_true', help='Whether to test a mask of all ones.')
+        '--test-no-mask', action='store_true', help='Whether to test without masking.')
     parser.add_argument('--algo', type=str, help='Evolutionary algorithm to use.',
                         choices=['PGPE', 'CMA', 'OpenES'])
     parser.add_argument('--pixel-input', action='store_true', help='Input the pixel values to the masking model.')
@@ -97,9 +97,11 @@ def main(config):
     logger.info('=' * 50)
 
     datasets_tuple = full_data_loader()
-    mask_params = None
-    cnn_state = processed_params = None
-    train_task = validation_task = test_task = None
+    mask_params = cnn_state = processed_params = None
+    trainer = train_task = validation_task = test_task = None
+
+    # There will be this many epochs where alternatively the CNN is trained, then the masking model is evolved
+    # The new best masking parameters will then be passed to the CNN, and it's trained again, etc. etc.
     for i in range(config.evo_epochs):
         cnn_state, cnn_best_test_accuracy = run_mnist_training(logger=logger,
                                                                datasets_tuple=datasets_tuple,
@@ -107,7 +109,11 @@ def main(config):
                                                                num_epochs=config.cnn_epochs,
                                                                state=cnn_state,
                                                                mask_params=mask_params,
-                                                               pixel_input=config.pixel_input)
+                                                               pixel_input=config.pixel_input,
+                                                               evo_epoch=i)
+        if config.test_no_mask:
+            break
+
         cnn_params = cnn_state.params
         linear_weights = cnn_params[linear_layer_name]["kernel"]
         mask_size = linear_weights.shape[0]
@@ -185,16 +191,17 @@ def main(config):
             best_unmasked_accuracy=cnn_best_test_accuracy
         )
         best_score, processed_params = trainer.run(demo_mode=False)
-        current_masks, _ = policy.get_actions(None, processed_params, None)
+        # current_masks, _ = policy.get_actions(None, processed_params, None)
 
         logger.info(f'Best test score from evo epoch {i} = {best_score:.4f}')
 
-    # Test the final model.
-    src_file = os.path.join(log_dir, 'best.npz')
-    tar_file = os.path.join(log_dir, 'model.npz')
-    shutil.copy(src_file, tar_file)
-    trainer.model_dir = log_dir
-    trainer.run(demo_mode=True)
+    if trainer:
+        # Test the final model.
+        src_file = os.path.join(log_dir, 'best.npz')
+        tar_file = os.path.join(log_dir, 'model.npz')
+        shutil.copy(src_file, tar_file)
+        trainer.model_dir = log_dir
+        trainer.run(demo_mode=True)
 
     end_time = time.time()
     logger.info(f'Total time taken: {end_time-start_time:.2f}s')

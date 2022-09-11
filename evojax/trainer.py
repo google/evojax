@@ -135,17 +135,17 @@ class Trainer(object):
             f'[{split.upper()}] #tests={score_array.size}, max={best_score:.4f}, '
             f'avg={mean_score:.4f}, min={worst_score:.4f}, std={std_score:.4f}')
 
-        wandb.log({f'Best {split} accuracy': best_score,
-                   f'Mean {split} accuracy': mean_score,
-                   f'Worst {split} accuracy': worst_score,
-                   f'{split} STD': std_score})
+        wandb.log({f'Evo Best {split} accuracy': best_score,
+                   f'Evo Mean {split} accuracy': mean_score,
+                   f'Evo Worst {split} accuracy': worst_score,
+                   f'Evo {split} STD': std_score})
 
         if split == 'test':
             best_score_delta = best_score - self.best_unmasked_accuracy
             self._logger.info(f'[TEST] Masked vs Unmasked Delta = {best_score_delta:.4f}')
-            wandb.log({'Masked vs Unmasked Delta': best_score_delta})
+            # wandb.log({'Masked vs Unmasked Delta': best_score_delta})
 
-    def run(self, demo_mode: bool = False) -> Tuple[float, jnp.ndarray]:
+    def run(self, demo_mode: bool = False, evo_epoch=0) -> Tuple[float, jnp.ndarray]:
         """Start the training / test process."""
 
         if self.model_dir is not None:
