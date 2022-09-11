@@ -215,7 +215,8 @@ def run_mnist_training(
         mask_params=None,
         pixel_input=False,
         datasets_tuple=None,
-        evo_epoch=0
+        evo_epoch=0,
+        early_stopping=False
 ):
 
     logger.info('Starting training MNIST CNN')
@@ -260,6 +261,8 @@ def run_mnist_training(
         if current_validation_accuracy > previous_validation_accuracy:
             previous_validation_accuracy = current_validation_accuracy
             best_state = state
+        elif not early_stopping:
+            pass
         else:
             logger.info(f'Validation accuracy decreased on epoch {epoch}, stopping early')
             break
