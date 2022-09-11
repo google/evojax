@@ -28,6 +28,7 @@ from evojax.task.base import TaskState
 from evojax.util import create_logger
 from evojax.util import get_params_format_fn
 
+from evojax.models import Mask, mask_final_layer_name
 from evojax.datasets import DATASET_LABELS
 
 
