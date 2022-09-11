@@ -66,7 +66,8 @@ class Masking(VectorizedTask):
                  test: bool = False,
                  validation: bool = False,
                  mnist_params=None,
-                 mask_size: int = None):
+                 mask_size: int = None,
+                 pixel_input: bool = False):
 
         self.mnist_params = mnist_params
         self.linear_weights_orig = self.mnist_params[linear_layer_name]["kernel"]
@@ -111,7 +112,12 @@ class Masking(VectorizedTask):
         def reset_fn(key):
             batch_data, batch_class_labels, batch_dataset_labels = sample_batch(
                 key, image_data, class_labels, dataset_labels, batch_size)
-            return State(obs=batch_dataset_labels,
+            # This determines whether the mask sees the image or the dataset label
+            if pixel_input:
+                obs = batch_data
+            else:
+                obs = batch_dataset_labels
+            return State(obs=obs,
                          labels=batch_class_labels,
                          image_data=batch_data)
         self._reset_fn = jax.jit(jax.vmap(reset_fn))

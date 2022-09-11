@@ -68,7 +68,7 @@ def parse_args():
         '--test-no-mask', action='store_true', help='Whether to test a mask of all ones.')
     parser.add_argument('--algo', type=str, help='Evolutionary algorithm to use.',
                         choices=['PGPE', 'CMA', 'OpenES'])
-    parser.add_argument('--mask-input', type=str, default='dataset_label')
+    parser.add_argument('--pixel-input', action='store_true', help='Input the pixel values to the masking model.')
     config, _ = parser.parse_known_args()
     return config
 
@@ -111,13 +111,16 @@ def main(config):
         mask_size = linear_weights.shape[0]
 
         policy = MaskPolicy(logger=logger, mask_size=mask_size, batch_size=config.batch_size,
-                            test_no_mask=config.test_no_mask)
+                            test_no_mask=config.test_no_mask, dataset_number=len(DATASET_LABELS),
+                            pixel_input=config.pixel_input)
 
         if not i:
-            train_task = Masking(batch_size=config.batch_size, test=False, mnist_params=cnn_params, mask_size=mask_size)
+            train_task = Masking(batch_size=config.batch_size, test=False, mnist_params=cnn_params, mask_size=mask_size,
+                                 pixel_input=config.pixel_input)
             validation_task = Masking(batch_size=config.batch_size, test=False, validation=True,
-                                      mnist_params=cnn_params, mask_size=mask_size)
-            test_task = Masking(batch_size=config.batch_size, test=True, mnist_params=cnn_params, mask_size=mask_size)
+                                      mnist_params=cnn_params, mask_size=mask_size, pixel_input=config.pixel_input)
+            test_task = Masking(batch_size=config.batch_size, test=True, mnist_params=cnn_params, mask_size=mask_size,
+                                pixel_input=config.pixel_input)
 
             # Need to initialise PGPE with the right parameters
             flat, tree = tree_util.tree_flatten(policy.initial_params)

@@ -35,13 +35,19 @@ mask_final_layer_name = 'DENSE'
 class Mask(nn.Module):
     """Mask network for MNIST."""
     mask_size: int
-    dataset_number: int = 3
+    dataset_number: int = 4
     round_output: bool = True
     test_no_mask: bool = False
+    pixel_input: bool = False
 
     @nn.compact
     def __call__(self, x):
-        x = nn.one_hot(x, self.dataset_number)
+        if self.pixel_input:
+            x = nn.Conv(features=32, kernel_size=(3, 3), padding="SAME", name="CONV1")(x)
+            x = nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")(x)
+            x = x.reshape((x.shape[0], -1))
+        else:
+            x = nn.one_hot(x, self.dataset_number)
         # x = nn.Dense(features=10, name="DENSE1")(x)
         # x = nn.relu(x)
         # x = nn.Dense(features=100, name="DENSE2")(x)
@@ -71,13 +77,14 @@ class MaskPolicy(PolicyNetwork):
     """A dense neural network for masking the MNIST classification task."""
 
     def __init__(self, logger: logging.Logger = None, mask_size: int = None,
-                 batch_size: int = None, test_no_mask=False):
+                 batch_size: int = None, test_no_mask=False, dataset_number=4, pixel_input=False):
         if logger is None:
             self._logger = create_logger('MaskNetPolicy')
         else:
             self._logger = logger
 
-        model = Mask(mask_size=mask_size, test_no_mask=test_no_mask)
+        model = Mask(mask_size=mask_size, test_no_mask=test_no_mask,
+                     dataset_number=dataset_number, pixel_input=pixel_input)
         params = model.init(random.PRNGKey(0), jnp.ones([batch_size, ]))
 
         # I want to start with no masking, then move away from this
