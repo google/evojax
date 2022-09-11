@@ -85,7 +85,12 @@ class MaskPolicy(PolicyNetwork):
 
         model = Mask(mask_size=mask_size, test_no_mask=test_no_mask,
                      dataset_number=dataset_number, pixel_input=pixel_input)
-        params = model.init(random.PRNGKey(0), jnp.ones([batch_size, ]))
+
+        if pixel_input:
+            init_array = jnp.ones([batch_size, 28, 28, 1])
+        else:
+            init_array = jnp.ones([batch_size, ])
+        params = model.init(random.PRNGKey(0), init_array)
 
         # I want to start with no masking, then move away from this
         # Try having all weights in the final layer be zero with a bias of ones
