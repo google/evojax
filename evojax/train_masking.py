@@ -29,10 +29,11 @@ import jax.numpy as jnp
 from evojax import Trainer
 from evojax.task.masking import Masking
 from evojax.policy.mask import MaskPolicy
-from evojax.algo import PGPE, OpenES, CMA_ES, CMA_ES_JAX
+from evojax.algo import PGPE, OpenES, CMA_ES_JAX
 from evojax import util
 
-from evojax.train_mnist_cnn import run_mnist_training, linear_layer_name, full_data_loader
+from evojax.train_mnist_cnn import run_mnist_training, full_data_loader
+from evojax.models import linear_layer_name
 from evojax.datasets import DATASET_LABELS
 
 
@@ -96,7 +97,7 @@ def main(config):
     logger.info('=' * 50)
 
     datasets_tuple = full_data_loader()
-    masks = None
+    mask_params = None
     cnn_state = processed_params = None
     train_task = validation_task = test_task = None
     for i in range(config.evo_epochs):
@@ -105,7 +106,8 @@ def main(config):
                                                                return_model=True,
                                                                num_epochs=config.cnn_epochs,
                                                                state=cnn_state,
-                                                               masks=masks)
+                                                               mask_params=mask_params,
+                                                               pixel_input=config.pixel_input)
         cnn_params = cnn_state.params
         linear_weights = cnn_params[linear_layer_name]["kernel"]
         mask_size = linear_weights.shape[0]

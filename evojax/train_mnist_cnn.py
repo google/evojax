@@ -1,120 +1,18 @@
 import logging
 import numpy as np
-from typing import Optional, Tuple
+from typing import Tuple
 
+import optax
 import jax
 from jax import random
 import jax.numpy as jnp
-import optax
-from flax import linen as nn
 from flax.training import train_state
 from flaxmodels.flaxmodels.resnet import ResNet18
 
+from evojax.models import CNN, Mask, linear_layer_name
 from evojax.datasets import read_data_files, digit, fashion, kuzushiji, cifar
 
 dataset_names = [digit, fashion, kuzushiji, cifar]
-linear_layer_name = 'Dense_0'
-
-
-class CNN(nn.Module):
-    """CNN for MNIST."""
-    # train: bool
-
-    def setup(self):
-        # self.conv1 = nn.Conv(features=32, kernel_size=(3, 3), padding='SAME', name='conv1')
-        # # self.bn1 = nn.BatchNorm(32, momentum=0.9, use_running_average=True, name='bn1')
-        #
-        # self.conv2 = nn.Conv(features=48, kernel_size=(3, 3), padding='SAME', name='conv2')
-        # # self.bn2 = nn.BatchNorm(48, momentum=0.9, use_running_average=True, name='bn2')
-        #
-        # self.conv3 = nn.Conv(features=64, kernel_size=(3, 3), padding='SAME', name='conv3')
-        # # self.bn3 = nn.BatchNorm(64, momentum=0.9, use_running_average=not self.train, name='bn3')
-        #
-        # self.conv4 = nn.Conv(features=80, kernel_size=(3, 3), padding='SAME', name='conv4')
-        # # self.bn4 = nn.BatchNorm(80, momentum=0.9, use_running_average=not self.train, name='bn4')
-        #
-        # self.conv5 = nn.Conv(features=96, kernel_size=(3, 3), padding='SAME', name='conv5')
-        # # self.bn5 = nn.BatchNorm(96, momentum=0.9, use_running_average=not self.train, name='bn5')
-        #
-        # self.conv6 = nn.Conv(features=112, kernel_size=(3, 3), padding='SAME', name='conv6')
-        # # self.bn6 = nn.BatchNorm(112, momentum=0.9, use_running_average=not self.train, name='bn6')
-        #
-        # self.conv7 = nn.Conv(features=128, kernel_size=(3, 3), padding='SAME', name='conv7')
-        # # self.bn7 = nn.BatchNorm(128, momentum=0.9, use_running_average=not self.train, name='bn7')
-        #
-        # self.conv8 = nn.Conv(features=144, kernel_size=(3, 3), padding='SAME', name='conv8')
-        # # self.bn8 = nn.BatchNorm(144, momentum=0.9, use_running_average=not self.train, name='bn8')
-        #
-        # self.conv9 = nn.Conv(features=160, kernel_size=(3, 3), padding='SAME', name='conv9')
-        # # self.bn9 = nn.BatchNorm(160, momentum=0.9, use_running_average=not self.train, name='bn9')
-        #
-        # self.conv10 = nn.Conv(features=176, kernel_size=(3, 3), padding='SAME', name='conv10')
-        # # self.bn10 = nn.BatchNorm(176, momentum=0.9, use_running_average=not self.train, name='bn10')
-        #
-        # self.linear = nn.Dense(10, name='linear')
-
-        # self.conv1 = nn.Conv(features=32, kernel_size=(3, 3), padding="SAME", name="CONV1")
-        # self.conv2 = nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")
-
-        self.conv1 = nn.Conv(features=32, kernel_size=(3, 3), padding="SAME", name="CONV1")
-        self.conv2 = nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")
-
-        self.linear1 = nn.Dense(features=10, name=linear_layer_name)
-
-    @nn.compact
-    def __call__(self, x,
-                 mask: Optional[jnp.ndarray] = None):
-
-        # x = nn.relu(self.bn1(self.conv1(x)))
-        # x = nn.relu(self.bn2(self.conv2(x)))
-        # x = nn.relu(self.bn3(self.conv3(x)))
-        # x = nn.relu(self.bn4(self.conv4(x)))
-        # x = nn.relu(self.bn5(self.conv5(x)))
-        # x = nn.relu(self.bn6(self.conv6(x)))
-        # x = nn.relu(self.bn7(self.conv7(x)))
-        # x = nn.relu(self.bn8(self.conv8(x)))
-        # x = nn.relu(self.bn9(self.conv9(x)))
-        # x = nn.relu(self.bn10(self.conv10(x)))
-        #
-        # x = nn.relu(self.conv1(x))
-        # x = nn.relu(self.conv2(x))
-        # x = nn.relu(self.conv3(x))
-        # x = nn.relu(self.conv4(x))
-        # x = nn.relu(self.conv5(x))
-        # x = nn.relu(self.conv6(x))
-        # x = nn.relu(self.conv7(x))
-        # x = nn.relu(self.conv8(x))
-        # x = nn.relu(self.conv9(x))
-        # x = nn.relu(self.conv10(x))
-
-        # for i in range(1, 11):
-        #     x = nn.relu(getattr(self, f'bn{i}')(getattr(self, f'conv{i}')(x)))
-
-        # Use the example MNIST CNN
-        # x = nn.Conv(features=8, kernel_size=(5, 5), padding='SAME')(x)
-        # x = nn.relu(x)
-        # x = nn.max_pool(x, window_shape=(2, 2), strides=(2, 2))
-        # x = nn.Conv(features=16, kernel_size=(5, 5), padding='SAME')(x)
-        # x = nn.relu(x)
-        # x = nn.max_pool(x, window_shape=(2, 2), strides=(2, 2))
-        #
-        # x = x.reshape((x.shape[0], -1))  # flatten
-        #
-        # x = self.linear(x)
-        # x = nn.log_softmax(x)
-
-        x = nn.relu(self.conv1(x))
-        x = nn.relu(self.conv2(x))
-
-        x = x.reshape((x.shape[0], -1))
-
-        # TODO is this a fine way to implement the masking???
-        if mask is not None:
-            x = x * mask
-
-        x = self.linear1(x)
-        # x = nn.softmax(x)
-        return x
 
 
 chosen_model = CNN()
@@ -145,15 +43,28 @@ def create_train_state(rng, learning_rate):
         apply_fn=chosen_model.apply, params=params, tx=tx)
 
 
+def get_masks(mask_params, mask_size, batch, pixel_input):
+    if pixel_input:
+        input_array = batch['image']
+    else:
+        input_array = batch['label'][:, 1]
+
+    batch_masks = Mask(mask_size=mask_size, pixel_input=pixel_input).apply({'params': mask_params}, input_array)
+    return batch_masks
+
+
 @jax.jit
-def train_step(state, batch, masks):
+def train_step(state, batch, mask_params=None, pixel_input=False):
     """Train for a single step."""
-    class_labels = batch['label'][:, 0]
-    dataset_labels = batch['label'][:, 1]
-    if masks is not None:
-        batch_masks = jnp.take(masks, indices=dataset_labels, axis=0)
+
+    if mask_params is not None:
+        linear_weights = state.params[linear_layer_name]["kernel"]
+        mask_size = linear_weights.shape[0]
+        batch_masks = get_masks(mask_params, mask_size, batch, pixel_input)
     else:
         batch_masks = None
+
+    class_labels = batch['label'][:, 0]
 
     def loss_fn(params):
         output_logits = chosen_model.apply({'params': params}, batch['image'], batch_masks)
@@ -168,20 +79,21 @@ def train_step(state, batch, masks):
 
 
 @jax.jit
-def eval_step(params, batch, masks):
+def eval_step(params, batch, mask_params=None, pixel_input=False):
 
-    class_labels = batch['label'][:, 0]
-    dataset_labels = batch['label'][:, 1]
-    if masks is not None:
-        batch_masks = jnp.take(masks, indices=dataset_labels, axis=0)
+    if mask_params is not None:
+        linear_weights = params[linear_layer_name]["kernel"]
+        mask_size = linear_weights.shape[0]
+        batch_masks = get_masks(mask_params, mask_size, batch, pixel_input)
     else:
         batch_masks = None
 
     logits = chosen_model.apply({'params': params}, batch['image'], batch_masks)
-    return compute_metrics(logits=logits, labels=class_labels)
+    return compute_metrics(logits=logits, labels=batch['label'][:, 0])
 
 
-def train_epoch(state, train_ds, batch_size, epoch, rng, logger: logging.Logger = None, mask=None):
+def train_epoch(state, train_ds, batch_size, epoch, rng, logger: logging.Logger = None,
+                mask_params=None, pixel_input=False):
     """Train for a single epoch."""
     train_ds_size = len(train_ds['image'])
     steps_per_epoch = train_ds_size // batch_size
@@ -193,7 +105,7 @@ def train_epoch(state, train_ds, batch_size, epoch, rng, logger: logging.Logger 
 
     for perm in perms:
         batch = {k: v[perm, ...] for k, v in train_ds.items()}
-        state, metrics = train_step(state, batch, mask)
+        state, metrics = train_step(state, batch, mask_params, pixel_input)
         batch_metrics.append(metrics)
 
     # compute mean of metrics across each batch in epoch.
@@ -211,7 +123,7 @@ def train_epoch(state, train_ds, batch_size, epoch, rng, logger: logging.Logger 
     return state
 
 
-def eval_model(params, test_dataset_class, batch_size, mask=None):
+def eval_model(params, test_dataset_class, batch_size, mask_params=None, pixel_input=False):
 
     for dataset_name, test_ds in test_dataset_class.dataset_holder.items():
         test_ds_size = len(test_ds['image'])
@@ -220,7 +132,7 @@ def eval_model(params, test_dataset_class, batch_size, mask=None):
         batch_metrics = []
         for i in range(steps_per_epoch):
             batch = {k: v[i*batch_size: (i+1)*batch_size, ...] for k, v in test_ds.items()}
-            metrics = eval_step(params, batch, mask)
+            metrics = eval_step(params, batch, mask_params, pixel_input)
             batch_metrics.append(metrics)
 
         batch_metrics_np = jax.device_get(batch_metrics)
@@ -304,7 +216,8 @@ def run_mnist_training(
         cnn_batch_size=1024,
         return_model=True,
         state=None,
-        masks=None,
+        mask_params=None,
+        pixel_input=False,
         datasets_tuple=None
 ):
 
@@ -332,10 +245,12 @@ def run_mnist_training(
         rng, input_rng = jax.random.split(rng)
 
         # Run an optimization step over a training batch
-        state = train_epoch(state, train_dataset, cnn_batch_size, epoch, input_rng, logger=logger, mask=masks)
+        state = train_epoch(state, train_dataset, cnn_batch_size, epoch, input_rng, logger=logger,
+                            mask_params=mask_params, pixel_input=pixel_input)
 
         # Check the validation dataset
-        validation_dataset_class = eval_model(state.params, validation_dataset_class, cnn_batch_size, mask=masks)
+        validation_dataset_class = eval_model(state.params, validation_dataset_class, cnn_batch_size,
+                                              mask_params=mask_params, pixel_input=pixel_input)
         current_validation_accuracy = np.mean([i['accuracy'] for i in validation_dataset_class.metrics_holder.values()])
         logger.info(f'VALIDATION, epoch={epoch}, accuracy={current_validation_accuracy}')
 

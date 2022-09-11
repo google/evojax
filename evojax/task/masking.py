@@ -25,7 +25,7 @@ from evojax.task.base import VectorizedTask
 from evojax.task.base import TaskState
 
 from evojax.datasets import read_data_files, DATASET_LABELS
-from evojax.train_mnist_cnn import CNN, linear_layer_name
+from evojax.models import CNN, linear_layer_name
 from flaxmodels.flaxmodels.resnet import ResNet18
 
 

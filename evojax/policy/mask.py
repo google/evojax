@@ -29,38 +29,7 @@ from evojax.util import create_logger
 from evojax.util import get_params_format_fn
 
 from evojax.datasets import DATASET_LABELS
-mask_final_layer_name = 'DENSE'
 
-
-class Mask(nn.Module):
-    """Mask network for MNIST."""
-    mask_size: int
-    dataset_number: int = 4
-    round_output: bool = True
-    test_no_mask: bool = False
-    pixel_input: bool = False
-
-    @nn.compact
-    def __call__(self, x):
-        if self.pixel_input:
-            x = nn.Conv(features=32, kernel_size=(3, 3), padding="SAME", name="CONV1")(x)
-            x = nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")(x)
-            x = x.reshape((x.shape[0], -1))
-        else:
-            x = nn.one_hot(x, self.dataset_number)
-        # x = nn.Dense(features=10, name="DENSE1")(x)
-        # x = nn.relu(x)
-        # x = nn.Dense(features=100, name="DENSE2")(x)
-        # x = nn.relu(x)
-        x = nn.Dense(features=self.mask_size, name=mask_final_layer_name)(x)
-        x = nn.sigmoid(x)
-        if self.round_output:
-            x = jnp.round(x)
-
-        if self.test_no_mask:
-            return jnp.ones((x.shape[0], self.mask_size))
-        else:
-            return x
 
 
 def set_bias_and_weights(params):
