@@ -276,11 +276,12 @@ def run_mnist_training(
             ds_test_accuracy = test_dataset_class.metrics_holder[dataset_name].get("accuracy")
             logger.debug(f'TEST, {dataset_name} 'f'accuracy={ds_test_accuracy:.2f}')
 
-            wandb.log({f'{dataset_name} Test Accuracy': ds_test_accuracy}, step=relative_epoch, commit=False)
+            # wandb.log({f'{dataset_name} Test Accuracy': ds_test_accuracy}, step=relative_epoch, commit=False)
+            wandb.log({f'{dataset_name} Test Accuracy': ds_test_accuracy})
 
         wandb.log({'Combined Train Accuracy': train_metrics['accuracy'],
                    'Combined Validation Accuracy': current_validation_accuracy,
-                   'Combined Test Accuracy': test_accuracy}, step=relative_epoch)
+                   'Combined Test Accuracy': test_accuracy})
 
     logger.info(f'Best test accuracy for unmasked CNN is {best_test_accuracy:.4f}')
 
