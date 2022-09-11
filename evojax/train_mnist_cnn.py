@@ -275,7 +275,7 @@ def run_mnist_training(
 
         for dataset_name in dataset_names:
             ds_test_accuracy = test_dataset_class.metrics_holder[dataset_name].get("accuracy")
-            logger.info(f'TEST, {dataset_name} 'f'accuracy={test_accuracy:.2f}')
+            logger.info(f'TEST, {dataset_name} 'f'accuracy={ds_test_accuracy:.2f}')
 
             wandb.log({f'{dataset_name} Test Accuracy': ds_test_accuracy}, step=relative_epoch, commit=False)
 
