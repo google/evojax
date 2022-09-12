@@ -214,21 +214,22 @@ def full_data_loader() -> Tuple[dict, TestDatasetUtil, TestDatasetUtil]:
 def run_mnist_training(
         logger: logging.Logger,
         num_epochs=20,
+        evo_epoch=0,
         learning_rate=1e-3,
         cnn_batch_size=1024,
         return_model=True,
         state=None,
         mask_params=None,
-        pixel_input=False,
         datasets_tuple=None,
-        evo_epoch=0,
+        pixel_input=False,
         early_stopping=False,
-        cnn_labels=False
+        cnn_labels=False,
+        seed: int = 0
 ):
 
     logger.info('Starting training MNIST CNN')
 
-    rng = random.PRNGKey(0)
+    rng = random.PRNGKey(seed)
 
     # Allow passing of a state, so only init if this is none
     if state is None:
