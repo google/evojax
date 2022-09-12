@@ -38,7 +38,7 @@ class CNN(nn.Module):
         #     label_input = nn.Dense(features=1000, name='LABEL2')(label_input)
         #     x = jnp.concatenate([x, label_input], axis=1)
         if cnn_labels is not None:
-            label_input = nn.one_hot(cnn_labels, dataset_number, axis=1)
+            label_input = nn.one_hot(cnn_labels, dataset_number)
             x = jnp.stack([x, label_input], axis=1)
 
         x = nn.Dense(features=10, name=linear_layer_name)(x)
