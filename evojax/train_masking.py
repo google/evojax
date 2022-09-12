@@ -65,9 +65,7 @@ def parse_args():
         '--gpu-id', type=str, help='GPU(s) to use.')
     parser.add_argument(
         '--debug', action='store_true', help='Debug mode.')
-    parser.add_argument(
-        '--test-no-mask', action='store_true', help='Whether to test without masking.')
-    parser.add_argument('--algo', type=str, help='Evolutionary algorithm to use.',
+    parser.add_argument('--algo', type=str, default='', help='Evolutionary algorithm to use.',
                         choices=['PGPE', 'CMA', 'OpenES'])
     parser.add_argument('--pixel-input', action='store_true', help='Input the pixel values to the masking model.')
     parser.add_argument('--early-stopping', action='store_true',
@@ -115,7 +113,7 @@ def main(config):
                                                                pixel_input=config.pixel_input,
                                                                evo_epoch=i,
                                                                early_stopping=config.early_stopping)
-        if config.test_no_mask:
+        if not config.algo:
             break
 
         cnn_params = cnn_state.params
