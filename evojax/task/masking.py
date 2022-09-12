@@ -26,7 +26,7 @@ from evojax.task.base import TaskState
 
 from evojax.datasets import read_data_files, DATASET_LABELS
 from evojax.models import CNN, linear_layer_name
-from flaxmodels.flaxmodels.resnet import ResNet18
+# from flaxmodels.flaxmodels.resnet import ResNet18
 
 
 @dataclass

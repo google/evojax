@@ -9,7 +9,7 @@ import jax
 from jax import random
 import jax.numpy as jnp
 from flax.training import train_state
-from flaxmodels.flaxmodels.resnet import ResNet18
+# from flaxmodels.flaxmodels.resnet import ResNet18
 
 from evojax.models import CNN, Mask, linear_layer_name
 from evojax.datasets import read_data_files, digit, fashion, kuzushiji, cifar
