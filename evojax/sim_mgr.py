@@ -138,7 +138,7 @@ class SimManager(object):
             self._logger = logger
 
         self._use_for_loop = use_for_loop
-        self._logger.info('use_for_loop={}'.format(self._use_for_loop))
+        # self._logger.info('use_for_loop={}'.format(self._use_for_loop))
         self._key = random.PRNGKey(seed=seed)
         self._n_repeats = n_repeats
         self._test_n_repeats = test_n_repeats
