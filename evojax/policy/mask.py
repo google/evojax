@@ -47,14 +47,13 @@ class MaskPolicy(PolicyNetwork):
     """A dense neural network for masking the MNIST classification task."""
 
     def __init__(self, logger: logging.Logger = None, mask_size: int = None,
-                 batch_size: int = None, test_no_mask=False, dataset_number=4, pixel_input=False):
+                 batch_size: int = None, pixel_input=False):
         if logger is None:
             self._logger = create_logger('MaskNetPolicy')
         else:
             self._logger = logger
 
-        model = Mask(mask_size=mask_size, test_no_mask=test_no_mask,
-                     dataset_number=dataset_number, pixel_input=pixel_input)
+        model = Mask(mask_size=mask_size, pixel_input=pixel_input)
 
         if pixel_input:
             init_array = jnp.ones([batch_size, 28, 28, 1])

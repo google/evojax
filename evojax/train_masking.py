@@ -124,7 +124,6 @@ def main(config):
         mask_size = linear_weights.shape[0]
 
         policy = MaskPolicy(logger=logger, mask_size=mask_size, batch_size=config.batch_size,
-                            test_no_mask=config.test_no_mask, dataset_number=len(DATASET_LABELS),
                             pixel_input=config.pixel_input)
 
         if not i:
