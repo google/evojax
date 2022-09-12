@@ -56,7 +56,7 @@ def get_masks(mask_params, mask_size, batch, pixel_input):
 
 
 @jax.jit
-def train_step(state, batch, mask_params=None, pixel_input=False, cnn_labels=False):
+def train_step(state, batch, mask_params=None, pixel_input=False, cnn_labels=None):
     """Train for a single step."""
 
     if mask_params is not None:
@@ -67,10 +67,10 @@ def train_step(state, batch, mask_params=None, pixel_input=False, cnn_labels=Fal
         batch_masks = None
 
     class_labels = batch['label'][:, 0]
-    label_input = batch['label'][:, 1] if cnn_labels else None
+    # label_input = batch['label'][:, 1] if cnn_labels else None
 
     def loss_fn(params):
-        output_logits = chosen_model.apply({'params': params}, batch['image'], batch_masks, label_input)
+        output_logits = chosen_model.apply({'params': params}, batch['image'], batch_masks, cnn_labels)
         loss = cross_entropy_loss(logits=output_logits, labels=class_labels)
         return loss, output_logits
 
@@ -82,7 +82,7 @@ def train_step(state, batch, mask_params=None, pixel_input=False, cnn_labels=Fal
 
 
 @jax.jit
-def eval_step(params, batch, mask_params=None, pixel_input=False, cnn_labels=False):
+def eval_step(params, batch, mask_params=None, pixel_input=False, cnn_labels=None):
 
     if mask_params is not None:
         linear_weights = params[linear_layer_name]["kernel"]
@@ -91,13 +91,13 @@ def eval_step(params, batch, mask_params=None, pixel_input=False, cnn_labels=Fal
     else:
         batch_masks = None
 
-    label_input = batch['label'][:, 1] if cnn_labels else None
+    # label_input = batch['label'][:, 1] if cnn_labels else None
 
-    logits = chosen_model.apply({'params': params}, batch['image'], batch_masks, label_input)
+    logits = chosen_model.apply({'params': params}, batch['image'], batch_masks, cnn_labels)
     return compute_metrics(logits=logits, labels=batch['label'][:, 0])
 
 
-def train_epoch(state, train_ds, batch_size, epoch, rng,
+def train_epoch(state, train_ds, batch_size, rng,
                 mask_params=None, pixel_input=False, cnn_labels=False):
     """Train for a single epoch."""
     train_ds_size = len(train_ds['image'])
@@ -110,7 +110,8 @@ def train_epoch(state, train_ds, batch_size, epoch, rng,
 
     for perm in perms:
         batch = {k: v[perm, ...] for k, v in train_ds.items()}
-        state, metrics = train_step(state, batch, mask_params, pixel_input, cnn_labels)
+        label_input = batch['label'][:, 1] if cnn_labels else None
+        state, metrics = train_step(state, batch, mask_params, pixel_input, label_input)
         batch_metrics.append(metrics)
 
     # compute mean of metrics across each batch in epoch.
@@ -131,7 +132,8 @@ def eval_model(params, test_dataset_class, batch_size, mask_params=None, pixel_i
         batch_metrics = []
         for i in range(steps_per_epoch):
             batch = {k: v[i*batch_size: (i+1)*batch_size, ...] for k, v in test_ds.items()}
-            metrics = eval_step(params, batch, mask_params, pixel_input, cnn_labels)
+            label_input = batch['label'][:, 1] if cnn_labels else None
+            metrics = eval_step(params, batch, mask_params, pixel_input, label_input)
             batch_metrics.append(metrics)
 
         batch_metrics_np = jax.device_get(batch_metrics)
@@ -251,7 +253,7 @@ def run_mnist_training(
         rng, input_rng = jax.random.split(rng)
 
         # Run an optimization step over a training batch
-        state, train_metrics = train_epoch(state, train_dataset, cnn_batch_size, epoch, input_rng,
+        state, train_metrics = train_epoch(state, train_dataset, cnn_batch_size, input_rng,
                                            mask_params=mask_params, pixel_input=pixel_input,
                                            cnn_labels=cnn_labels)
 
