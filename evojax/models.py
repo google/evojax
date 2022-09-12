@@ -53,6 +53,7 @@ class CNN(nn.Module):
 
     @nn.compact
     def __call__(self, x,
+                 cnn_labels: Optional[jnp.ndarray] = None,
                  mask: Optional[jnp.ndarray] = None):
 
         # x = nn.relu(self.bn1(self.conv1(x)))
@@ -101,6 +102,12 @@ class CNN(nn.Module):
         # TODO is this a fine way to implement the masking???
         if mask is not None:
             x = x * mask
+
+        if cnn_labels is not None:
+            label_input = nn.one_hot(cnn_labels, self.dataset_number)
+            label_input = nn.Dense(features=10, name='LABEL1')(label_input)
+            label_input = nn.Dense(features=100, name='LABEL2')(label_input)
+            x = jnp.concatenate([x, label_input], axis=1)
 
         x = self.linear1(x)
         return x

@@ -56,7 +56,7 @@ def get_masks(mask_params, mask_size, batch, pixel_input):
 
 
 @jax.jit
-def train_step(state, batch, mask_params=None, pixel_input=False):
+def train_step(state, batch, mask_params=None, pixel_input=False, cnn_labels=False):
     """Train for a single step."""
 
     if mask_params is not None:
@@ -67,9 +67,10 @@ def train_step(state, batch, mask_params=None, pixel_input=False):
         batch_masks = None
 
     class_labels = batch['label'][:, 0]
+    label_input = batch['label'][:, 1] if cnn_labels else None
 
     def loss_fn(params):
-        output_logits = chosen_model.apply({'params': params}, batch['image'], batch_masks)
+        output_logits = chosen_model.apply({'params': params}, batch['image'], batch_masks, label_input)
         loss = cross_entropy_loss(logits=output_logits, labels=class_labels)
         return loss, output_logits
 
@@ -81,7 +82,7 @@ def train_step(state, batch, mask_params=None, pixel_input=False):
 
 
 @jax.jit
-def eval_step(params, batch, mask_params=None, pixel_input=False):
+def eval_step(params, batch, mask_params=None, pixel_input=False, cnn_labels=False):
 
     if mask_params is not None:
         linear_weights = params[linear_layer_name]["kernel"]
@@ -90,12 +91,14 @@ def eval_step(params, batch, mask_params=None, pixel_input=False):
     else:
         batch_masks = None
 
-    logits = chosen_model.apply({'params': params}, batch['image'], batch_masks)
+    label_input = batch['label'][:, 1] if cnn_labels else None
+
+    logits = chosen_model.apply({'params': params}, batch['image'], batch_masks, label_input)
     return compute_metrics(logits=logits, labels=batch['label'][:, 0])
 
 
-def train_epoch(state, train_ds, batch_size, epoch, rng, logger: logging.Logger = None,
-                mask_params=None, pixel_input=False):
+def train_epoch(state, train_ds, batch_size, epoch, rng,
+                mask_params=None, pixel_input=False, cnn_labels=False):
     """Train for a single epoch."""
     train_ds_size = len(train_ds['image'])
     steps_per_epoch = train_ds_size // batch_size
@@ -119,7 +122,7 @@ def train_epoch(state, train_ds, batch_size, epoch, rng, logger: logging.Logger 
     return state, epoch_metrics_np
 
 
-def eval_model(params, test_dataset_class, batch_size, mask_params=None, pixel_input=False):
+def eval_model(params, test_dataset_class, batch_size, mask_params=None, pixel_input=False, cnn_labels=False):
 
     for dataset_name, test_ds in test_dataset_class.dataset_holder.items():
         test_ds_size = len(test_ds['image'])
@@ -216,7 +219,8 @@ def run_mnist_training(
         pixel_input=False,
         datasets_tuple=None,
         evo_epoch=0,
-        early_stopping=False
+        early_stopping=False,
+        cnn_labels=False
 ):
 
     logger.info('Starting training MNIST CNN')

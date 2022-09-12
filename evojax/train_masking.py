@@ -70,6 +70,9 @@ def parse_args():
     parser.add_argument('--algo', type=str, help='Evolutionary algorithm to use.',
                         choices=['PGPE', 'CMA', 'OpenES'])
     parser.add_argument('--pixel-input', action='store_true', help='Input the pixel values to the masking model.')
+    parser.add_argument('--early-stopping', action='store_true',
+                        help='Allow CNN training to end if validation loss decreases.')
+    parser.add_argument('--cnn-labels', action='store_true', help='Pass dataset labels to the CNN.')
     config, _ = parser.parse_known_args()
     return config
 
@@ -110,7 +113,8 @@ def main(config):
                                                                state=cnn_state,
                                                                mask_params=mask_params,
                                                                pixel_input=config.pixel_input,
-                                                               evo_epoch=i)
+                                                               evo_epoch=i,
+                                                               early_stopping=config.early_stopping)
         if config.test_no_mask:
             break
 
