@@ -110,7 +110,7 @@ def train_epoch(state, train_ds, batch_size, epoch, rng,
 
     for perm in perms:
         batch = {k: v[perm, ...] for k, v in train_ds.items()}
-        state, metrics = train_step(state, batch, mask_params, pixel_input)
+        state, metrics = train_step(state, batch, mask_params, pixel_input, cnn_labels)
         batch_metrics.append(metrics)
 
     # compute mean of metrics across each batch in epoch.
@@ -131,7 +131,7 @@ def eval_model(params, test_dataset_class, batch_size, mask_params=None, pixel_i
         batch_metrics = []
         for i in range(steps_per_epoch):
             batch = {k: v[i*batch_size: (i+1)*batch_size, ...] for k, v in test_ds.items()}
-            metrics = eval_step(params, batch, mask_params, pixel_input)
+            metrics = eval_step(params, batch, mask_params, pixel_input, cnn_labels)
             batch_metrics.append(metrics)
 
         batch_metrics_np = jax.device_get(batch_metrics)
@@ -251,14 +251,16 @@ def run_mnist_training(
         rng, input_rng = jax.random.split(rng)
 
         # Run an optimization step over a training batch
-        state, train_metrics = train_epoch(state, train_dataset, cnn_batch_size, epoch, input_rng, logger=logger,
-                                           mask_params=mask_params, pixel_input=pixel_input)
+        state, train_metrics = train_epoch(state, train_dataset, cnn_batch_size, epoch, input_rng,
+                                           mask_params=mask_params, pixel_input=pixel_input,
+                                           cnn_labels=cnn_labels)
 
         logger.debug(f'TRAIN, epoch={epoch}, loss={train_metrics["loss"]}, accuracy={train_metrics["accuracy"]}')
 
         # Check the validation dataset
         validation_dataset_class = eval_model(state.params, validation_dataset_class, cnn_batch_size,
-                                              mask_params=mask_params, pixel_input=pixel_input)
+                                              mask_params=mask_params, pixel_input=pixel_input,
+                                              cnn_labels=cnn_labels)
         current_validation_accuracy = np.mean([i['accuracy'] for i in validation_dataset_class.metrics_holder.values()])
         logger.debug(f'VALIDATION, epoch={epoch}, accuracy={current_validation_accuracy}')
 
@@ -272,7 +274,9 @@ def run_mnist_training(
             break
 
         # Evaluate on the test set after each training epoch
-        test_dataset_class = eval_model(state.params, test_dataset_class, cnn_batch_size)
+        test_dataset_class = eval_model(state.params, test_dataset_class, cnn_batch_size, mask_params=mask_params,
+                                        pixel_input=pixel_input, cnn_labels=cnn_labels)
+
         test_loss = np.mean([i['loss'] for i in test_dataset_class.metrics_holder.values()])
         test_accuracy = np.mean([i['accuracy'] for i in test_dataset_class.metrics_holder.values()])
         best_test_accuracy = max(best_test_accuracy, test_accuracy)

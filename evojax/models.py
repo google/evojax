@@ -105,8 +105,8 @@ class CNN(nn.Module):
 
         if cnn_labels is not None:
             label_input = nn.one_hot(cnn_labels, self.dataset_number)
-            label_input = nn.Dense(features=10, name='LABEL1')(label_input)
-            label_input = nn.Dense(features=100, name='LABEL2')(label_input)
+            # label_input = nn.Dense(features=10, name='LABEL1')(label_input)
+            # label_input = nn.Dense(features=100, name='LABEL2')(label_input)
             x = jnp.concatenate([x, label_input], axis=1)
 
         x = self.linear1(x)
