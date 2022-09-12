@@ -5,6 +5,7 @@ from flax import linen as nn
 
 mask_final_layer_name = 'DENSE'
 linear_layer_name = 'Dense_0'
+dataset_number = 4
 
 
 class CNN(nn.Module):
@@ -34,7 +35,7 @@ class CNN(nn.Module):
         #     # label_input = nn.Dense(features=10, name='LABEL1')(label_input)
         #     label_input = nn.Dense(features=1000, name='LABEL2')(label_input)
         #     x = jnp.concatenate([x, label_input], axis=1)
-        label_input = nn.one_hot(cnn_labels, self.dataset_number)
+        label_input = nn.one_hot(cnn_labels, dataset_number)
         x = jnp.concatenate([x, label_input], axis=1)
 
         x = nn.Dense(features=10, name=linear_layer_name)(x)
