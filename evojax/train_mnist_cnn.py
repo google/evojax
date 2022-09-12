@@ -37,9 +37,10 @@ def compute_metrics(*, logits, labels):
     return metrics
 
 
-def create_train_state(rng, learning_rate):
+def create_train_state(rng, learning_rate, cnn_labels):
     """Creates initial `TrainState`."""
-    params = chosen_model.init(rng, jnp.ones([1, 28, 28, 1]))['params']
+    label_input = jnp.ones([1, 1]) if cnn_labels else None
+    params = chosen_model.init(rng, jnp.ones([1, 28, 28, 1]), None, label_input)['params']
     tx = optax.adam(learning_rate)
     return train_state.TrainState.create(
         apply_fn=chosen_model.apply, params=params, tx=tx)
@@ -232,7 +233,7 @@ def run_mnist_training(
     # Allow passing of a state, so only init if this is none
     if state is None:
         rng, init_rng = random.split(rng)
-        state = create_train_state(init_rng, learning_rate)
+        state = create_train_state(init_rng, learning_rate, cnn_labels)
         del init_rng  # Must not be used anymore.
 
     if datasets_tuple:
