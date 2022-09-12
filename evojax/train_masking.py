@@ -52,6 +52,8 @@ def parse_args():
     parser.add_argument(
         '--test-interval', type=int, default=1000, help='Test interval.')
     parser.add_argument(
+        '--val-interval', type=int, default=10, help='Validation interval.')
+    parser.add_argument(
         '--log-interval', type=int, default=100, help='Logging interval.')
     parser.add_argument(
         '--seed', type=int, default=42, help='Random seed for training.')

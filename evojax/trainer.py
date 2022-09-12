@@ -145,7 +145,7 @@ class Trainer(object):
             self._logger.info(f'[TEST] Masked vs Unmasked Delta = {best_score_delta:.4f}')
             # wandb.log({'Masked vs Unmasked Delta': best_score_delta})
 
-    def run(self, demo_mode: bool = False, evo_epoch=0) -> Tuple[float, jnp.ndarray]:
+    def run(self, demo_mode: bool = False) -> Tuple[float, jnp.ndarray]:
         """Start the training / test process."""
 
         if self.model_dir is not None:
