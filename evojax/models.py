@@ -10,19 +10,18 @@ linear_layer_name = 'Dense_0'
 class CNN(nn.Module):
     """CNN for MNIST."""
 
-    def setup(self):
-        self.conv1 = nn.Conv(features=32, kernel_size=(3, 3), padding="SAME", name="CONV1")
-        self.conv2 = nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")
-
-        self.linear1 = nn.Dense(features=10, name=linear_layer_name)
+    # def setup(self):
+    #     self.conv1 = nn.Conv(features=32, kernel_size=(3, 3), padding="SAME", name="CONV1")
+    #     self.conv2 = nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")
+    #     self.linear1 = nn.Dense(features=10, name=linear_layer_name)
 
     @nn.compact
     def __call__(self, x,
                  cnn_labels: Optional[jnp.ndarray] = None,
                  mask: Optional[jnp.ndarray] = None):
 
-        x = nn.relu(self.conv1(x))
-        x = nn.relu(self.conv2(x))
+        x = nn.relu(nn.Conv(features=32, kernel_size=(3, 3), padding="SAME", name="CONV1")(x))
+        x = nn.relu(nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")(x))
 
         x = x.reshape((x.shape[0], -1))
 
@@ -30,13 +29,15 @@ class CNN(nn.Module):
         if mask is not None:
             x = x * mask
 
-        if cnn_labels is not None:
-            label_input = nn.one_hot(cnn_labels, self.dataset_number)
-            # label_input = nn.Dense(features=10, name='LABEL1')(label_input)
-            label_input = nn.Dense(features=1000, name='LABEL2')(label_input)
-            x = jnp.concatenate([x, label_input], axis=1)
+        # if cnn_labels is not None:
+        #     label_input = nn.one_hot(cnn_labels, self.dataset_number)
+        #     # label_input = nn.Dense(features=10, name='LABEL1')(label_input)
+        #     label_input = nn.Dense(features=1000, name='LABEL2')(label_input)
+        #     x = jnp.concatenate([x, label_input], axis=1)
+        label_input = nn.one_hot(cnn_labels, self.dataset_number)
+        x = jnp.concatenate([x, label_input], axis=1)
 
-        x = self.linear1(x)
+        x = nn.Dense(features=10, name=linear_layer_name)(x)
         return x
 
 

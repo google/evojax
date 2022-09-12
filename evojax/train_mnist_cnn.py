@@ -68,10 +68,10 @@ def train_step(state, batch, mask_params=None, pixel_input=False, cnn_labels=Non
         batch_masks = None
 
     class_labels = batch['label'][:, 0]
-    # label_input = batch['label'][:, 1] if cnn_labels else None
+    dataset_label = batch['label'][:, 1]
 
     def loss_fn(params):
-        output_logits = chosen_model.apply({'params': params}, batch['image'], batch_masks, cnn_labels)
+        output_logits = chosen_model.apply({'params': params}, batch['image'], batch_masks, dataset_label)
         loss = cross_entropy_loss(logits=output_logits, labels=class_labels)
         return loss, output_logits
 
@@ -92,9 +92,9 @@ def eval_step(params, batch, mask_params=None, pixel_input=False, cnn_labels=Non
     else:
         batch_masks = None
 
-    # label_input = batch['label'][:, 1] if cnn_labels else None
+    dataset_label = batch['label'][:, 1]
 
-    logits = chosen_model.apply({'params': params}, batch['image'], batch_masks, cnn_labels)
+    logits = chosen_model.apply({'params': params}, batch['image'], batch_masks, dataset_label)
     return compute_metrics(logits=logits, labels=batch['label'][:, 0])
 
 
