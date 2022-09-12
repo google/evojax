@@ -9,17 +9,11 @@ import jax
 from jax import random
 import jax.numpy as jnp
 from flax.training import train_state
-# from flaxmodels.flaxmodels.resnet import ResNet18
 
 from evojax.models import CNN, Mask, linear_layer_name
 from evojax.datasets import read_data_files, digit, fashion, kuzushiji, cifar
 
 dataset_names = [digit, fashion, kuzushiji, cifar]
-
-
-chosen_model = CNN()
-# chosen_model = ResNet18(num_classes=10,
-#                         pretrained='')
 
 
 def cross_entropy_loss(*, logits, labels):
@@ -40,10 +34,10 @@ def compute_metrics(*, logits, labels):
 def create_train_state(rng, learning_rate, cnn_labels):
     """Creates initial `TrainState`."""
     label_input = jnp.ones([1, ]) if cnn_labels else None
-    params = chosen_model.init(rng, jnp.ones([1, 28, 28, 1]), None, label_input)['params']
+    params = CNN().init(rng, jnp.ones([1, 28, 28, 1]), label_input)['params']
     tx = optax.adam(learning_rate)
     return train_state.TrainState.create(
-        apply_fn=chosen_model.apply, params=params, tx=tx)
+        apply_fn=CNN().apply, params=params, tx=tx)
 
 
 def get_masks(mask_params, mask_size, batch, pixel_input):
@@ -71,7 +65,7 @@ def train_step(state, batch, mask_params=None, pixel_input=False, cnn_labels=Non
     # dataset_label = batch['label'][:, 1]
 
     def loss_fn(params):
-        output_logits = chosen_model.apply({'params': params}, batch['image'], batch_masks, cnn_labels)
+        output_logits = CNN(mask=batch_masks).apply({'params': params}, batch['image'], cnn_labels)
         loss = cross_entropy_loss(logits=output_logits, labels=class_labels)
         return loss, output_logits
 
@@ -94,7 +88,7 @@ def eval_step(params, batch, mask_params=None, pixel_input=False, cnn_labels=Non
 
     # dataset_label = batch['label'][:, 1]
 
-    logits = chosen_model.apply({'params': params}, batch['image'], batch_masks, cnn_labels)
+    logits = CNN(mask=batch_masks).apply({'params': params}, batch['image'], cnn_labels)
     return compute_metrics(logits=logits, labels=batch['label'][:, 0])
 
 
