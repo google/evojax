@@ -39,7 +39,7 @@ def compute_metrics(*, logits, labels):
 
 def create_train_state(rng, learning_rate, cnn_labels):
     """Creates initial `TrainState`."""
-    label_input = jnp.ones([1, 1]) if cnn_labels else None
+    label_input = jnp.ones([1, ]) if cnn_labels else None
     params = chosen_model.init(rng, jnp.ones([1, 28, 28, 1]), None, label_input)['params']
     tx = optax.adam(learning_rate)
     return train_state.TrainState.create(
