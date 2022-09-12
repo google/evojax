@@ -73,6 +73,7 @@ def parse_args():
     parser.add_argument('--early-stopping', action='store_true',
                         help='Allow CNN training to end if validation loss decreases.')
     parser.add_argument('--cnn-labels', action='store_true', help='Pass dataset labels to the CNN.')
+    parser.add_argument('--dropout', action='store_true', help='Apply dropout in the CNN.')
     config, _ = parser.parse_known_args()
     return config
 

@@ -11,6 +11,7 @@ current_dataset_number = 4
 class CNN(nn.Module):
     """CNN for MNIST."""
     mask: Optional[jnp.ndarray] = None
+    dropout: bool = False
     dataset_number: int = current_dataset_number
 
     @nn.compact
@@ -21,6 +22,9 @@ class CNN(nn.Module):
         x = nn.relu(nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")(x))
 
         x = x.reshape((x.shape[0], -1))
+
+        if self.dropout:
+            x = nn.Dropout(0.05)(x)
 
         # TODO is this a fine way to implement the masking???
         if self.mask is not None:
