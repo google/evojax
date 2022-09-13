@@ -116,7 +116,8 @@ def main(config):
                                                                pixel_input=config.pixel_input,
                                                                evo_epoch=i,
                                                                early_stopping=config.early_stopping,
-                                                               cnn_labels=config.cnn_labels)
+                                                               cnn_labels=config.cnn_labels,
+                                                               seed=config.seed)
         if not config.algo:
             break
 
