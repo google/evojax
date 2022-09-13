@@ -116,11 +116,10 @@ class Trainer(object):
             logger=self._logger,
         )
 
-        # This will store the masking network, so masks can be checked throughout training
-        self.policy_network = policy
-        self.dataset_labels = dataset_labels
-        self.masks_array = []
-        self.best_unmasked_accuracy = best_unmasked_accuracy
+        # # This will store the masking network, so masks can be checked throughout training
+        # self.policy_network = policy
+        # self.dataset_labels = dataset_labels
+        # self.masks_array = []
 
     def wand_log_scores(self, score_array: jnp.ndarray, split: str):
         best_score = score_array.max()
