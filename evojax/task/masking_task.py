@@ -139,13 +139,11 @@ class Masking(VectorizedTask):
     def __init__(self,
                  batch_size: int = 1024,
                  max_steps: int = 100,
-                 learning_rate: float = 1e-3,
-                 test: bool = False,
-                 mask_size: int = None):
+                 test: bool = False):
 
         self.max_steps = max_steps
         self.obs_shape = tuple([1, ])
-        self.act_shape = tuple([mask_size, ])
+        self.act_shape = tuple([10, ])
 
         image_data, class_labels, task_labels = setup_task_data(test)
 

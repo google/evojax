@@ -24,7 +24,7 @@ import optax
 from evojax.policy.base import PolicyNetwork, PolicyState
 from evojax.task.masking_task import State, CNNData
 from evojax.util import create_logger, get_params_format_fn
-from evojax.models import Mask, CNN
+from evojax.models import Mask, CNN, cnn_final_layer_name
 
 
 def create_train_state(rng, learning_rate):
@@ -57,16 +57,18 @@ def cnn_train_step(cnn_state: train_state.TrainState, cnn_data: CNNData, masks: 
 class MaskPolicy(PolicyNetwork):
     """A dense neural network for masking the MNIST classification task."""
 
-    def __init__(self, logger: logging.Logger = None, mask_size: int = None, learning_rate: float = 1e-3):
+    def __init__(self, logger: logging.Logger = None, learning_rate: float = 1e-3):
         if logger is None:
             self._logger = create_logger('MaskNetPolicy')
         else:
             self._logger = logger
 
         self.cnn_state = create_train_state(random.PRNGKey(0), learning_rate)
+        self.mask_size = self.cnn_state.params[cnn_final_layer_name]["kernel"].shape[0]
 
-        mask_model = Mask(mask_size=mask_size)
+        mask_model = Mask(mask_size=self.mask_size)
         params = mask_model.init(random.PRNGKey(0), jnp.ones([1, ]))
+
         self.num_params, format_params_fn = get_params_format_fn(params)
         self._format_params_fn = jax.vmap(format_params_fn)
         self._forward_fn = jax.vmap(mask_model.apply)
@@ -77,6 +79,7 @@ class MaskPolicy(PolicyNetwork):
                     p_states: PolicyState) -> Tuple[jnp.ndarray, PolicyState]:
         params = self._format_params_fn(params)
         masks = self._forward_fn(params, t_states.obs)
+        masks = masks.reshape((8, 1024, self.mask_size))
 
         cnn_data = t_states.cnn_data
         self.cnn_state, output_logits = cnn_train_step(self.cnn_state, cnn_data, masks)

@@ -96,10 +96,10 @@ def main(config):
     cnn_params = CNN().init(random.PRNGKey(0), jnp.ones([1, 28, 28, 1]))["params"]
     mask_size = cnn_params[cnn_final_layer_name]["kernel"].shape[0]
 
-    policy = MaskPolicy(logger=logger, mask_size=mask_size)
+    policy = MaskPolicy(logger=logger)
 
-    train_task = Masking(batch_size=config.batch_size, test=False, mask_size=mask_size)
-    test_task = Masking(batch_size=config.batch_size, test=True, mask_size=mask_size)
+    train_task = Masking(batch_size=config.batch_size, test=False)
+    test_task = Masking(batch_size=config.batch_size, test=True)
 
     if config.algo == 'PGPE':
         solver = PGPE(
