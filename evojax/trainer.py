@@ -56,8 +56,7 @@ class Trainer(object):
                  model_dir: str = None,
                  log_dir: str = None,
                  logger: logging.Logger = None,
-                 log_scores_fn: Optional[Callable[[int, jnp.ndarray, str], None]] = None,
-                 dataset_labels: dict = None):
+                 log_scores_fn: Optional[Callable[[int, jnp.ndarray, str], None]] = None):
         """Initialization.
 
         Args:
@@ -136,11 +135,6 @@ class Trainer(object):
                    f'Evo Worst {split.capitalize()} accuracy': worst_score,
                    f'Evo {split.capitalize()} STD': std_score})
 
-        if split == 'test':
-            best_score_delta = best_score - self.best_unmasked_accuracy
-            self._logger.info(f'[TEST] Masked vs Unmasked Delta = {best_score_delta:.4f}')
-            # wandb.log({'Masked vs Unmasked Delta': best_score_delta})
-
     def run(self, demo_mode: bool = False) -> Tuple[float, jnp.ndarray]:
         """Start the training / test process."""
 
@@ -171,8 +165,6 @@ class Trainer(object):
                 self.solver.best_params = params
 
             best_score = -float('Inf')
-            validation_best_score = -float('Inf')
-            validation_best_params = None
 
             for i in range(self._max_iter):
                 start_time = time.perf_counter()

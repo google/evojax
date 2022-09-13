@@ -53,6 +53,7 @@ class State(TaskState):
     cnn_state: train_state.TrainState  # The parameters for the CNN
     cnn_data: CNNData
     key: jnp.ndarray  # Random key for JAX
+    steps: jnp.int32
 
 
 def sample_batch(key: jnp.ndarray,
@@ -86,12 +87,12 @@ def cnn_train_step(cnn_state: train_state.TrainState, cnn_data: CNNData, masks: 
     return cnn_state, logits
 
 
-def loss(prediction: jnp.ndarray, target: jnp.ndarray) -> jnp.float32:
+def step_loss(prediction: jnp.ndarray, target: jnp.ndarray) -> jnp.float32:
     target = jax.nn.one_hot(target, 10)
     return -jnp.mean(jnp.sum(prediction * target, axis=1))
 
 
-def accuracy(prediction: jnp.ndarray, target: jnp.ndarray) -> jnp.float32:
+def step_accuracy(prediction: jnp.ndarray, target: jnp.ndarray) -> jnp.float32:
     predicted_class = jnp.argmax(prediction, axis=1)
     return jnp.mean(predicted_class == target)
 
@@ -136,11 +137,12 @@ class Masking(VectorizedTask):
 
     def __init__(self,
                  batch_size: int = 1024,
+                 max_steps: int = 100,
                  learning_rate: float = 1e-3,
                  test: bool = False,
                  mask_size: int = None):
 
-        self.max_steps = 1
+        self.max_steps = max_steps
         self.obs_shape = tuple([1, ])
         self.act_shape = tuple([mask_size, ])
 
@@ -163,7 +165,8 @@ class Masking(VectorizedTask):
                          task_labels=batch_task_labels,
                          cnn_state=cnn_state,
                          cnn_data=cnn_data,
-                         key=next_key)
+                         key=next_key,
+                         steps=jnp.zeros((), dtype=int))
         self._reset_fn = jax.jit(jax.vmap(reset_fn))
 
         def step_fn(state, action):
@@ -172,10 +175,30 @@ class Masking(VectorizedTask):
             cnn_state, output_logits = cnn_train_step(state.cnn_state, state.cnn_data, action)
 
             if test:
-                reward = accuracy(output_logits, state.labels)
+                reward = step_accuracy(output_logits, state.labels)
             else:
-                reward = -loss(output_logits, state.labels)
-            return state, reward, jnp.ones(())
+                reward = -step_loss(output_logits, state.labels)
+
+            steps = state.steps + 1
+            done = jnp.bitwise_and(jnp.ones(()), steps >= self.max_steps)
+            steps = jnp.where(done, jnp.zeros((), jnp.int32), steps)
+
+            batch_images, batch_class_labels, batch_task_labels = sample_batch(
+                key, image_data, class_labels, task_labels, batch_size)
+
+            cnn_data = CNNData(obs=batch_images,
+                               labels=batch_class_labels,
+                               task_labels=batch_task_labels, )
+
+            new_state = State(obs=batch_task_labels,
+                              labels=batch_class_labels,
+                              task_labels=batch_task_labels,
+                              cnn_state=cnn_state,
+                              cnn_data=cnn_data,
+                              key=next_key,
+                              steps=steps)
+
+            return new_state, reward, done
         self._step_fn = jax.jit(jax.vmap(step_fn))
 
     def reset(self, key: jnp.ndarray) -> State:
