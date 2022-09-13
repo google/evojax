@@ -142,7 +142,6 @@ class Masking(VectorizedTask):
                  test: bool = False,
                  mask_size: int = None):
 
-        self.max_steps = max_steps
         self.obs_shape = tuple([1, ])
         self.act_shape = tuple([mask_size, ])
 
@@ -180,7 +179,7 @@ class Masking(VectorizedTask):
                 reward = -step_loss(output_logits, state.labels)
 
             steps = state.steps + 1
-            done = jnp.bitwise_and(jnp.ones(()), steps >= self.max_steps)
+            done = jnp.where(steps >= max_steps, 1, 0)
             steps = jnp.where(done, jnp.zeros((), jnp.int32), steps)
 
             batch_images, batch_class_labels, batch_task_labels = sample_batch(
