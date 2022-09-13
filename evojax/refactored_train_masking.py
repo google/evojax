@@ -93,7 +93,7 @@ def main(config):
     logger.info('=' * 50)
 
     # Calculate the size of the mask required from the shape of the CNN linear layer weights
-    cnn_params = CNN().init(random.PRNGKey(0), jnp.ones([1, 28, 28, 1]))
+    cnn_params = CNN().init(random.PRNGKey(0), jnp.ones([1, 28, 28, 1]))["params"]
     mask_size = cnn_params[cnn_final_layer_name]["kernel"].shape[0]
 
     policy = MaskPolicy(logger=logger, mask_size=mask_size)
