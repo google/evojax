@@ -178,7 +178,7 @@ class Masking(VectorizedTask):
         self._reset_fn = jax.jit(jax.vmap(reset_fn))
 
         def step_fn(state, action):
-            next_key, key = random.split(state.key)
+            # next_key, key = random.split(state.key)
 
             cnn_data = state.cnn_data
             output_logits = CNN().apply({'params': cnn_state.params}, cnn_data.obs, action)
@@ -189,27 +189,28 @@ class Masking(VectorizedTask):
             else:
                 reward = -step_loss(output_logits, state.labels)
 
-            steps = state.steps + 1
-            done = jnp.where(steps >= self.max_steps, 1, 0)
-            steps = jnp.where(done, jnp.zeros((), jnp.int32), steps)
+            # steps = state.steps + 1
+            # done = jnp.where(steps >= self.max_steps, 1, 0)
+            # steps = jnp.where(done, jnp.zeros((), jnp.int32), steps)
+            #
+            # batch_images, batch_class_labels, batch_task_labels = sample_batch(
+            #     key, image_data, class_labels, task_labels, batch_size)
+            #
+            # cnn_data = CNNData(obs=batch_images,
+            #                    labels=batch_class_labels,
+            #                    task_labels=batch_task_labels, )
+            #
+            # new_state = State(obs=batch_task_labels,
+            #                   labels=batch_class_labels,
+            #                   task_labels=batch_task_labels,
+            #                   # cnn_state=new_cnn_state,
+            #                   cnn_state=cnn_state,
+            #                   cnn_data=cnn_data,
+            #                   key=next_key,
+            #                   steps=steps)
 
-            batch_images, batch_class_labels, batch_task_labels = sample_batch(
-                key, image_data, class_labels, task_labels, batch_size)
-
-            cnn_data = CNNData(obs=batch_images,
-                               labels=batch_class_labels,
-                               task_labels=batch_task_labels, )
-
-            new_state = State(obs=batch_task_labels,
-                              labels=batch_class_labels,
-                              task_labels=batch_task_labels,
-                              # cnn_state=new_cnn_state,
-                              cnn_state=cnn_state,
-                              cnn_data=cnn_data,
-                              key=next_key,
-                              steps=steps)
-
-            return new_state, reward, done
+            # return new_state, reward, done
+            return state, reward, jnp.ones(())
         self._step_fn = jax.jit(jax.vmap(step_fn))
 
     def reset(self, key: jnp.ndarray) -> State:
