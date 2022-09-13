@@ -25,6 +25,7 @@ from flax.core.frozen_dict import FrozenDict
 
 from evojax.task.base import VectorizedTask
 from evojax.task.base import TaskState
+from evojax.util import get_params_format_fn
 
 from evojax.datasets import read_data_files, DATASET_LABELS
 from evojax.models import CNN, cnn_final_layer_name
@@ -38,6 +39,7 @@ def create_train_state(rng, learning_rate):
         apply_fn=CNN().apply, params=params, tx=tx)
 
 
+# This will allow training the CNN on the train data and mask on the validation split
 @dataclass
 class CNNData(object):
     obs: jnp.ndarray  # This will be the mnist image etc
@@ -148,10 +150,16 @@ class Masking(VectorizedTask):
 
         image_data, class_labels, task_labels = setup_task_data(test)
 
+        cnn_state = create_train_state(random.PRNGKey(0), learning_rate)
+
+        self.num_params, format_params_fn = get_params_format_fn(cnn_state.params)
+        self._format_params_fn = jax.vmap(format_params_fn)
+        self._forward_fn = jax.vmap(cnn_state.apply_fn)
+
         def reset_fn(key):
             next_key, key = random.split(key)
 
-            cnn_state = create_train_state(key, learning_rate)
+            # cnn_state = create_train_state(key, learning_rate)
 
             batch_images, batch_class_labels, batch_task_labels = sample_batch(
                 key, image_data, class_labels, task_labels, batch_size)
@@ -172,8 +180,10 @@ class Masking(VectorizedTask):
         def step_fn(state, action):
             next_key, key = random.split(state.key)
 
-            cnn_state, output_logits = cnn_train_step(state.cnn_state, state.cnn_data, action)
+            cnn_data = state.cnn_data
+            output_logits = CNN().apply({'params': cnn_state.params}, cnn_data.obs, action)
 
+            # new_cnn_state, output_logits = cnn_train_step(state.cnn_state, state.cnn_data, action)
             if test:
                 reward = step_accuracy(output_logits, state.labels)
             else:
@@ -193,6 +203,7 @@ class Masking(VectorizedTask):
             new_state = State(obs=batch_task_labels,
                               labels=batch_class_labels,
                               task_labels=batch_task_labels,
+                              # cnn_state=new_cnn_state,
                               cnn_state=cnn_state,
                               cnn_data=cnn_data,
                               key=next_key,

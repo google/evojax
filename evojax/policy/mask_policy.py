@@ -39,7 +39,7 @@ class MaskPolicy(PolicyNetwork):
 
         model = Mask(mask_size=mask_size)
 
-        params = model.init(random.PRNGKey(0), jnp.ones([1, 28, 28, 1]))
+        params = model.init(random.PRNGKey(0), jnp.ones([1, ]))
         self.num_params, format_params_fn = get_params_format_fn(params)
         self._format_params_fn = jax.vmap(format_params_fn)
         self._forward_fn = jax.vmap(model.apply)
