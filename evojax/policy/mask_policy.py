@@ -65,7 +65,7 @@ class MaskPolicy(PolicyNetwork):
 
         self.cnn_state = create_train_state(random.PRNGKey(0), learning_rate)
         self.mask_size = self.cnn_state.params[cnn_final_layer_name]["kernel"].shape[0]
-        self.apply_cnn = jax.vmap(cnn_train_step)
+        self.apply_cnn = jax.vmap(cnn_train_step, in_axes=(None, None, 0), out_axes=(None, 0))
 
         mask_model = Mask(mask_size=self.mask_size)
         params = mask_model.init(random.PRNGKey(0), jnp.ones([1, ]))
