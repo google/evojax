@@ -17,7 +17,7 @@ from .mlp import MLPPolicy
 from .mlp_pi import PermutationInvariantPolicy
 from .convnet import ConvNetPolicy
 from .seq2seq import Seq2seqPolicy
-from .mask import MaskPolicy
+from .mask_policy import MaskPolicy
 
 
 __all__ = ['PolicyNetwork', 'MLPPolicy', 'PermutationInvariantPolicy',

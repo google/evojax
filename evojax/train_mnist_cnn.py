@@ -10,7 +10,7 @@ from jax import random
 import jax.numpy as jnp
 from flax.training import train_state
 
-from evojax.models import CNN, Mask, linear_layer_name
+from evojax.models import CNN, Mask, cnn_final_layer_name
 from evojax.datasets import read_data_files, digit, fashion, kuzushiji, cifar
 
 dataset_names = [digit, fashion, kuzushiji, cifar]
@@ -55,7 +55,7 @@ def train_step(state, batch, mask_params=None, pixel_input=False, cnn_labels=Non
     """Train for a single step."""
 
     if mask_params is not None:
-        linear_weights = state.params[linear_layer_name]["kernel"]
+        linear_weights = state.params[cnn_final_layer_name]["kernel"]
         mask_size = linear_weights.shape[0]
         batch_masks = get_masks(mask_params, mask_size, batch, pixel_input)
     else:
@@ -80,7 +80,7 @@ def train_step(state, batch, mask_params=None, pixel_input=False, cnn_labels=Non
 def eval_step(params, batch, mask_params=None, pixel_input=False, cnn_labels=None):
 
     if mask_params is not None:
-        linear_weights = params[linear_layer_name]["kernel"]
+        linear_weights = params[cnn_final_layer_name]["kernel"]
         mask_size = linear_weights.shape[0]
         batch_masks = get_masks(mask_params, mask_size, batch, pixel_input)
     else:

@@ -41,7 +41,6 @@ class Trainer(object):
                  policy: PolicyNetwork,
                  solver: NEAlgorithm,
                  train_task: VectorizedTask,
-                 validation_task: VectorizedTask,
                  test_task: VectorizedTask,
                  max_iter: int = 1000,
                  log_interval: int = 20,
@@ -111,7 +110,6 @@ class Trainer(object):
             n_evaluations=n_evaluations,
             policy_net=policy,
             train_vec_task=train_task,
-            valid_vec_task=validation_task,
             test_vec_task=test_task,
             seed=seed,
             obs_normalizer=self._obs_normalizer,
@@ -199,31 +197,17 @@ class Trainer(object):
 
                     self._log_scores_fn(i, scores, "train")
 
-                # Test the new best params on the validation set
-                if i and i % self._val_interval == 0:
-                    val_scores, _ = self.sim_mgr.eval_params(params=self.solver.best_params, test=True, validation=True)
-                    if validation_best_params is not None and val_scores.max() < validation_best_score:
-                        self.solver.best_params = validation_best_params
-                    else:
-                        validation_best_params = self.solver.best_params
-                        validation_best_score = val_scores.max()
-
-                    if i % self._log_interval == 0:
-                        val_scores = np.array(val_scores)
-                        self.wand_log_scores(val_scores, split='val')
-
-                # if i > 0 and i % self._test_interval == 0:
-                if i % self._test_interval == 0:
+                if i > 0 and i % self._test_interval == 0:
                     best_params = self.solver.best_params
 
-                    # Test and save the mask used for each dataset
-                    current_masks, _ = self.policy_network.get_actions(None, best_params, None)
-                    self.masks_array.append(current_masks)
-
-                    mean_mask = jnp.mean(current_masks, axis=1)
-                    for k, v in self.dataset_labels.items():
-                        self._logger.info(f'[MASK] Mean mask value for {k}: {mean_mask[v]}')
-                        wandb.log({f'Mean mask {k}': mean_mask[v]})
+                    # # Test and save the mask used for each dataset
+                    # current_masks, _ = self.policy_network.get_actions(None, best_params, None)
+                    # self.masks_array.append(current_masks)
+                    #
+                    # mean_mask = jnp.mean(current_masks, axis=1)
+                    # for k, v in self.dataset_labels.items():
+                    #     self._logger.info(f'[MASK] Mean mask value for {k}: {mean_mask[v]}')
+                    #     wandb.log({f'Mean mask {k}': mean_mask[v]})
 
                     test_scores, _ = self.sim_mgr.eval_params(
                         params=best_params, test=True)
@@ -269,9 +253,9 @@ class Trainer(object):
                 f'Training done, best_score={best_score:.4f}')
 
             # Save all the masks for the run
-            time_str = time.strftime("%Y%m%d_%H%M%S")
-            save_path = os.path.join(self._log_dir, f'masks_for_run_{time_str}')
-            stacked_masks = np.stack(self.masks_array).astype('b')
-            np.savez_compressed(save_path, masks=stacked_masks)
+            # time_str = time.strftime("%Y%m%d_%H%M%S")
+            # save_path = os.path.join(self._log_dir, f'masks_for_run_{time_str}')
+            # stacked_masks = np.stack(self.masks_array).astype('b')
+            # np.savez_compressed(save_path, masks=stacked_masks)
 
-            return best_score, validation_best_params
+            return best_score
