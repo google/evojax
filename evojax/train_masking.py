@@ -32,7 +32,7 @@ from evojax.policy.mask import MaskPolicy
 from evojax.algo import PGPE, OpenES, CMA_ES_JAX
 from evojax import util
 
-from evojax.train_mnist_cnn import run_mnist_training, full_data_loader
+from evojax.train_mnist_cnn import run_mnist_training, full_data_loader, eval_model
 from evojax.models import linear_layer_name
 from evojax.datasets import DATASET_LABELS
 
@@ -101,7 +101,7 @@ def main(config):
     logger.info('=' * 50)
 
     datasets_tuple = full_data_loader()
-    mask_params = cnn_state = processed_params = None
+    mask_params = cnn_state = cnn_params = processed_params = None
     trainer = train_task = validation_task = test_task = None
 
     # There will be this many epochs where alternatively the CNN is trained, then the masking model is evolved
@@ -109,6 +109,7 @@ def main(config):
     for i in range(config.evo_epochs):
         cnn_state, cnn_best_test_accuracy = run_mnist_training(logger=logger,
                                                                datasets_tuple=datasets_tuple,
+                                                               cnn_batch_size=config.batch_size,
                                                                return_model=True,
                                                                num_epochs=config.cnn_epochs,
                                                                state=cnn_state,
@@ -196,8 +197,11 @@ def main(config):
             dataset_labels=DATASET_LABELS,
             best_unmasked_accuracy=cnn_best_test_accuracy
         )
-        best_score, processed_params = trainer.run(demo_mode=False)
-        # current_masks, _ = policy.get_actions(None, processed_params, None)
+
+        best_score, mask_params = trainer.run(demo_mode=False)
+
+        # These parameters should be used in the optimiser at the next step
+        processed_params = mask_params
 
         logger.info(f'Best test score from evo epoch {i} = {best_score:.4f}')
 
@@ -208,6 +212,10 @@ def main(config):
         shutil.copy(src_file, tar_file)
         trainer.model_dir = log_dir
         trainer.run(demo_mode=True)
+
+    # Run a final evaluation with the mask params found
+    _ = eval_model(cnn_params, datasets_tuple[-1], config.batch_size,
+                   mask_params=mask_params, pixel_input=config.pixel_input, cnn_labels=config.cnn_labels)
 
     end_time = time.time()
     logger.info(f'Total time taken: {end_time-start_time:.2f}s')
