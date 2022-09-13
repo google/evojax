@@ -146,7 +146,7 @@ def main(config):
         seed=config.seed,
         log_dir=log_dir,
         logger=logger,
-        dataset_labels=DATASET_LABELS,
+        dataset_labels=DATASET_LABELS
     )
 
     best_score = trainer.run(demo_mode=False)

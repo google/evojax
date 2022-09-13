@@ -57,8 +57,7 @@ class Trainer(object):
                  log_dir: str = None,
                  logger: logging.Logger = None,
                  log_scores_fn: Optional[Callable[[int, jnp.ndarray, str], None]] = None,
-                 dataset_labels: dict = None,
-                 best_unmasked_accuracy: float = None):
+                 dataset_labels: dict = None):
         """Initialization.
 
         Args:
