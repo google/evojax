@@ -245,14 +245,12 @@ class SimManager(object):
 
     def eval_params(self,
                     params: jnp.ndarray,
-                    test: bool,
-                    validation: bool = False) -> Tuple[jnp.ndarray, TaskState]:
+                    test: bool) -> Tuple[jnp.ndarray, TaskState]:
         """Evaluate population parameters or test the best parameter.
 
         Args:
             params - Parameters to be evaluated.
             test - Whether we are testing the best parameter
-            val - Whether we are testing against the validation set
         Returns:
             An array of fitness scores.
         """
@@ -269,9 +267,9 @@ class SimManager(object):
         policy_act_func = self._policy_act_fn
         if test:
             n_repeats = self._test_n_repeats
-            task_reset_func = self._valid_reset_fn
-            task_step_func = self._valid_step_fn
-            task_max_steps = self._valid_max_steps
+            task_reset_func = self._test_reset_fn
+            task_step_func = self._test_step_fn
+            task_max_steps = self._test_max_steps
             params = duplicate_params(
                 params[None, :], self._n_evaluations, False)
         else:

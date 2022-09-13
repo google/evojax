@@ -46,7 +46,7 @@ def parse_args():
     parser.add_argument(
         '--max-iter', type=int, default=1000, help='Max training iterations.')
     parser.add_argument(
-        '--cnn-epochs', type=int, default=20, help='Number of epochs to train the CNN for.')
+        '--max-steps', type=int, default=100, help='Max steps for the tasks.')
     parser.add_argument(
         '--test-interval', type=int, default=1000, help='Test interval.')
     parser.add_argument(
@@ -149,7 +149,7 @@ def main(config):
     )
 
     best_score = trainer.run(demo_mode=False)
-    logger.info(f'Best score was: {best_score}')
+    # logger.info(f'Best score was: {best_score}')
 
     src_file = os.path.join(log_dir, 'best.npz')
     tar_file = os.path.join(log_dir, 'model.npz')
