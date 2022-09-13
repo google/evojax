@@ -39,7 +39,7 @@ class OpenES(NEAlgorithm):
         w_decay: float = 0.0,
         seed: int = 0,
         logger: logging.Logger = None,
-        custom_init_params = None
+        custom_init_params: jnp.ndarray = None
     ):
         """Initialization function.
 
@@ -107,12 +107,6 @@ class OpenES(NEAlgorithm):
         self.es_state = self.es.initialize(init_key, self.es_params)
 
         if custom_init_params is not None:
-            # self.es_state = EvoState(
-            #     mean=custom_init_params,
-            #     sigma=self.es_params.sigma_init,
-            #     opt_state=self.es.optimizer.initialize(self.es_params.opt_params),
-            #     best_member=custom_init_params,
-            # )
             self.es_state.replace(mean=custom_init_params,
                                   best_member=custom_init_params)
 

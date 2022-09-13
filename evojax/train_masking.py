@@ -135,9 +135,9 @@ def main(config):
             test_task = Masking(batch_size=config.batch_size, test=True, mnist_params=cnn_params, mask_size=mask_size,
                                 pixel_input=config.pixel_input)
 
-            # Need to initialise PGPE with the right parameters
-            flat, tree = tree_util.tree_flatten(policy.initial_params)
-            processed_params = jnp.concatenate([i.ravel() for i in flat])
+            # # Need to initialise PGPE with the right parameters
+            # flat, tree = tree_util.tree_flatten(policy.initial_params)
+            # processed_params = jnp.concatenate([i.ravel() for i in flat])
         else:
             train_task.mnist_params = cnn_params
             validation_task.mnist_params = cnn_params
