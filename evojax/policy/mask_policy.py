@@ -79,9 +79,12 @@ class MaskPolicy(PolicyNetwork):
                     p_states: PolicyState) -> Tuple[jnp.ndarray, PolicyState]:
         params = self._format_params_fn(params)
         masks = self._forward_fn(params, t_states.obs)
-        masks = masks.reshape((8, 1024, self.mask_size))
+        mask_input = masks.reshape((8, 1024, self.mask_size))
+        
+        self._logger.info(f'Masks of shape: {masks.shape}')
+        self._logger.info(f'Mask input of shape: {mask_input.shape}')
 
         cnn_data = t_states.cnn_data
-        self.cnn_state, output_logits = cnn_train_step(self.cnn_state, cnn_data, masks)
+        self.cnn_state, output_logits = cnn_train_step(self.cnn_state, cnn_data, mask_input)
 
         return output_logits, p_states
