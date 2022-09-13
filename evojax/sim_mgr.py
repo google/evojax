@@ -228,8 +228,10 @@ class SimManager(object):
             step_once_fn=partial(step_once, task=train_vec_task),
             max_steps=train_vec_task.max_steps)
         if self._num_device > 1:
-            self._train_rollout_fn = jax.jit(jax.pmap(
-                self._train_rollout_fn, in_axes=(0, 0, 0, None)))
+            # TODO - jit of pmap - check with someone who knows a lot about JAX
+            # self._train_rollout_fn = jax.jit(jax.pmap(
+            #     self._train_rollout_fn, in_axes=(0, 0, 0, None)))
+            self._train_rollout_fn = jax.pmap(self._train_rollout_fn, in_axes=(0, 0, 0, None))
 
         # Set up test functions.
         self._test_reset_fn = test_vec_task.reset
@@ -240,8 +242,10 @@ class SimManager(object):
             step_once_fn=partial(step_once, task=test_vec_task),
             max_steps=test_vec_task.max_steps)
         if self._num_device > 1:
-            self._test_rollout_fn = jax.jit(jax.pmap(
-                self._test_rollout_fn, in_axes=(0, 0, 0, None)))
+            # TODO - is this jit of pmap bad???
+            # self._test_rollout_fn = jax.jit(jax.pmap(
+            #     self._test_rollout_fn, in_axes=(0, 0, 0, None)))
+            self._test_rollout_fn = jax.pmap(self._test_rollout_fn, in_axes=(0, 0, 0, None))
 
     def eval_params(self,
                     params: jnp.ndarray,
