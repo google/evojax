@@ -10,7 +10,6 @@ current_dataset_number = 4
 
 class CNN(nn.Module):
     """CNN for MNIST."""
-    dropout: bool = False
     dataset_number: int = current_dataset_number
 
     @nn.compact
@@ -22,7 +21,7 @@ class CNN(nn.Module):
         x = x.reshape((x.shape[0], -1))
 
         if mask is not None:
-            x = x * self.mask
+            x = x * mask
 
         x = nn.Dense(features=10, name=cnn_final_layer_name)(x)
         return x
