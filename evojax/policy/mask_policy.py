@@ -29,7 +29,7 @@ from evojax.models import Mask, CNN, cnn_final_layer_name
 
 def create_train_state(rng, learning_rate, cnn: CNN):
     """Creates initial `TrainState`."""
-    params = cnn.init(rng, jnp.ones([1, 28, 28, 1]))['params']
+    params = CNN().init(rng, jnp.ones([1, 28, 28, 1]))['params']
     tx = optax.adam(learning_rate)
     return train_state.TrainState.create(
         apply_fn=CNN().apply, params=params, tx=tx)
@@ -69,7 +69,7 @@ class MaskPolicy(PolicyNetwork):
         self.cnn_state = create_train_state(random.PRNGKey(0), learning_rate, cnn_model)
         self.mask_size = self.cnn_state.params[cnn_final_layer_name]["kernel"].shape[0]
         # self.apply_cnn = jax.vmap(cnn_train_step, in_axes=(None, None, 0), out_axes=(None, 0))
-        self._apply_cnn = jax.vmap(cnn_model.apply, in_axes=(None, 0, 0))
+        self._forward_fn_cnn = jax.vmap(cnn_model.apply, in_axes=(None, 0, 0))
 
         mask_model = Mask(mask_size=self.mask_size)
         params = mask_model.init(random.PRNGKey(0), jnp.ones([1, ]))
@@ -100,6 +100,6 @@ class MaskPolicy(PolicyNetwork):
         cnn_data = t_states.cnn_data
         # self.cnn_state, output_logits = self.apply_cnn(self.cnn_state, cnn_data, masks)
         # self.cnn_state, output_logits = cnn_train_step(self.cnn_state, cnn_data.obs, cnn_data.labels, masks)
-        output_logits = self._apply_cnn(self.cnn_state.params, cnn_data.obs, masks)
+        output_logits = self._forward_fn_cnn(self.cnn_state.params, cnn_data.obs, masks)
 
         return output_logits, p_states
