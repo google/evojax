@@ -70,6 +70,7 @@ class MaskPolicy(PolicyNetwork):
         self.mask_size = self.cnn_state.params[cnn_final_layer_name]["kernel"].shape[0]
         # self.apply_cnn = jax.vmap(cnn_train_step, in_axes=(None, None, 0), out_axes=(None, 0))
         self._forward_fn_cnn = jax.vmap(cnn_model.apply, in_axes=(None, 0, 0))
+        self._train_fn_cnn = jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0))
 
         mask_model = Mask(mask_size=self.mask_size)
         params = mask_model.init(random.PRNGKey(0), jnp.ones([1, ]))
@@ -84,8 +85,8 @@ class MaskPolicy(PolicyNetwork):
                     t_states: State,
                     params: jnp.ndarray,
                     p_states: PolicyState) -> Tuple[jnp.ndarray, PolicyState]:
-        # import ipdb
-        # ipdb.set_trace()
+        import ipdb
+        ipdb.set_trace()
 
         params = self._format_params_fn(params)
         # masks = self._forward_fn(params, t_states.obs)
@@ -101,6 +102,7 @@ class MaskPolicy(PolicyNetwork):
         # self.cnn_state, output_logits = self.apply_cnn(self.cnn_state, cnn_data, masks)
         # self.cnn_state, output_logits = cnn_train_step(self.cnn_state, cnn_data.obs, cnn_data.labels, masks)
         # output_logits = self._forward_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)
-        output_logits = self._forward_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)
+        # output_logits = self._forward_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)
+        train_step_state, output_logits = self._train_fn_cnn(self.cnn_state, cnn_data.obs, cnn_data.labels, masks)
 
         return output_logits, p_states
