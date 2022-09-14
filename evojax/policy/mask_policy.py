@@ -71,7 +71,7 @@ class MaskPolicy(PolicyNetwork):
         # self.apply_cnn = jax.vmap(cnn_train_step, in_axes=(None, None, 0), out_axes=(None, 0))
         # self._forward_fn_cnn = jax.vmap(cnn_model.apply, in_axes=(None, 0, 0))
         # self._train_fn_cnn = jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0), axis_name='i')
-        self._train_fn_cnn = jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0))
+        self._train_fn_cnn = jax.jit(jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0)))
 
         mask_model = Mask(mask_size=self.mask_size)
         params = mask_model.init(random.PRNGKey(0), jnp.ones([1, ]))
@@ -106,6 +106,7 @@ class MaskPolicy(PolicyNetwork):
         # output_logits = self._forward_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)
         grads, output_logits = self._train_fn_cnn(self.cnn_state, cnn_data.obs, cnn_data.labels, masks)
         # mean_grads = jax.lax.pmean(grads, axis_name='i')
+
         mean_grads = jax.tree_map(lambda x: jnp.mean(x, axis=0), grads)
         self.cnn_state = self.cnn_state.apply_gradients(grads=mean_grads)
 
