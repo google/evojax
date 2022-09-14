@@ -50,8 +50,8 @@ def cnn_train_step(cnn_state: train_state.TrainState, images: jnp.ndarray, label
 
     grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
     (_, logits), grads = grad_fn(cnn_state.params)
-    cnn_state = cnn_state.apply_gradients(grads=grads)
-    return cnn_state, logits
+    # cnn_state = cnn_state.apply_gradients(grads=grads)
+    return grads, logits
 
 
 class MaskPolicy(PolicyNetwork):
@@ -70,7 +70,7 @@ class MaskPolicy(PolicyNetwork):
         self.mask_size = self.cnn_state.params[cnn_final_layer_name]["kernel"].shape[0]
         # self.apply_cnn = jax.vmap(cnn_train_step, in_axes=(None, None, 0), out_axes=(None, 0))
         self._forward_fn_cnn = jax.vmap(cnn_model.apply, in_axes=(None, 0, 0))
-        self._train_fn_cnn = jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0))
+        self._train_fn_cnn = jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0), axis_name='i')
 
         mask_model = Mask(mask_size=self.mask_size)
         params = mask_model.init(random.PRNGKey(0), jnp.ones([1, ]))
@@ -103,6 +103,8 @@ class MaskPolicy(PolicyNetwork):
         # self.cnn_state, output_logits = cnn_train_step(self.cnn_state, cnn_data.obs, cnn_data.labels, masks)
         # output_logits = self._forward_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)
         # output_logits = self._forward_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)
-        train_step_state, output_logits = self._train_fn_cnn(self.cnn_state, cnn_data.obs, cnn_data.labels, masks)
+        grads, output_logits = self._train_fn_cnn(self.cnn_state, cnn_data.obs, cnn_data.labels, masks)
+        mean_grads = jax.lax.pmean(grads, axis_name='i')
+        self.cnn_state.apply_gradients(grads=mean_grads)
 
         return output_logits, p_states
