@@ -57,11 +57,13 @@ def cnn_train_step(cnn_state: train_state.TrainState, images: jnp.ndarray, label
 class MaskPolicy(PolicyNetwork):
     """A dense neural network for masking the MNIST classification task."""
 
-    def __init__(self, logger: logging.Logger = None, learning_rate: float = 1e-3):
+    def __init__(self, logger: logging.Logger = None, learning_rate: float = 1e-3, mask_threshold: float = 0.5):
         if logger is None:
             self._logger = create_logger('MaskNetPolicy')
         else:
             self._logger = logger
+
+        self.mask_threshold = mask_threshold
 
         self.cnn_state = create_train_state(random.PRNGKey(0), learning_rate)
         self.mask_size = self.cnn_state.params[cnn_final_layer_name]["kernel"].shape[0]
@@ -87,7 +89,8 @@ class MaskPolicy(PolicyNetwork):
         # masks = self._forward_fn(params, t_states.obs)
         # mask_input = masks.reshape((8, 1024, self.mask_size))
 
-        masks = self._forward_fn(params, t_states.obs)
+        masking_output = self._forward_fn(params, t_states.obs)
+        masks = jnp.where(masking_output > self.mask_threshold, 1, 0)
 
         self._logger.info(f'Masks of shape: {masks.shape}')
         # self._logger.info(f'Mask input of shape: {mask_input.shape}')
