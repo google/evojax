@@ -100,6 +100,7 @@ class MaskPolicy(PolicyNetwork):
         cnn_data = t_states.cnn_data
         # self.cnn_state, output_logits = self.apply_cnn(self.cnn_state, cnn_data, masks)
         # self.cnn_state, output_logits = cnn_train_step(self.cnn_state, cnn_data.obs, cnn_data.labels, masks)
-        output_logits = self._forward_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)
+        # output_logits = self._forward_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)
+        output_logits = self._forward_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, None)
 
         return output_logits, p_states
