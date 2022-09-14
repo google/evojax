@@ -18,7 +18,7 @@ class CNN(nn.Module):
 
         x = nn.relu(nn.Conv(features=32, kernel_size=(3, 3), padding="SAME", name="CONV1")(x))
         x = nn.relu(nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")(x))
-        x = x.reshape((x.shape[0], x.shape[1], -1))
+        x = x.reshape((x.shape[0], -1))
 
         if mask is not None:
             x = x * mask
