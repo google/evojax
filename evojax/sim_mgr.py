@@ -353,7 +353,8 @@ class SimManager(object):
         if self._num_device > 1:
             params = split_params_for_pmap(params)
             task_state = split_states_for_pmap(task_state)
-            policy_state = split_states_for_pmap(policy_state)
+            # TODO can the policy state not be split???
+            # policy_state = split_states_for_pmap(policy_state)
 
         # Do the rollouts.
         scores, all_obs, masks, final_states = rollout_func(
