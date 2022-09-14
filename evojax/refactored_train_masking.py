@@ -146,7 +146,7 @@ def main(config):
         seed=config.seed,
         log_dir=log_dir,
         logger=logger,
-        use_for_loop=True
+        use_for_loop=False
     )
 
     best_score = trainer.run(demo_mode=False)

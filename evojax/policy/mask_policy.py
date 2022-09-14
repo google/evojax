@@ -73,10 +73,10 @@ class MaskPolicy(PolicyNetwork):
         params = mask_model.init(random.PRNGKey(0), jnp.ones([1, ]))
 
         self.num_params, format_params_fn = get_params_format_fn(params)
-        # self._format_params_fn = jax.vmap(format_params_fn)
-        self._format_params_fn = format_params_fn
-        # self._forward_fn = jax.vmap(mask_model.apply)
-        self._forward_fn = mask_model.apply
+        self._format_params_fn = jax.vmap(format_params_fn)
+        # self._format_params_fn = format_params_fn
+        self._forward_fn = jax.vmap(mask_model.apply)
+        # self._forward_fn = mask_model.apply
 
     def get_actions(self,
                     t_states: State,
@@ -97,6 +97,7 @@ class MaskPolicy(PolicyNetwork):
 
         cnn_data = t_states.cnn_data
         # self.cnn_state, output_logits = self.apply_cnn(self.cnn_state, cnn_data, masks)
-        self.cnn_state, output_logits = cnn_train_step(self.cnn_state, cnn_data.obs, cnn_data.labels, masks)
-
+        # self.cnn_state, output_logits = cnn_train_step(self.cnn_state, cnn_data.obs, cnn_data.labels, masks)
+        output_logits = CNN().apply({"params": self.cnn_state.params}, cnn_data.obs, cnn_data.labels, masks)
+        
         return output_logits, p_states
