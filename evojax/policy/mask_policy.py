@@ -110,7 +110,7 @@ class MaskPolicy(PolicyNetwork):
         flat_params = self.flatten_params(self.cnn_state.params)
 
         return MaskPolicyState(keys=keys,
-                               cnn_state=flat_params)
+                               cnn_params=flat_params)
 
     def get_actions(self,
                     t_states: State,
@@ -139,7 +139,7 @@ class MaskPolicy(PolicyNetwork):
         param_step = jax.tree_map(
             lambda p, g: p - self.lr * g, params, mean_grads
         )
-        
+
         p_states.cnn_params = self.flatten_params(param_step)
 
         return output_logits, p_states
