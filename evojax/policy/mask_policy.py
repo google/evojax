@@ -108,7 +108,7 @@ class MaskPolicy(PolicyNetwork):
         """
         keys = jax.random.split(jax.random.PRNGKey(0), states.obs.shape[0])
         flat_params = self.flatten_params(self.cnn_state.params)
-        # split_params = jnp.tile(flat_params, jax.local_device_count())
+        flat_params = jnp.tile(flat_params, jax.local_device_count())
 
         return MaskPolicyState(keys=keys,
                                cnn_params=flat_params)
@@ -127,7 +127,8 @@ class MaskPolicy(PolicyNetwork):
         self._logger.info(f'Masks of shape: {masks.shape}')
 
         cnn_data = t_states.cnn_data
-        cnn_params = self._cnn_format_params_fn(p_states.cnn_params)
+        # cnn_params = self._cnn_format_params_fn(p_states.cnn_params)
+        cnn_params = self._cnn_format_params_fn(jnp.mean(p_states.cnn_params, axis=0))
 
         # self.cnn_state, output_logits = self.apply_cnn(self.cnn_state, cnn_data, masks)
         # self.cnn_state, output_logits = cnn_train_step(self.cnn_state, cnn_data.obs, cnn_data.labels, masks)
@@ -137,10 +138,12 @@ class MaskPolicy(PolicyNetwork):
 
         mean_grads = jax.tree_map(lambda x: jnp.mean(x, axis=0), grads)
         # new_cnn_state = cnn_state.apply_gradients(grads=mean_grads)
-        param_step = jax.tree_map(
-            lambda p, g: p - self.lr * g, params, mean_grads
+        updated_params = jax.tree_map(
+            lambda p, g: p - self.lr * g, cnn_params, mean_grads
         )
 
-        p_states.cnn_params = self.flatten_params(param_step)
+        flat_params = self.flatten_params(updated_params)
+        flat_params = jnp.tile(flat_params, jax.local_device_count())
+        p_states.cnn_params = flat_params
 
         return output_logits, p_states
