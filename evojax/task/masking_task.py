@@ -184,7 +184,8 @@ class Masking(VectorizedTask):
             if test:
                 reward = step_accuracy(action, state.labels)
             else:
-                reward = -step_loss(action, state.labels)
+                reward = step_accuracy(action, state.labels)
+                # reward = -step_loss(action, state.labels)
 
             # steps = state.steps + 1
             # done = jnp.where(steps >= self.max_steps, 1, 0)

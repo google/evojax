@@ -107,6 +107,6 @@ class MaskPolicy(PolicyNetwork):
         grads, output_logits = self._train_fn_cnn(self.cnn_state, cnn_data.obs, cnn_data.labels, masks)
         # mean_grads = jax.lax.pmean(grads, axis_name='i')
         mean_grads = jax.tree_map(lambda x: jnp.mean(x, axis=0), grads)
-        self.cnn_state.apply_gradients(grads=mean_grads)
+        self.cnn_state = self.cnn_state.apply_gradients(grads=mean_grads)
 
         return output_logits, p_states
