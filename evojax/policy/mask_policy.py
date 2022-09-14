@@ -40,12 +40,12 @@ def cross_entropy_loss(*, logits, labels):
     return optax.softmax_cross_entropy(logits=logits, labels=labels_onehot).sum()
 
 
-@jax.jit
-def cnn_train_step(cnn_state: train_state.TrainState, cnn_data: CNNData, masks: jnp.ndarray):
+# @jax.jit
+def cnn_train_step(cnn_state: train_state.TrainState, images: jnp.ndarray, labels: jnp.ndarray, masks: jnp.ndarray):
     """Train for a single step."""
     def loss_fn(params):
-        output_logits = CNN().apply({'params': params}, cnn_data.obs, masks)
-        loss = cross_entropy_loss(logits=output_logits, labels=cnn_data.labels)
+        output_logits = CNN().apply({'params': params}, images, masks)
+        loss = cross_entropy_loss(logits=output_logits, labels=labels)
         return loss, output_logits
 
     grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
@@ -71,24 +71,29 @@ class MaskPolicy(PolicyNetwork):
         params = mask_model.init(random.PRNGKey(0), jnp.ones([1, ]))
 
         self.num_params, format_params_fn = get_params_format_fn(params)
-        self._format_params_fn = jax.vmap(format_params_fn)
-        self._forward_fn = jax.vmap(mask_model.apply)
+        # self._format_params_fn = jax.vmap(format_params_fn)
+        self._format_params_fn = format_params_fn
+        # self._forward_fn = jax.vmap(mask_model.apply)
+        self._forward_fn = mask_model.apply
 
     def get_actions(self,
                     t_states: State,
                     params: jnp.ndarray,
                     p_states: PolicyState) -> Tuple[jnp.ndarray, PolicyState]:
-        import ipdb
-        ipdb.set_trace()
-        
+        # import ipdb
+        # ipdb.set_trace()
+
         params = self._format_params_fn(params)
-        masks = self._forward_fn(params, t_states.obs)
+        # masks = self._forward_fn(params, t_states.obs)
         # mask_input = masks.reshape((8, 1024, self.mask_size))
+
+        masks = self._forward_fn(params, t_states.obs)
 
         self._logger.info(f'Masks of shape: {masks.shape}')
         # self._logger.info(f'Mask input of shape: {mask_input.shape}')
 
         cnn_data = t_states.cnn_data
-        self.cnn_state, output_logits = self.apply_cnn(self.cnn_state, cnn_data, masks)
+        # self.cnn_state, output_logits = self.apply_cnn(self.cnn_state, cnn_data, masks)
+        self.cnn_state, output_logits = cnn_train_step(self.cnn_state, cnn_data.obs, cnn_data.labels, masks)
 
         return output_logits, p_states
