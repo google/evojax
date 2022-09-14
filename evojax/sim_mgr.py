@@ -137,7 +137,7 @@ class SimManager(object):
             self._logger = logger
 
         self._use_for_loop = use_for_loop
-        # self._logger.info('use_for_loop={}'.format(self._use_for_loop))
+        self._logger.info('use_for_loop={}'.format(self._use_for_loop))
         self._key = random.PRNGKey(seed=seed)
         self._n_repeats = n_repeats
         self._test_n_repeats = test_n_repeats
@@ -177,8 +177,6 @@ class SimManager(object):
             task_state = task_state.replace(obs=normed_obs)
             actions, policy_state = policy_net.get_actions(
                 task_state, params, policy_state)
-            # TODO how to log and check the masks being created (the actions)
-
             if task.multi_agent_training:
                 task_state = task_state.replace(
                     obs=task_state.obs.reshape(
