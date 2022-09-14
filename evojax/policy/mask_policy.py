@@ -84,8 +84,8 @@ class MaskPolicy(PolicyNetwork):
                     t_states: State,
                     params: jnp.ndarray,
                     p_states: PolicyState) -> Tuple[jnp.ndarray, PolicyState]:
-        import ipdb
-        ipdb.set_trace()
+        # import ipdb
+        # ipdb.set_trace()
 
         params = self._format_params_fn(params)
         # masks = self._forward_fn(params, t_states.obs)
@@ -101,6 +101,6 @@ class MaskPolicy(PolicyNetwork):
         # self.cnn_state, output_logits = self.apply_cnn(self.cnn_state, cnn_data, masks)
         # self.cnn_state, output_logits = cnn_train_step(self.cnn_state, cnn_data.obs, cnn_data.labels, masks)
         # output_logits = self._forward_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)
-        output_logits = self._forward_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, None)
+        output_logits = self._forward_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)
 
         return output_logits, p_states
