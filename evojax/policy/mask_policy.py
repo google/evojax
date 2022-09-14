@@ -19,15 +19,23 @@ import jax
 import jax.numpy as jnp
 from jax import random
 from flax.training import train_state
+from flax.struct import dataclass
+from flax.core.frozen_dict import FrozenDict
 import optax
 
 from evojax.policy.base import PolicyNetwork, PolicyState
-from evojax.task.masking_task import State, CNNData
+from evojax.task.masking_task import State
 from evojax.util import create_logger, get_params_format_fn
 from evojax.models import Mask, CNN, cnn_final_layer_name
 
 
-def create_train_state(rng, learning_rate, cnn: CNN):
+@dataclass
+class MaskPolicyState(PolicyState):
+    keys: jnp.ndarray
+    cnn_state: train_state.TrainState
+
+
+def create_train_state(rng, learning_rate):
     """Creates initial `TrainState`."""
     params = CNN().init(rng, jnp.ones([1, 28, 28, 1]))['params']
     tx = optax.adam(learning_rate)
@@ -65,11 +73,13 @@ class MaskPolicy(PolicyNetwork):
 
         self.mask_threshold = mask_threshold
 
-        cnn_model = CNN()
-        self.cnn_state = create_train_state(random.PRNGKey(0), learning_rate, cnn_model)
+        # cnn_model = CNN()
+        self.cnn_state = create_train_state(random.PRNGKey(0), learning_rate)
         self.mask_size = self.cnn_state.params[cnn_final_layer_name]["kernel"].shape[0]
+
         # self.apply_cnn = jax.vmap(cnn_train_step, in_axes=(None, None, 0), out_axes=(None, 0))
         # self._forward_fn_cnn = jax.vmap(cnn_model.apply, in_axes=(None, 0, 0))
+
         # self._train_fn_cnn = jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0), axis_name='i')
         self._train_fn_cnn = jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0))
         # self._train_fn_cnn = jax.jit(jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0)))
@@ -79,14 +89,24 @@ class MaskPolicy(PolicyNetwork):
 
         self.num_params, format_params_fn = get_params_format_fn(params)
         self._format_params_fn = jax.vmap(format_params_fn)
-        # self._format_params_fn = format_params_fn
         self._forward_fn = jax.vmap(mask_model.apply)
-        # self._forward_fn = mask_model.apply
+
+    def reset(self, states: State) -> MaskPolicyState:
+        """Reset the policy.
+
+        Args:
+            State - Initial observations.
+        Returns:
+            PolicyState. Policy internal states.
+        """
+        keys = jax.random.split(jax.random.PRNGKey(0), states.obs.shape[0])
+        return MaskPolicyState(keys=keys,
+                               cnn_state=self.cnn_state)
 
     def get_actions(self,
                     t_states: State,
                     params: jnp.ndarray,
-                    p_states: PolicyState) -> Tuple[jnp.ndarray, PolicyState]:
+                    p_states: MaskPolicyState) -> Tuple[jnp.ndarray, PolicyState]:
         # import ipdb
         # ipdb.set_trace()
 
@@ -101,14 +121,16 @@ class MaskPolicy(PolicyNetwork):
         # self._logger.info(f'Mask input of shape: {mask_input.shape}')
 
         cnn_data = t_states.cnn_data
+        cnn_state = p_states.cnn_state
         # self.cnn_state, output_logits = self.apply_cnn(self.cnn_state, cnn_data, masks)
         # self.cnn_state, output_logits = cnn_train_step(self.cnn_state, cnn_data.obs, cnn_data.labels, masks)
         # output_logits = self._forward_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)
         # output_logits = self._forward_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)
-        grads, output_logits = self._train_fn_cnn(self.cnn_state, cnn_data.obs, cnn_data.labels, masks)
+        grads, output_logits = self._train_fn_cnn(cnn_state, cnn_data.obs, cnn_data.labels, masks)
         # mean_grads = jax.lax.pmean(grads, axis_name='i')
 
         mean_grads = jax.tree_map(lambda x: jnp.mean(x, axis=0), grads)
-        self.cnn_state = self.cnn_state.apply_gradients(grads=mean_grads)
+        new_cnn_state = cnn_state.apply_gradients(grads=mean_grads)
+        p_states.cnn_state = new_cnn_state
 
         return output_logits, p_states
