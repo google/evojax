@@ -78,6 +78,9 @@ class MaskPolicy(PolicyNetwork):
                     t_states: State,
                     params: jnp.ndarray,
                     p_states: PolicyState) -> Tuple[jnp.ndarray, PolicyState]:
+        import ipdb
+        ipdb.set_trace()
+        
         params = self._format_params_fn(params)
         masks = self._forward_fn(params, t_states.obs)
         # mask_input = masks.reshape((8, 1024, self.mask_size))
