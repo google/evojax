@@ -354,7 +354,7 @@ class SimManager(object):
             params = split_params_for_pmap(params)
             task_state = split_states_for_pmap(task_state)
             # TODO can the policy state not be split???
-            # policy_state = split_states_for_pmap(policy_state)
+            policy_state = split_states_for_pmap(policy_state)
 
         # Do the rollouts.
         scores, all_obs, masks, final_states = rollout_func(
