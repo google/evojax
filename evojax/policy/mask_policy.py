@@ -71,7 +71,8 @@ class MaskPolicy(PolicyNetwork):
         # self.apply_cnn = jax.vmap(cnn_train_step, in_axes=(None, None, 0), out_axes=(None, 0))
         # self._forward_fn_cnn = jax.vmap(cnn_model.apply, in_axes=(None, 0, 0))
         # self._train_fn_cnn = jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0), axis_name='i')
-        self._train_fn_cnn = jax.jit(jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0)))
+        self._train_fn_cnn = jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0))
+        # self._train_fn_cnn = jax.jit(jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0)))
 
         mask_model = Mask(mask_size=self.mask_size)
         params = mask_model.init(random.PRNGKey(0), jnp.ones([1, ]))
