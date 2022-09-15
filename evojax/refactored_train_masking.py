@@ -44,7 +44,7 @@ def parse_args():
     parser.add_argument(
         '--batch-size', type=int, default=1024, help='Batch size for training.')
     parser.add_argument(
-        '--mask_threshold', type=float, default=0.5, help='Threshold for setting binary mask.')
+        '--mask-threshold', type=float, default=0.5, help='Threshold for setting binary mask.')
     parser.add_argument(
         '--max-iter', type=int, default=1000, help='Max training iterations.')
     parser.add_argument(
