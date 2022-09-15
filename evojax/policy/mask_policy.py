@@ -107,10 +107,11 @@ class MaskPolicy(PolicyNetwork):
         Returns:
             PolicyState. Policy internal states.
         """
-        keys = jax.random.split(jax.random.PRNGKey(0), states.obs.shape[0])
+        split_size = states.obs.shape[0]
+        keys = jax.random.split(jax.random.PRNGKey(0), split_size)
 
         flat_params = self.flatten_params(self.cnn_state.params)
-        # flat_params = jnp.tile(flat_params, jax.local_device_count())
+        flat_params = jnp.tile(flat_params, split_size)
 
         return MaskPolicyState(keys=keys,
                                cnn_params=flat_params)
