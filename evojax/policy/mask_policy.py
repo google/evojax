@@ -84,7 +84,8 @@ class MaskPolicy(PolicyNetwork):
         # self._train_fn_cnn = jax.jit(jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0)))
 
         self.cnn_num_params, cnn_format_params_fn = get_params_format_fn(self.cnn_state.params)
-        self._cnn_format_params_fn = jax.vmap(cnn_format_params_fn)
+        # self._cnn_format_params_fn = jax.vmap(cnn_format_params_fn)
+        self._cnn_format_params_fn = cnn_format_params_fn
 
         mask_model = Mask(mask_size=self.mask_size)
         params = mask_model.init(random.PRNGKey(0), jnp.ones([1, ]))
