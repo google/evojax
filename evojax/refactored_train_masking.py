@@ -44,6 +44,8 @@ def parse_args():
     parser.add_argument(
         '--batch-size', type=int, default=1024, help='Batch size for training.')
     parser.add_argument(
+        '--mask_threshold', type=float, default=0.5, help='Threshold for setting binary mask.')
+    parser.add_argument(
         '--max-iter', type=int, default=1000, help='Max training iterations.')
     parser.add_argument(
         '--max-steps', type=int, default=100, help='Max steps for the tasks.')
@@ -95,7 +97,9 @@ def main(config):
     best_cnn_state, best_cnn_acc = run_mnist_training(logger, num_epochs=20, early_stopping=True,
                                                       return_model=True)
 
-    policy = MaskPolicy(logger=logger, pretrained_cnn_state=best_cnn_state)
+    policy = MaskPolicy(logger=logger,
+                        mask_threshold=config.mask_threshold,
+                        pretrained_cnn_state=best_cnn_state)
 
     train_task = Masking(batch_size=config.batch_size, test=False)
     test_task = Masking(batch_size=config.batch_size, test=True)
