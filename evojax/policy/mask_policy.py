@@ -152,21 +152,22 @@ class MaskPolicy(PolicyNetwork):
         # output_logits = self._forward_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)
         grads, output_logits = self._train_fn_cnn(cnn_params, cnn_data.obs, cnn_data.labels, masks)
 
-        # mean_grads = jax.lax.pmean(grads, axis_name='num_devices')
+        # Need to average the grads over the vmap
+        mean_grads = jax.tree_map(lambda x: jnp.mean(x, axis=0), grads)
         # self.cnn_state = self.cnn_state.apply_gradients(grads=mean_grads)
 
         # # TODO see if these can be applied using the opt in the cnn_state
         # mean_grads = jax.tree_map(lambda x: jnp.mean(x, axis=0), grads)
         # # new_cnn_state = cnn_state.apply_gradients(grads=mean_grads)
         updated_params = jax.tree_map(
-            lambda p, g: p - self.lr * g, cnn_params, grads
+            lambda p, g: p - self.lr * g, cnn_params, mean_grads
         )
         #
         flat_params = self.flatten_params(updated_params)
         mean_flat_params = jax.lax.pmean(flat_params, axis_name='num_devices')
 
-        import ipdb
-        ipdb.set_trace()
+        # import ipdb
+        # ipdb.set_trace()
 
         assert mean_flat_params.shape == p_states.cnn_params.shape
 
