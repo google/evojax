@@ -32,7 +32,7 @@ from evojax.policy.base import PolicyNetwork
 from evojax.util import create_logger
 
 
-@partial(jax.jit, static_argnums=(1, 2, 3, 4, 5))
+# @partial(jax.jit, static_argnums=(1, 2, 3, 4, 5))
 def get_task_reset_keys(key: jnp.ndarray,
                         test: bool,
                         pop_size: int,
@@ -51,31 +51,31 @@ def get_task_reset_keys(key: jnp.ndarray,
     return key, reset_keys
 
 
-@jax.jit
+# @jax.jit
 def split_params_for_pmap(param: jnp.ndarray) -> jnp.ndarray:
     return jnp.stack(jnp.split(param, jax.local_device_count()))
 
 
-@jax.jit
+# @jax.jit
 def split_states_for_pmap(
         state: Union[TaskState, PolicyState]) -> Union[TaskState, PolicyState]:
     return tree_map(split_params_for_pmap, state)
 
 
-@jax.jit
+# @jax.jit
 def reshape_data_from_pmap(data: jnp.ndarray) -> jnp.ndarray:
     # data.shape = (#device, steps, #jobs/device, *)
     data = data.transpose([1, 0] + [i for i in range(2, data.ndim)])
     return jnp.reshape(data, (data.shape[0], data.shape[1] * data.shape[2], -1))
 
 
-@jax.jit
+# @jax.jit
 def merge_state_from_pmap(state: TaskState) -> TaskState:
     return jax.tree_map(
         lambda x: x.reshape((x.shape[0] * x.shape[1], *x.shape[2:])), state)
 
 
-@partial(jax.jit, static_argnums=(1, 2))
+# @partial(jax.jit, static_argnums=(1, 2))
 def duplicate_params(params: jnp.ndarray,
                      repeats: int,
                      ma_training: bool) -> jnp.ndarray:
@@ -85,19 +85,19 @@ def duplicate_params(params: jnp.ndarray,
         return jnp.repeat(params, repeats=repeats, axis=0)
 
 
-@jax.jit
+# @jax.jit
 def update_score_and_mask(score, reward, mask, done):
     new_score = score + reward * mask
     new_mask = mask * (1 - done.ravel())
     return new_score, new_mask
 
 
-@partial(jax.jit, static_argnums=(1,))
+# @partial(jax.jit, static_argnums=(1,))
 def report_score(scores, n_repeats):
     return jnp.mean(scores.ravel().reshape((-1, n_repeats)), axis=-1)
 
 
-@jax.jit
+# @jax.jit
 def all_done(masks):
     return masks.sum() == 0
 
