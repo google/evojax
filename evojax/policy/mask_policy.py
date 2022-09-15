@@ -85,13 +85,14 @@ class MaskPolicy(PolicyNetwork):
         # self._forward_fn_cnn = jax.vmap(cnn_model.apply, in_axes=(None, 0, 0))
 
         # self._train_fn_cnn = jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0), axis_name='i')
-        self._train_fn_cnn = jax.jit(jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0)))
+        # self._train_fn_cnn = jax.jit(jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0)))
+        self._train_fn_cnn = jax.vmap(cnn_train_step)
         # self._train_fn_cnn = jax.vmap(cnn_train_step, in_axes=(0, 0, 0, 0))
         # self._train_fn_cnn = jax.jit(jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0)))
 
         self.cnn_num_params, cnn_format_params_fn = get_params_format_fn(self.cnn_state.params)
-        # self._cnn_format_params_fn = jax.vmap(cnn_format_params_fn)
-        self._cnn_format_params_fn = cnn_format_params_fn
+        self._cnn_format_params_fn = jax.vmap(cnn_format_params_fn)
+        # self._cnn_format_params_fn = cnn_format_params_fn
 
         mask_model = Mask(mask_size=self.mask_size)
         params = mask_model.init(random.PRNGKey(0), jnp.ones([1, ]))
@@ -107,14 +108,8 @@ class MaskPolicy(PolicyNetwork):
 
     def update_from_state(self, policy_state: MaskPolicyState):
         """ Func to update the cnn from the pmapped policy state. """
-        # import ipdb
-        # ipdb.set_trace()
-
         mean_params = jnp.mean(policy_state.cnn_params, axis=0)
         param_dict = self._cnn_format_params_fn(mean_params)
-        # unfrozen_state = unfreeze(self.cnn_state)
-        # unfrozen_state["params"] = param_dict
-        # self.cnn_state = freeze(unfrozen_state)
         self.cnn_state = self.cnn_state.replace(params=param_dict)
 
     def reset(self, states: MaskTaskState) -> MaskPolicyState:
@@ -133,7 +128,8 @@ class MaskPolicy(PolicyNetwork):
         keys = jax.random.split(jax.random.PRNGKey(0), split_size)
 
         flat_params = self.flatten_params(self.cnn_state.params)
-        flat_params = jnp.tile(flat_params, jax.local_device_count())
+        # flat_params = jnp.tile(flat_params, jax.local_device_count())
+        flat_params = jnp.tile(flat_params, split_size)
 
         # self._logger.info(f'PolicyState params have shape: {flat_params.shape}')
 
@@ -166,23 +162,23 @@ class MaskPolicy(PolicyNetwork):
         grads, output_logits = self._train_fn_cnn(cnn_params, cnn_data.obs, cnn_data.labels, masks)
 
         # Need to average the grads over the vmap
-        mean_grads = jax.tree_map(lambda x: jnp.mean(x, axis=0), grads)
+        # mean_grads = jax.tree_map(lambda x: jnp.mean(x, axis=0), grads)
         # self.cnn_state = self.cnn_state.apply_gradients(grads=mean_grads)
 
         # # TODO see if these can be applied using the opt in the cnn_state
         # mean_grads = jax.tree_map(lambda x: jnp.mean(x, axis=0), grads)
         # # new_cnn_state = cnn_state.apply_gradients(grads=mean_grads)
         updated_params = jax.tree_map(
-            lambda p, g: p - self.lr * g, cnn_params, mean_grads
+            lambda p, g: p - self.lr * g, cnn_params, grads
         )
         #
         flat_params = self.flatten_params(updated_params)
         # mean_flat_params = jax.lax.pmean(flat_params, axis_name='num_devices')
 
-        # import ipdb
-        # ipdb.set_trace()
+        import ipdb
+        ipdb.set_trace()
 
-        # assert mean_flat_params.shape == p_states.cnn_params.shape
+        assert flat_params.shape == p_states.cnn_params.shape
 
         # new_p_state_params = jnp.stack([flat_params] * jax.local_device_count(), axis=0)
         # TODO check how these are recombined
