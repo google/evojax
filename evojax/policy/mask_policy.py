@@ -111,12 +111,12 @@ class MaskPolicy(PolicyNetwork):
         # import ipdb
         # ipdb.set_trace()
 
-        # split_size = states.obs.shape[0]
-        split_size = 1
+        split_size = states.obs.shape[0]
+        # split_size = 1
         keys = jax.random.split(jax.random.PRNGKey(0), split_size)
 
         flat_params = self.flatten_params(self.cnn_state.params)
-        # flat_params = jnp.tile(flat_params, jax.local_device_count())
+        flat_params = jnp.tile(flat_params, jax.local_device_count())
 
         return MaskPolicyState(keys=keys,
                                cnn_params=flat_params)
@@ -157,10 +157,12 @@ class MaskPolicy(PolicyNetwork):
         )
 
         flat_params = self.flatten_params(updated_params)
+        mean_flat_params = jax.lax.pmean(flat_params, axis_name='num_devices')
+
         # new_p_state_params = jnp.stack([flat_params] * jax.local_device_count(), axis=0)
         # TODO check how these are recombined
         new_p_states = MaskPolicyState(keys=p_states.keys,
-                                       cnn_params=flat_params)
+                                       cnn_params=mean_flat_params)
 
         return output_logits, new_p_states
         # return output_logits, p_states
