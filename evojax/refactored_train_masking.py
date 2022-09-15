@@ -32,7 +32,7 @@ from evojax.policy.mask_policy import MaskPolicy
 from evojax.algo import PGPE, OpenES, CMA_ES_JAX
 from evojax import util
 
-# from evojax.train_mnist_cnn import run_mnist_training, full_data_loader, eval_model
+from evojax.train_mnist_cnn import run_mnist_training, full_data_loader, eval_model
 from evojax.models import cnn_final_layer_name, CNN
 from evojax.datasets import DATASET_LABELS
 
@@ -92,11 +92,10 @@ def main(config):
     logger.info(f'Start Time - {time.strftime("%H:%M")}')
     logger.info('=' * 50)
 
-    # Calculate the size of the mask required from the shape of the CNN linear layer weights
-    cnn_params = CNN().init(random.PRNGKey(0), jnp.ones([1, 28, 28, 1]))["params"]
-    mask_size = cnn_params[cnn_final_layer_name]["kernel"].shape[0]
+    best_cnn_state, best_cnn_acc = run_mnist_training(logger, num_epochs=20, early_stopping=True,
+                                                      return_model=True)
 
-    policy = MaskPolicy(logger=logger)
+    policy = MaskPolicy(logger=logger, pretrained_cnn_state=best_cnn_state)
 
     train_task = Masking(batch_size=config.batch_size, test=False)
     test_task = Masking(batch_size=config.batch_size, test=True)

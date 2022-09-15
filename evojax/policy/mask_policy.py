@@ -63,7 +63,8 @@ def cnn_train_step(cnn_params: FrozenDict, images: jnp.ndarray, labels: jnp.ndar
 class MaskPolicy(PolicyNetwork):
     """A dense neural network for masking the MNIST classification task."""
 
-    def __init__(self, logger: logging.Logger = None, learning_rate: float = 1e-3, mask_threshold: float = 0.5):
+    def __init__(self, logger: logging.Logger = None, learning_rate: float = 1e-3, mask_threshold: float = 0.5,
+                 pretrained_cnn_state: train_state.TrainState = None):
         if logger is None:
             self._logger = create_logger('MaskNetPolicy')
         else:
@@ -73,7 +74,11 @@ class MaskPolicy(PolicyNetwork):
         self.lr = learning_rate
 
         # cnn_model = CNN()
-        self.cnn_state = create_train_state(random.PRNGKey(0), learning_rate)
+        if pretrained_cnn_state:
+            self.cnn_state = pretrained_cnn_state
+        else:
+            self.cnn_state = create_train_state(random.PRNGKey(0), learning_rate)
+
         self.mask_size = self.cnn_state.params[cnn_final_layer_name]["kernel"].shape[0]
 
         # self.apply_cnn = jax.vmap(cnn_train_step, in_axes=(None, None, 0), out_axes=(None, 0))
