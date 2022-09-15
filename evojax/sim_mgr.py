@@ -27,7 +27,6 @@ from evojax.obs_norm import ObsNormalizer
 from evojax.task.base import TaskState
 from evojax.task.base import VectorizedTask
 from evojax.policy.base import PolicyState
-from evojax.policy.mask_policy import MaskPolicy
 from evojax.policy.base import PolicyNetwork
 from evojax.util import create_logger
 
@@ -110,7 +109,7 @@ class SimManager(object):
                  test_n_repeats: int,
                  pop_size: int,
                  n_evaluations: int,
-                 policy_net: MaskPolicy,
+                 policy_net: PolicyNetwork,
                  train_vec_task: VectorizedTask,
                  test_vec_task: VectorizedTask,
                  seed: int = 0,
@@ -157,7 +156,6 @@ class SimManager(object):
         self.obs_params = self.obs_normalizer.get_init_params()
 
         self._num_device = jax.local_device_count()
-
         if self._pop_size % self._num_device != 0:
             raise ValueError(
                 'pop_size must be multiples of GPU/TPUs: '
@@ -207,7 +205,7 @@ class SimManager(object):
                 step_once_fn,
                 (task_states, policy_states, params, obs_params,
                  accumulated_rewards, valid_masks), (), max_steps)
-            return accumulated_rewards, obs_set, obs_mask, task_states, policy_states
+            return accumulated_rewards, obs_set, obs_mask, task_states
 
         self._policy_reset_fn = jax.jit(policy_net.reset)
         # self._policy_reset_fn = policy_net.reset
@@ -365,7 +363,7 @@ class SimManager(object):
             policy_state = split_states_for_pmap(policy_state)
 
         # Do the rollouts.
-        scores, all_obs, masks, final_states, policy_state = rollout_func(
+        scores, all_obs, masks, final_states = rollout_func(
             task_state, policy_state, params, self.obs_params)
 
         # self.policy_net.update_from_state(policy_state)
