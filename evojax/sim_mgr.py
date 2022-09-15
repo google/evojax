@@ -156,7 +156,8 @@ class SimManager(object):
             )
         self.obs_params = self.obs_normalizer.get_init_params()
 
-        self._num_device = jax.local_device_count()
+        # self._num_device = jax.local_device_count()
+        self._num_device = 1
 
         if self._pop_size % self._num_device != 0:
             raise ValueError(

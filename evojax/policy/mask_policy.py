@@ -143,8 +143,8 @@ class MaskPolicy(PolicyNetwork):
         masking_output = self._forward_fn(params, t_states.obs)
         masks = jnp.where(masking_output > self.mask_threshold, 1, 0)
 
-        self._logger.info(f'{jnp.mean(masking_output, axis=1)}')
-
+        print(jnp.mean(masking_output, axis=1))
+        print(jnp.mean(t_states.obs, axis=1))
         # self._logger.info(f'Masks of shape: {masks.shape}')
         # self._logger.info(f'Mask sparsity: {jnp.mean(masks)}')
 
