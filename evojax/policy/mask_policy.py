@@ -24,7 +24,7 @@ from flax.core.frozen_dict import FrozenDict
 import optax
 
 from evojax.policy.base import PolicyNetwork, PolicyState
-from evojax.task.masking_task import State
+from evojax.task.masking_task import MaskTaskState
 from evojax.util import create_logger, get_params_format_fn
 from evojax.models import Mask, CNN, cnn_final_layer_name
 
@@ -99,7 +99,7 @@ class MaskPolicy(PolicyNetwork):
         flat, _ = jax.tree_util.tree_flatten(dict_params)
         return jnp.concatenate([i.ravel() for i in flat])
 
-    def reset(self, states: State) -> MaskPolicyState:
+    def reset(self, states: MaskTaskState) -> MaskPolicyState:
         """Reset the policy.
 
         Args:
@@ -107,17 +107,16 @@ class MaskPolicy(PolicyNetwork):
         Returns:
             PolicyState. Policy internal states.
         """
-        # keys = jax.random.split(jax.random.PRNGKey(0), states.obs.shape[0])
-        keys = jax.random.PRNGKey(0)
+        keys = jax.random.split(jax.random.PRNGKey(0), states.obs.shape[0])
 
         flat_params = self.flatten_params(self.cnn_state.params)
-        # flat_params = jnp.tile(flat_params, states.obs.shape[0])
+        flat_params = jnp.tile(flat_params, states.obs.shape[0])
 
         return MaskPolicyState(keys=keys,
                                cnn_params=flat_params)
 
     def get_actions(self,
-                    t_states: State,
+                    t_states: MaskTaskState,
                     params: jnp.ndarray,
                     p_states: MaskPolicyState) -> Tuple[jnp.ndarray, MaskPolicyState]:
         # import ipdb
@@ -141,19 +140,20 @@ class MaskPolicy(PolicyNetwork):
         # output_logits = self._forward_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)
         grads, output_logits = self._train_fn_cnn(cnn_params, cnn_data.obs, cnn_data.labels, masks)
 
-        # TODO see if these can be applied using the opt in the cnn_state
-        mean_grads = jax.tree_map(lambda x: jnp.mean(x, axis=0), grads)
-        # new_cnn_state = cnn_state.apply_gradients(grads=mean_grads)
-        updated_params = jax.tree_map(
-            lambda p, g: p - self.lr * g, cnn_params, mean_grads
-        )
+        # # TODO see if these can be applied using the opt in the cnn_state
+        # mean_grads = jax.tree_map(lambda x: jnp.mean(x, axis=0), grads)
+        # # new_cnn_state = cnn_state.apply_gradients(grads=mean_grads)
+        # updated_params = jax.tree_map(
+        #     lambda p, g: p - self.lr * g, cnn_params, mean_grads
+        # )
+        #
+        # flat_params = self.flatten_params(updated_params)
+        # # flat_params = jnp.tile(flat_params, jax.local_device_count())
+        # # p_states.cnn_params = flat_params
+        #
+        # # TODO check how these are recombined
+        # new_p_states = MaskPolicyState(keys=p_states.keys,
+        #                                cnn_params=flat_params)
 
-        flat_params = self.flatten_params(updated_params)
-        # flat_params = jnp.tile(flat_params, jax.local_device_count())
-        # p_states.cnn_params = flat_params
-
-        # TODO check how these are recombined
-        new_p_states = MaskPolicyState(keys=p_states.keys,
-                                       cnn_params=flat_params)
-
-        return output_logits, new_p_states
+        # return output_logits, new_p_states
+        return output_logits, p_states

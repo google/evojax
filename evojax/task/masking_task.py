@@ -47,7 +47,7 @@ class CNNData(object):
 
 
 @dataclass
-class State(TaskState):
+class MaskTaskState(TaskState):
     obs: jnp.ndarray  # This will be the mnist image etc
     labels: jnp.ndarray  # This is the class label
     task_labels: jnp.ndarray  # This will be the label associated with each dataset
@@ -165,16 +165,16 @@ class Masking(VectorizedTask):
                                labels=batch_class_labels,
                                task_labels=batch_task_labels,)
 
-            return State(obs=batch_task_labels,
-                         labels=batch_class_labels,
-                         task_labels=batch_task_labels,
-                         # cnn_state=cnn_state,
-                         cnn_data=cnn_data,
-                         key=next_key,
-                         steps=jnp.zeros((), dtype=int))
+            return MaskTaskState(obs=batch_task_labels,
+                                 labels=batch_class_labels,
+                                 task_labels=batch_task_labels,
+                                 # cnn_state=cnn_state,
+                                 cnn_data=cnn_data,
+                                 key=next_key,
+                                 steps=jnp.zeros((), dtype=int))
         self._reset_fn = jax.jit(jax.vmap(reset_fn))
 
-        def step_fn(state, action):
+        def step_fn(state: MaskTaskState, action: jnp.ndarray):
             # next_key, key = random.split(state.key)
 
             # cnn_data = state.cnn_data
@@ -211,10 +211,10 @@ class Masking(VectorizedTask):
             return state, reward, jnp.ones(())
         self._step_fn = jax.jit(jax.vmap(step_fn))
 
-    def reset(self, key: jnp.ndarray) -> State:
+    def reset(self, key: jnp.ndarray) -> MaskTaskState:
         return self._reset_fn(key)
 
     def step(self,
-             state: TaskState,
-             action: jnp.ndarray) -> Tuple[TaskState, jnp.ndarray, jnp.ndarray]:
+             state: MaskTaskState,
+             action: jnp.ndarray) -> Tuple[MaskTaskState, jnp.ndarray, jnp.ndarray]:
         return self._step_fn(state, action)
