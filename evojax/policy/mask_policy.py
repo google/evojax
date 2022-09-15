@@ -129,7 +129,7 @@ class MaskPolicy(PolicyNetwork):
 
         flat_params = self.flatten_params(self.cnn_state.params)
         # flat_params = jnp.tile(flat_params, jax.local_device_count())
-        flat_params = jnp.tile(flat_params, split_size)
+        flat_params = jnp.stack([flat_params]*split_size, axis=0)
 
         # self._logger.info(f'PolicyState params have shape: {flat_params.shape}')
 
