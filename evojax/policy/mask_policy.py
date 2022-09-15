@@ -121,7 +121,7 @@ class MaskPolicy(PolicyNetwork):
         keys = jax.random.split(jax.random.PRNGKey(0), split_size)
 
         flat_params = self.flatten_params(self.cnn_state.params)
-        flat_params = jnp.tile(flat_params, jax.local_device_count())
+        # flat_params = jnp.tile(flat_params, jax.local_device_count())
 
         return MaskPolicyState(keys=keys,
                                cnn_params=flat_params)
