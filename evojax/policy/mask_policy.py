@@ -107,14 +107,15 @@ class MaskPolicy(PolicyNetwork):
 
     def update_from_state(self, policy_state: MaskPolicyState):
         """ Func to update the cnn from the pmapped policy state. """
-        import ipdb
-        ipdb.set_trace()
+        # import ipdb
+        # ipdb.set_trace()
 
         mean_params = jnp.mean(policy_state.cnn_params, axis=0)
         param_dict = self._cnn_format_params_fn(mean_params)
-        unfrozen_state = unfreeze(self.cnn_state)
-        unfrozen_state["params"] = param_dict
-        self.cnn_state = freeze(unfrozen_state)
+        # unfrozen_state = unfreeze(self.cnn_state)
+        # unfrozen_state["params"] = param_dict
+        # self.cnn_state = freeze(unfrozen_state)
+        self.cnn_state = self.cnn_state.replace(params=param_dict)
 
     def reset(self, states: MaskTaskState) -> MaskPolicyState:
         """Reset the policy.
