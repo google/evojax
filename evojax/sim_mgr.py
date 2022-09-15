@@ -157,6 +157,7 @@ class SimManager(object):
         self.obs_params = self.obs_normalizer.get_init_params()
 
         self._num_device = jax.local_device_count()
+
         if self._pop_size % self._num_device != 0:
             raise ValueError(
                 'pop_size must be multiples of GPU/TPUs: '
@@ -208,8 +209,10 @@ class SimManager(object):
                  accumulated_rewards, valid_masks), (), max_steps)
             return accumulated_rewards, obs_set, obs_mask, task_states, policy_states
 
-        self._policy_reset_fn = jax.jit(policy_net.reset)
-        self._policy_act_fn = jax.jit(policy_net.get_actions)
+        # self._policy_reset_fn = jax.jit(policy_net.reset)
+        self._policy_reset_fn = policy_net.reset
+        # self._policy_act_fn = jax.jit(policy_net.get_actions)
+        self._policy_act_fn = policy_net.get_actions
 
         if (
                 hasattr(train_vec_task, 'bd_extractor') and
