@@ -116,12 +116,12 @@ class MaskPolicy(PolicyNetwork):
         # import ipdb
         # ipdb.set_trace()
 
-        # split_size = states.obs.shape[0]
-        split_size = 1
+        split_size = states.obs.shape[0]
+        # split_size = 1
         keys = jax.random.split(jax.random.PRNGKey(0), split_size)
 
         flat_params = self.flatten_params(self.cnn_state.params)
-        # flat_params = jnp.tile(flat_params, jax.local_device_count())
+        flat_params = jnp.tile(flat_params, jax.local_device_count())
 
         self._logger.info(f'policy state params has shape: {flat_params.shape}')
 
