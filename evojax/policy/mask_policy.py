@@ -136,6 +136,9 @@ class MaskPolicy(PolicyNetwork):
                     params: jnp.ndarray,
                     p_states: MaskPolicyState) -> Tuple[jnp.ndarray, MaskPolicyState]:
 
+        import ipdb
+        ipdb.set_trace()
+
         params = self._format_params_fn(params)
         masking_output = self._forward_fn(params, t_states.obs)
         masks = jnp.where(masking_output > self.mask_threshold, 1, 0)
