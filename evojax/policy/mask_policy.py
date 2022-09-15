@@ -132,8 +132,6 @@ class MaskPolicy(PolicyNetwork):
                     t_states: MaskTaskState,
                     params: jnp.ndarray,
                     p_states: MaskPolicyState) -> Tuple[jnp.ndarray, MaskPolicyState]:
-        # import ipdb
-        # ipdb.set_trace()
 
         params = self._format_params_fn(params)
         masking_output = self._forward_fn(params, t_states.obs)
@@ -166,6 +164,9 @@ class MaskPolicy(PolicyNetwork):
         #
         flat_params = self.flatten_params(updated_params)
         mean_flat_params = jax.lax.pmean(flat_params, axis_name='num_devices')
+
+        import ipdb
+        ipdb.set_trace()
 
         assert mean_flat_params.shape == p_states.cnn_params.shape
 
