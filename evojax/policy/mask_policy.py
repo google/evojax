@@ -20,7 +20,7 @@ import jax.numpy as jnp
 from jax import random
 from flax.training import train_state
 from flax.struct import dataclass
-from flax.core.frozen_dict import FrozenDict
+from flax.core.frozen_dict import FrozenDict, unfreeze, freeze
 import optax
 
 from evojax.policy.base import PolicyNetwork, PolicyState
@@ -109,7 +109,9 @@ class MaskPolicy(PolicyNetwork):
         """ Func to update the cnn from the pmapped policy state. """
         mean_params = jnp.mean(policy_state.cnn_params, axis=0)
         param_dict = self._cnn_format_params_fn(mean_params)
-        self.cnn_state.params = param_dict
+        unfrozen_state = unfreeze(self.cnn_state)
+        unfrozen_state.params = param_dict
+        self.cnn_state = freeze(unfrozen_state)
 
     def reset(self, states: MaskTaskState) -> MaskPolicyState:
         """Reset the policy.
