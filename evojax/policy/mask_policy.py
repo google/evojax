@@ -148,6 +148,9 @@ class MaskPolicy(PolicyNetwork):
         # self._logger.info(f'Masks of shape: {masks.shape}')
         # self._logger.info(f'Mask sparsity: {jnp.mean(masks)}')
 
+        import ipdb
+        ipdb.set_trace()
+
         cnn_data = t_states.cnn_data
         # cnn_params = self._cnn_format_params_fn(p_states.cnn_params)
         # cnn_params = self._cnn_format_params_fn(jnp.mean(p_states.cnn_params, axis=0))
@@ -174,9 +177,6 @@ class MaskPolicy(PolicyNetwork):
         #
         flat_params = self.flatten_params(updated_params)
         # mean_flat_params = jax.lax.pmean(flat_params, axis_name='num_devices')
-
-        import ipdb
-        ipdb.set_trace()
 
         assert flat_params.shape == p_states.cnn_params.shape
 
