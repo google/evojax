@@ -50,6 +50,8 @@ def parse_args():
     parser.add_argument(
         '--max-steps', type=int, default=100, help='Max steps for the tasks.')
     parser.add_argument(
+        '--cnn-epochs', type=int, default=10, help='Number of epochs for cnn pretraining.')
+    parser.add_argument(
         '--test-interval', type=int, default=1000, help='Test interval.')
     parser.add_argument(
         '--log-interval', type=int, default=100, help='Logging interval.')
@@ -94,7 +96,7 @@ def main(config):
     logger.info(f'Start Time - {time.strftime("%H:%M")}')
     logger.info('=' * 50)
 
-    best_cnn_state, best_cnn_acc = run_mnist_training(logger, num_epochs=20, early_stopping=True,
+    best_cnn_state, best_cnn_acc = run_mnist_training(logger, num_epochs=config.cnn_epochs, early_stopping=True,
                                                       return_model=True)
 
     policy = MaskPolicy(logger=logger,
