@@ -229,7 +229,8 @@ class SimManager(object):
             # TODO - jit of pmap - check with someone who knows a lot about JAX
             # self._train_rollout_fn = jax.jit(jax.pmap(
             #     self._train_rollout_fn, in_axes=(0, 0, 0, None)))
-            self._train_rollout_fn = jax.pmap(self._train_rollout_fn, in_axes=(0, None, 0, None))
+            self._train_rollout_fn = jax.pmap(self._train_rollout_fn,
+                                              in_axes=(0, None, 0, None), axis_name='num_devices')
 
         # Set up test functions.
         self._test_reset_fn = test_vec_task.reset
@@ -243,7 +244,8 @@ class SimManager(object):
             # TODO - is this jit of pmap bad???
             # self._test_rollout_fn = jax.jit(jax.pmap(
             #     self._test_rollout_fn, in_axes=(0, 0, 0, None)))
-            self._test_rollout_fn = jax.pmap(self._test_rollout_fn, in_axes=(0, None, 0, None))
+            self._test_rollout_fn = jax.pmap(self._test_rollout_fn,
+                                             in_axes=(0, None, 0, None), axis_name='num_devices')
 
     def eval_params(self,
                     params: jnp.ndarray,
@@ -353,10 +355,10 @@ class SimManager(object):
         if self._num_device > 1:
             params = split_params_for_pmap(params)
             task_state = split_states_for_pmap(task_state)
-            import ipdb
-            ipdb.set_trace()
+            # import ipdb
+            # ipdb.set_trace()
             # TODO can the policy state not be split???
-            policy_state = split_states_for_pmap(policy_state)
+            # policy_state = split_states_for_pmap(policy_state)
 
         # Do the rollouts.
         scores, all_obs, masks, final_states = rollout_func(
