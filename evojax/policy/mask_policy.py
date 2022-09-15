@@ -73,7 +73,6 @@ class MaskPolicy(PolicyNetwork):
         self.mask_threshold = mask_threshold
         self.lr = learning_rate
 
-        # cnn_model = CNN()
         if pretrained_cnn_state:
             self.cnn_state = pretrained_cnn_state
         else:
@@ -81,14 +80,8 @@ class MaskPolicy(PolicyNetwork):
 
         self.mask_size = self.cnn_state.params[cnn_final_layer_name]["kernel"].shape[0]
 
-        # self.apply_cnn = jax.vmap(cnn_train_step, in_axes=(None, None, 0), out_axes=(None, 0))
-        # self._forward_fn_cnn = jax.vmap(cnn_model.apply, in_axes=(None, 0, 0))
-
-        # self._train_fn_cnn = jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0), axis_name='i')
-        # self._train_fn_cnn = jax.jit(jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0)))
-        self._train_fn_cnn = jax.vmap(cnn_train_step)
-        # self._train_fn_cnn = jax.vmap(cnn_train_step, in_axes=(0, 0, 0, 0))
-        # self._train_fn_cnn = jax.jit(jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0)))
+        self._train_fn_cnn = jax.vmap(self.cnn_state.apply_fn)
+        # self._train_fn_cnn = jax.vmap(cnn_train_step)
 
         self.cnn_num_params, cnn_format_params_fn = get_params_format_fn(self.cnn_state.params)
         self._cnn_format_params_fn = jax.vmap(cnn_format_params_fn)
@@ -112,24 +105,24 @@ class MaskPolicy(PolicyNetwork):
         param_dict = self._cnn_format_params_fn(mean_params)
         self.cnn_state = self.cnn_state.replace(params=param_dict)
 
-    def reset(self, states: MaskTaskState) -> MaskPolicyState:
-        """Reset the policy.
-
-        Args:
-            State - Initial observations.
-        Returns:
-            PolicyState. Policy internal states.
-        """
-
-        split_size = states.obs.shape[0]
-        keys = jax.random.split(jax.random.PRNGKey(0), split_size)
-
-        flat_params = self.flatten_params(self.cnn_state.params)
-        # flat_params = jnp.tile(flat_params, jax.local_device_count())
-        flat_params = jnp.stack([flat_params]*split_size, axis=0)
-
-        return MaskPolicyState(keys=keys,
-                               cnn_params=flat_params)
+    # def reset(self, states: MaskTaskState) -> MaskPolicyState:
+    #     """Reset the policy.
+    #
+    #     Args:
+    #         State - Initial observations.
+    #     Returns:
+    #         PolicyState. Policy internal states.
+    #     """
+    #
+    #     split_size = states.obs.shape[0]
+    #     keys = jax.random.split(jax.random.PRNGKey(0), split_size)
+    #
+    #     flat_params = self.flatten_params(self.cnn_state.params)
+    #     # flat_params = jnp.tile(flat_params, jax.local_device_count())
+    #     flat_params = jnp.stack([flat_params]*split_size, axis=0)
+    #
+    #     return MaskPolicyState(keys=keys,
+    #                            cnn_params=flat_params)
 
     def get_actions(self,
                     t_states: MaskTaskState,
@@ -143,48 +136,43 @@ class MaskPolicy(PolicyNetwork):
         masking_output = self._forward_fn(params, t_states.obs)
         masks = jnp.where(masking_output > self.mask_threshold, 1, 0)
 
-        print(jnp.mean(masking_output, axis=1))
-        print(jnp.mean(t_states.obs, axis=1))
-        # self._logger.info(f'Masks of shape: {masks.shape}')
-        # self._logger.info(f'Mask sparsity: {jnp.mean(masks)}')
-
-        # import ipdb
-        # ipdb.set_trace()
-
         cnn_data = t_states.cnn_data
+        output_logits = self._train_fn_cnn(self.cnn_state, cnn_data.obs, cnn_data.labels, masks)
+        #
+        #
+        # # cnn_params = self._cnn_format_params_fn(p_states.cnn_params)
+        # # cnn_params = self._cnn_format_params_fn(jnp.mean(p_states.cnn_params, axis=0))
+        # # Note that there should only be one set of cnn_params so this func shouldn't be vmapped
+        # # mean_cnn_params = jnp.mean(p_states.cnn_params, axis=0)
         # cnn_params = self._cnn_format_params_fn(p_states.cnn_params)
-        # cnn_params = self._cnn_format_params_fn(jnp.mean(p_states.cnn_params, axis=0))
-        # Note that there should only be one set of cnn_params so this func shouldn't be vmapped
-        # mean_cnn_params = jnp.mean(p_states.cnn_params, axis=0)
-        cnn_params = self._cnn_format_params_fn(p_states.cnn_params)
-
-        # self.cnn_state, output_logits = self.apply_cnn(self.cnn_state, cnn_data, masks)
-        # self.cnn_state, output_logits = cnn_train_step(self.cnn_state, cnn_data.obs, cnn_data.labels, masks)
-        # output_logits = self._forward_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)
-        # output_logits = self._forward_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)
-        grads, output_logits = self._train_fn_cnn(cnn_params, cnn_data.obs, cnn_data.labels, masks)
-
-        # Need to average the grads over the vmap
-        # mean_grads = jax.tree_map(lambda x: jnp.mean(x, axis=0), grads)
-        # self.cnn_state = self.cnn_state.apply_gradients(grads=mean_grads)
-
-        # # TODO see if these can be applied using the opt in the cnn_state
-        # mean_grads = jax.tree_map(lambda x: jnp.mean(x, axis=0), grads)
-        # # new_cnn_state = cnn_state.apply_gradients(grads=mean_grads)
-        updated_params = jax.tree_map(
-            lambda p, g: p - self.lr * g, cnn_params, grads
-        )
         #
-        flat, _ = jax.tree_util.tree_flatten(updated_params)
-        flat_params = jnp.concatenate([i.reshape((i.shape[0], -1)) for i in flat], axis=1)
-        # mean_flat_params = jax.lax.pmean(flat_params, axis_name='num_devices')
-
-        assert flat_params.shape == p_states.cnn_params.shape
-
-        # new_p_state_params = jnp.stack([flat_params] * jax.local_device_count(), axis=0)
-        # TODO check how these are recombined
-        new_p_states = MaskPolicyState(keys=p_states.keys,
-                                       cnn_params=flat_params)
+        # # self.cnn_state, output_logits = self.apply_cnn(self.cnn_state, cnn_data, masks)
+        # # self.cnn_state, output_logits = cnn_train_step(self.cnn_state, cnn_data.obs, cnn_data.labels, masks)
+        # # output_logits = self._forward_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)
+        # # output_logits = self._forward_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)
+        # grads, output_logits = self._train_fn_cnn(cnn_params, cnn_data.obs, cnn_data.labels, masks)
         #
-        return output_logits, new_p_states
-        # return output_logits, p_states
+        # # Need to average the grads over the vmap
+        # # mean_grads = jax.tree_map(lambda x: jnp.mean(x, axis=0), grads)
+        # # self.cnn_state = self.cnn_state.apply_gradients(grads=mean_grads)
+        #
+        # # # TODO see if these can be applied using the opt in the cnn_state
+        # # mean_grads = jax.tree_map(lambda x: jnp.mean(x, axis=0), grads)
+        # # # new_cnn_state = cnn_state.apply_gradients(grads=mean_grads)
+        # updated_params = jax.tree_map(
+        #     lambda p, g: p - self.lr * g, cnn_params, grads
+        # )
+        #
+        # flat, _ = jax.tree_util.tree_flatten(updated_params)
+        # flat_params = jnp.concatenate([i.reshape((i.shape[0], -1)) for i in flat], axis=1)
+        # # mean_flat_params = jax.lax.pmean(flat_params, axis_name='num_devices')
+        #
+        # assert flat_params.shape == p_states.cnn_params.shape
+        #
+        # # new_p_state_params = jnp.stack([flat_params] * jax.local_device_count(), axis=0)
+        # # TODO check how these are recombined
+        # new_p_states = MaskPolicyState(keys=p_states.keys,
+        #                                cnn_params=flat_params)
+        #
+        # return output_logits, new_p_states
+        return output_logits, p_states
