@@ -81,12 +81,12 @@ class MaskPolicy(PolicyNetwork):
 
         # self._train_fn_cnn = jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0), axis_name='i')
         self._train_fn_cnn = jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0))
-        self._train_fn_cnn = jax.vmap(cnn_train_step, in_axes=(0, 0, 0, 0))
+        # self._train_fn_cnn = jax.vmap(cnn_train_step, in_axes=(0, 0, 0, 0))
         # self._train_fn_cnn = jax.jit(jax.vmap(cnn_train_step, in_axes=(None, 0, 0, 0)))
 
         self.cnn_num_params, cnn_format_params_fn = get_params_format_fn(self.cnn_state.params)
-        self._cnn_format_params_fn = jax.vmap(cnn_format_params_fn)
-        # self._cnn_format_params_fn = cnn_format_params_fn
+        # self._cnn_format_params_fn = jax.vmap(cnn_format_params_fn)
+        self._cnn_format_params_fn = cnn_format_params_fn
 
         mask_model = Mask(mask_size=self.mask_size)
         params = mask_model.init(random.PRNGKey(0), jnp.ones([1, ]))
@@ -115,7 +115,7 @@ class MaskPolicy(PolicyNetwork):
         keys = jax.random.split(jax.random.PRNGKey(0), split_size)
 
         flat_params = self.flatten_params(self.cnn_state.params)
-        flat_params = jnp.tile(flat_params, split_size)
+        flat_params = jnp.tile(flat_params, jax.local_device_count())
 
         return MaskPolicyState(keys=keys,
                                cnn_params=flat_params)
