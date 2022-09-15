@@ -120,18 +120,13 @@ class MaskPolicy(PolicyNetwork):
         Returns:
             PolicyState. Policy internal states.
         """
-        # import ipdb
-        # ipdb.set_trace()
 
         split_size = states.obs.shape[0]
-        # split_size = 1
         keys = jax.random.split(jax.random.PRNGKey(0), split_size)
 
         flat_params = self.flatten_params(self.cnn_state.params)
         # flat_params = jnp.tile(flat_params, jax.local_device_count())
         flat_params = jnp.stack([flat_params]*split_size, axis=0)
-
-        # self._logger.info(f'PolicyState params have shape: {flat_params.shape}')
 
         return MaskPolicyState(keys=keys,
                                cnn_params=flat_params)
@@ -148,8 +143,8 @@ class MaskPolicy(PolicyNetwork):
         # self._logger.info(f'Masks of shape: {masks.shape}')
         # self._logger.info(f'Mask sparsity: {jnp.mean(masks)}')
 
-        import ipdb
-        ipdb.set_trace()
+        # import ipdb
+        # ipdb.set_trace()
 
         cnn_data = t_states.cnn_data
         # cnn_params = self._cnn_format_params_fn(p_states.cnn_params)

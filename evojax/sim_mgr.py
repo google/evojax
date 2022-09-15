@@ -358,8 +358,6 @@ class SimManager(object):
         if self._num_device > 1:
             params = split_params_for_pmap(params)
             task_state = split_states_for_pmap(task_state)
-            # import ipdb
-            # ipdb.set_trace()
             # TODO can the policy state not be split???
             policy_state = split_states_for_pmap(policy_state)
 
@@ -367,16 +365,12 @@ class SimManager(object):
         scores, all_obs, masks, final_states, policy_state = rollout_func(
             task_state, policy_state, params, self.obs_params)
 
-        # import ipdb
-        # ipdb.set_trace()
-
         self.policy_net.update_from_state(policy_state)
 
         if self._num_device > 1:
             all_obs = reshape_data_from_pmap(all_obs)
             masks = reshape_data_from_pmap(masks)
             final_states = merge_state_from_pmap(final_states)
-            # policy_state = jax.tree_map(lambda x: jnp.mean(x), policy_state)
 
         if not test and not self.obs_normalizer.is_dummy:
             self.obs_params = self.obs_normalizer.update_normalization_params(
