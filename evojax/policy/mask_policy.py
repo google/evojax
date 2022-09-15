@@ -117,7 +117,7 @@ class MaskPolicy(PolicyNetwork):
     def get_actions(self,
                     t_states: State,
                     params: jnp.ndarray,
-                    p_states: MaskPolicyState) -> Tuple[jnp.ndarray, PolicyState]:
+                    p_states: MaskPolicyState) -> Tuple[jnp.ndarray, MaskPolicyState]:
         import ipdb
         ipdb.set_trace()
 
@@ -145,7 +145,10 @@ class MaskPolicy(PolicyNetwork):
         )
 
         flat_params = self.flatten_params(updated_params)
-        flat_params = jnp.tile(flat_params, jax.local_device_count())
-        p_states.cnn_params = flat_params
+        # flat_params = jnp.tile(flat_params, jax.local_device_count())
+        # p_states.cnn_params = flat_params
 
-        return output_logits, p_states
+        new_p_states = MaskPolicyState(keys=p_states.keys,
+                                       cnn_params=flat_params)
+
+        return output_logits, new_p_states
