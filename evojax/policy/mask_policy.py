@@ -107,6 +107,9 @@ class MaskPolicy(PolicyNetwork):
         Returns:
             PolicyState. Policy internal states.
         """
+        import ipdb
+        ipdb.set_trace()
+
         split_size = states.obs.shape[0]
         keys = jax.random.split(jax.random.PRNGKey(0), split_size)
 
@@ -132,7 +135,7 @@ class MaskPolicy(PolicyNetwork):
         cnn_data = t_states.cnn_data
         # cnn_params = self._cnn_format_params_fn(p_states.cnn_params)
         # cnn_params = self._cnn_format_params_fn(jnp.mean(p_states.cnn_params, axis=0))
-        # Note that there will be one set of cnn_params so this func shouldn't be vmapped
+        # Note that there should only be one set of cnn_params so this func shouldn't be vmapped
         cnn_params = self._cnn_format_params_fn(p_states.cnn_params)
 
         # self.cnn_state, output_logits = self.apply_cnn(self.cnn_state, cnn_data, masks)
