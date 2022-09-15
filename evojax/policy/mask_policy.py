@@ -154,7 +154,7 @@ class MaskPolicy(PolicyNetwork):
         )
 
         flat_params = self.flatten_params(updated_params)
-        new_p_state_params = jnp.repeat(flat_params, jax.local_device_count(), axis=0)
+        new_p_state_params = jnp.stack([flat_params] * jax.local_device_count(), axis=0)
         # TODO check how these are recombined
         new_p_states = MaskPolicyState(keys=p_states.keys,
                                        cnn_params=new_p_state_params)
