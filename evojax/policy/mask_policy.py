@@ -175,7 +175,8 @@ class MaskPolicy(PolicyNetwork):
             lambda p, g: p - self.lr * g, cnn_params, grads
         )
         #
-        flat_params = self.flatten_params(updated_params)
+        flat, _ = jax.tree_util.tree_flatten(updated_params)
+        flat_params = jnp.concatenate([i.reshape((i.shape[0], -1)) for i in flat], axis=1)
         # mean_flat_params = jax.lax.pmean(flat_params, axis_name='num_devices')
 
         assert flat_params.shape == p_states.cnn_params.shape
