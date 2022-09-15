@@ -50,7 +50,7 @@ def parse_args():
     parser.add_argument(
         '--max-steps', type=int, default=100, help='Max steps for the tasks.')
     parser.add_argument(
-        '--cnn-epochs', type=int, default=10, help='Number of epochs for cnn pretraining.')
+        '--cnn-epochs', type=int, default=0, help='Number of epochs for cnn pretraining.')
     parser.add_argument(
         '--test-interval', type=int, default=1000, help='Test interval.')
     parser.add_argument(
@@ -96,8 +96,11 @@ def main(config):
     logger.info(f'Start Time - {time.strftime("%H:%M")}')
     logger.info('=' * 50)
 
-    best_cnn_state, best_cnn_acc = run_mnist_training(logger, num_epochs=config.cnn_epochs, early_stopping=True,
-                                                      return_model=True)
+    if config.cnn_epochs:
+        best_cnn_state, best_cnn_acc = run_mnist_training(logger, num_epochs=config.cnn_epochs, early_stopping=True,
+                                                          return_model=True)
+    else:
+        best_cnn_state = None
 
     policy = MaskPolicy(logger=logger,
                         mask_threshold=config.mask_threshold,
@@ -154,14 +157,16 @@ def main(config):
         use_for_loop=False
     )
 
-    best_score = trainer.run(demo_mode=False)
-    # logger.info(f'Best score was: {best_score}')
+    best_score, best_mask_params = trainer.run(demo_mode=False)
 
-    src_file = os.path.join(log_dir, 'best.npz')
-    tar_file = os.path.join(log_dir, 'model.npz')
-    shutil.copy(src_file, tar_file)
-    trainer.model_dir = log_dir
-    trainer.run(demo_mode=True)
+    _, final_test_accuracy = run_mnist_training(logger, return_model=True, eval_only=True, mask_params=best_mask_params)
+    logger.info(f'Final test accuracy was: {final_test_accuracy}')
+
+    # src_file = os.path.join(log_dir, 'best.npz')
+    # tar_file = os.path.join(log_dir, 'model.npz')
+    # shutil.copy(src_file, tar_file)
+    # trainer.model_dir = log_dir
+    # trainer.run(demo_mode=True)
 
     # # Run a final evaluation with the mask params found
     # _ = eval_model(cnn_params, datasets_tuple[-1], config.batch_size,

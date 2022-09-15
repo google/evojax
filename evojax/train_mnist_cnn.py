@@ -218,7 +218,8 @@ def run_mnist_training(
         pixel_input=False,
         early_stopping=False,
         cnn_labels=False,
-        seed: int = 0
+        seed: int = 0,
+        eval_only: bool = False
 ):
 
     logger.info('Starting training MNIST CNN')
@@ -235,6 +236,11 @@ def run_mnist_training(
         train_dataset, validation_dataset_class, test_dataset_class = datasets_tuple
     else:
         train_dataset, validation_dataset_class, test_dataset_class = full_data_loader()
+
+    if eval_only:
+        test_dataset_class = eval_model(state.params, test_dataset_class, cnn_batch_size, mask_params=mask_params,
+                                        pixel_input=pixel_input, cnn_labels=cnn_labels)
+        return np.mean([i['accuracy'] for i in test_dataset_class.metrics_holder.values()])
 
     best_state = None
     best_test_accuracy = 0

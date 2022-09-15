@@ -123,7 +123,7 @@ class MaskPolicy(PolicyNetwork):
         flat_params = self.flatten_params(self.cnn_state.params)
         flat_params = jnp.tile(flat_params, jax.local_device_count())
 
-        self._logger.info(f'PolicyState params have shape: {flat_params.shape}')
+        # self._logger.info(f'PolicyState params have shape: {flat_params.shape}')
 
         return MaskPolicyState(keys=keys,
                                cnn_params=flat_params)
@@ -137,7 +137,8 @@ class MaskPolicy(PolicyNetwork):
         masking_output = self._forward_fn(params, t_states.obs)
         masks = jnp.where(masking_output > self.mask_threshold, 1, 0)
 
-        self._logger.info(f'Masks of shape: {masks.shape}')
+        # self._logger.info(f'Masks of shape: {masks.shape}')
+        # self._logger.info(f'Mask sparsity: {jnp.mean(masks)}')
 
         cnn_data = t_states.cnn_data
         # cnn_params = self._cnn_format_params_fn(p_states.cnn_params)
@@ -169,7 +170,7 @@ class MaskPolicy(PolicyNetwork):
         # import ipdb
         # ipdb.set_trace()
 
-        assert mean_flat_params.shape == p_states.cnn_params.shape
+        # assert mean_flat_params.shape == p_states.cnn_params.shape
 
         # new_p_state_params = jnp.stack([flat_params] * jax.local_device_count(), axis=0)
         # TODO check how these are recombined
