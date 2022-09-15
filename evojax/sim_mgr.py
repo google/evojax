@@ -203,7 +203,7 @@ class SimManager(object):
                 step_once_fn,
                 (task_states, policy_states, params, obs_params,
                  accumulated_rewards, valid_masks), (), max_steps)
-            return accumulated_rewards, obs_set, obs_mask, task_states
+            return accumulated_rewards, obs_set, obs_mask, task_states, policy_states
 
         self._policy_reset_fn = jax.jit(policy_net.reset)
         self._policy_act_fn = jax.jit(policy_net.get_actions)
@@ -229,7 +229,7 @@ class SimManager(object):
             # TODO - jit of pmap - check with someone who knows a lot about JAX
             # self._train_rollout_fn = jax.jit(jax.pmap(
             #     self._train_rollout_fn, in_axes=(0, 0, 0, None)))
-            self._train_rollout_fn = jax.pmap(self._train_rollout_fn, in_axes=(0, 0, 0, None))
+            self._train_rollout_fn = jax.pmap(self._train_rollout_fn, in_axes=(0, None, 0, None))
 
         # Set up test functions.
         self._test_reset_fn = test_vec_task.reset
@@ -243,7 +243,7 @@ class SimManager(object):
             # TODO - is this jit of pmap bad???
             # self._test_rollout_fn = jax.jit(jax.pmap(
             #     self._test_rollout_fn, in_axes=(0, 0, 0, None)))
-            self._test_rollout_fn = jax.pmap(self._test_rollout_fn, in_axes=(0, 0, 0, None))
+            self._test_rollout_fn = jax.pmap(self._test_rollout_fn, in_axes=(0, None, 0, None))
 
     def eval_params(self,
                     params: jnp.ndarray,
@@ -354,15 +354,16 @@ class SimManager(object):
             params = split_params_for_pmap(params)
             task_state = split_states_for_pmap(task_state)
             # TODO can the policy state not be split???
-            policy_state = split_states_for_pmap(policy_state)
+            # policy_state = split_states_for_pmap(policy_state)
 
         # Do the rollouts.
-        scores, all_obs, masks, final_states = rollout_func(
+        scores, all_obs, masks, final_states, policy_state = rollout_func(
             task_state, policy_state, params, self.obs_params)
         if self._num_device > 1:
             all_obs = reshape_data_from_pmap(all_obs)
             masks = reshape_data_from_pmap(masks)
             final_states = merge_state_from_pmap(final_states)
+            # policy_state = jax.tree_map(lambda x: jnp.mean(x), policy_state)
 
         if not test and not self.obs_normalizer.is_dummy:
             self.obs_params = self.obs_normalizer.update_normalization_params(

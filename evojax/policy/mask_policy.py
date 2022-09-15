@@ -107,9 +107,11 @@ class MaskPolicy(PolicyNetwork):
         Returns:
             PolicyState. Policy internal states.
         """
-        keys = jax.random.split(jax.random.PRNGKey(0), states.obs.shape[0])
+        # keys = jax.random.split(jax.random.PRNGKey(0), states.obs.shape[0])
+        keys = jax.random.PRNGKey(0)
+
         flat_params = self.flatten_params(self.cnn_state.params)
-        flat_params = jnp.tile(flat_params, jax.local_device_count())
+        # flat_params = jnp.tile(flat_params, states.obs.shape[0])
 
         return MaskPolicyState(keys=keys,
                                cnn_params=flat_params)
@@ -130,6 +132,7 @@ class MaskPolicy(PolicyNetwork):
         cnn_data = t_states.cnn_data
         # cnn_params = self._cnn_format_params_fn(p_states.cnn_params)
         # cnn_params = self._cnn_format_params_fn(jnp.mean(p_states.cnn_params, axis=0))
+        # Note that there will be one set of cnn_params so this func shouldn't be vmapped
         cnn_params = self._cnn_format_params_fn(p_states.cnn_params)
 
         # self.cnn_state, output_logits = self.apply_cnn(self.cnn_state, cnn_data, masks)
@@ -138,6 +141,7 @@ class MaskPolicy(PolicyNetwork):
         # output_logits = self._forward_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)
         grads, output_logits = self._train_fn_cnn(cnn_params, cnn_data.obs, cnn_data.labels, masks)
 
+        # TODO see if these can be applied using the opt in the cnn_state
         mean_grads = jax.tree_map(lambda x: jnp.mean(x, axis=0), grads)
         # new_cnn_state = cnn_state.apply_gradients(grads=mean_grads)
         updated_params = jax.tree_map(
@@ -148,6 +152,7 @@ class MaskPolicy(PolicyNetwork):
         # flat_params = jnp.tile(flat_params, jax.local_device_count())
         # p_states.cnn_params = flat_params
 
+        # TODO check how these are recombined
         new_p_states = MaskPolicyState(keys=p_states.keys,
                                        cnn_params=flat_params)
 
