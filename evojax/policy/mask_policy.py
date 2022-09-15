@@ -129,7 +129,8 @@ class MaskPolicy(PolicyNetwork):
 
         cnn_data = t_states.cnn_data
         # cnn_params = self._cnn_format_params_fn(p_states.cnn_params)
-        cnn_params = self._cnn_format_params_fn(jnp.mean(p_states.cnn_params, axis=0))
+        # cnn_params = self._cnn_format_params_fn(jnp.mean(p_states.cnn_params, axis=0))
+        cnn_params = self._cnn_format_params_fn(p_states.cnn_params)
 
         # self.cnn_state, output_logits = self.apply_cnn(self.cnn_state, cnn_data, masks)
         # self.cnn_state, output_logits = cnn_train_step(self.cnn_state, cnn_data.obs, cnn_data.labels, masks)
