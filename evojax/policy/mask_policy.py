@@ -105,6 +105,12 @@ class MaskPolicy(PolicyNetwork):
         flat, _ = jax.tree_util.tree_flatten(dict_params)
         return jnp.concatenate([i.ravel() for i in flat])
 
+    def update_from_state(self, policy_state: MaskPolicyState):
+        """ Func to update the cnn from the pmapped policy state. """
+        mean_params = jnp.mean(policy_state.cnn_params, axis=0)
+        param_dict = self._cnn_format_params_fn(mean_params)
+        self.cnn_state.params = param_dict
+
     def reset(self, states: MaskTaskState) -> MaskPolicyState:
         """Reset the policy.
 

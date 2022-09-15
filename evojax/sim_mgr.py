@@ -27,6 +27,7 @@ from evojax.obs_norm import ObsNormalizer
 from evojax.task.base import TaskState
 from evojax.task.base import VectorizedTask
 from evojax.policy.base import PolicyState
+from evojax.policy.mask_policy import MaskPolicy
 from evojax.policy.base import PolicyNetwork
 from evojax.util import create_logger
 
@@ -109,7 +110,7 @@ class SimManager(object):
                  test_n_repeats: int,
                  pop_size: int,
                  n_evaluations: int,
-                 policy_net: PolicyNetwork,
+                 policy_net: MaskPolicy,
                  train_vec_task: VectorizedTask,
                  test_vec_task: VectorizedTask,
                  seed: int = 0,
@@ -135,6 +136,8 @@ class SimManager(object):
             self._logger = create_logger(name='SimManager')
         else:
             self._logger = logger
+
+        self.policy_net = policy_net
 
         self._use_for_loop = use_for_loop
         self._logger.info('use_for_loop={}'.format(self._use_for_loop))
@@ -364,8 +367,10 @@ class SimManager(object):
         scores, all_obs, masks, final_states, policy_state = rollout_func(
             task_state, policy_state, params, self.obs_params)
 
-        import ipdb
-        ipdb.set_trace()
+        # import ipdb
+        # ipdb.set_trace()
+
+        self.policy_net.update_from_state(policy_state)
 
         if self._num_device > 1:
             all_obs = reshape_data_from_pmap(all_obs)
