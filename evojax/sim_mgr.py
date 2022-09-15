@@ -203,7 +203,7 @@ class SimManager(object):
                 step_once_fn,
                 (task_states, policy_states, params, obs_params,
                  accumulated_rewards, valid_masks), (), max_steps)
-            return accumulated_rewards, obs_set, obs_mask, task_states
+            return accumulated_rewards, obs_set, obs_mask, task_states, policy_states
 
         self._policy_reset_fn = jax.jit(policy_net.reset)
         self._policy_act_fn = jax.jit(policy_net.get_actions)
@@ -361,8 +361,12 @@ class SimManager(object):
             policy_state = split_states_for_pmap(policy_state)
 
         # Do the rollouts.
-        scores, all_obs, masks, final_states = rollout_func(
+        scores, all_obs, masks, final_states, policy_state = rollout_func(
             task_state, policy_state, params, self.obs_params)
+
+        import ipdb
+        ipdb.set_trace()
+
         if self._num_device > 1:
             all_obs = reshape_data_from_pmap(all_obs)
             masks = reshape_data_from_pmap(masks)

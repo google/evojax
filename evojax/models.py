@@ -35,12 +35,12 @@ class Mask(nn.Module):
 
     @nn.compact
     def __call__(self, x):
-        if self.pixel_input:
-            x = nn.Conv(features=32, kernel_size=(3, 3), padding="SAME", name="CONV1")(x)
-            x = nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")(x)
-            x = x.reshape((x.shape[0], -1))
-        else:
-            x = nn.one_hot(x, self.dataset_number)
+        # if self.pixel_input:
+        #     x = nn.Conv(features=32, kernel_size=(3, 3), padding="SAME", name="CONV1")(x)
+        #     x = nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")(x)
+        #     x = x.reshape((x.shape[0], -1))
+        # else:
+        x = nn.one_hot(x, self.dataset_number)
 
         x = nn.Dense(features=self.mask_size, name=mask_final_layer_name)(x)
         x = nn.sigmoid(x)

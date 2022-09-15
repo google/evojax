@@ -40,13 +40,13 @@ def create_train_state(rng, learning_rate, cnn_labels):
         apply_fn=CNN().apply, params=params, tx=tx)
 
 
-def get_masks(mask_params, mask_size, batch, pixel_input):
-    if pixel_input:
-        input_array = batch['image']
-    else:
-        input_array = batch['label'][:, 1]
+def get_masks(mask_params, mask_size, batch):
+    # if pixel_input:
+    #     input_array = batch['image']
+    # else:
+    input_array = batch['label'][:, 1]
 
-    batch_masks = Mask(mask_size=mask_size, pixel_input=pixel_input).apply({'params': mask_params}, input_array)
+    batch_masks = Mask(mask_size=mask_size).apply({'params': mask_params}, input_array)
     return batch_masks
 
 
@@ -57,7 +57,7 @@ def train_step(state, batch, mask_params=None, pixel_input=False, cnn_labels=Non
     if mask_params is not None:
         linear_weights = state.params[cnn_final_layer_name]["kernel"]
         mask_size = linear_weights.shape[0]
-        batch_masks = get_masks(mask_params, mask_size, batch, pixel_input)
+        batch_masks = get_masks(mask_params, mask_size, batch)
     else:
         batch_masks = None
 
@@ -82,7 +82,7 @@ def eval_step(params, batch, mask_params=None, pixel_input=False, cnn_labels=Non
     if mask_params is not None:
         linear_weights = params[cnn_final_layer_name]["kernel"]
         mask_size = linear_weights.shape[0]
-        batch_masks = get_masks(mask_params, mask_size, batch, pixel_input)
+        batch_masks = get_masks(mask_params, mask_size, batch)
     else:
         batch_masks = None
 

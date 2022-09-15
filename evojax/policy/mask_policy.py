@@ -165,7 +165,7 @@ class MaskPolicy(PolicyNetwork):
         )
         #
         flat_params = self.flatten_params(updated_params)
-        mean_flat_params = jax.lax.pmean(flat_params, axis_name='num_devices')
+        # mean_flat_params = jax.lax.pmean(flat_params, axis_name='num_devices')
 
         # import ipdb
         # ipdb.set_trace()
@@ -175,7 +175,7 @@ class MaskPolicy(PolicyNetwork):
         # new_p_state_params = jnp.stack([flat_params] * jax.local_device_count(), axis=0)
         # TODO check how these are recombined
         new_p_states = MaskPolicyState(keys=p_states.keys,
-                                       cnn_params=mean_flat_params)
+                                       cnn_params=flat_params)
         #
         return output_logits, new_p_states
         # return output_logits, p_states
