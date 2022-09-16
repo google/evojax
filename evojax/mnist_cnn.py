@@ -112,6 +112,7 @@ def eval_step(state: train_state.TrainState,
 #
 #     return state, epoch_metrics_np
 
+
 # @jax.jit
 def epoch_step(test: bool,
                state: train_state.TrainState,
