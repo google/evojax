@@ -11,7 +11,7 @@ current_dataset_number = 4
 class CNN(nn.Module):
     """CNN for MNIST."""
     dataset_number: int = current_dataset_number
-    dropout_rate: float
+    dropout_rate: float = None
 
     @nn.compact
     def __call__(self, x,
