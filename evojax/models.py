@@ -12,7 +12,7 @@ current_dataset_number = 4
 class CNN(nn.Module):
     """CNN for MNIST."""
     dataset_number: int = current_dataset_number
-    dropout_rate: float = None
+    dropout_rate: float = 0.0
 
     @nn.compact
     def __call__(self,
@@ -30,9 +30,8 @@ class CNN(nn.Module):
             label_input = nn.one_hot(task_labels, self.dataset_number)
             x = jnp.concatenate([x, label_input], axis=1)
 
-        if self.dropout_rate:
-            # dropout_rng = self.make_rng('dropout')
-            x = nn.Dropout(rate=self.dropout_rate, deterministic=not train)(x)
+        # Default prob is 0, so will only drop if this is increased
+        x = nn.Dropout(rate=self.dropout_rate)(x, deterministic=not train)
 
         if mask is not None:
             x = x * mask
