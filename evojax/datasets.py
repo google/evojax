@@ -1,9 +1,8 @@
 import os
-# import torch
+from typing import Tuple
 import numpy as np
-# from PIL import Image
-# from sklearn.utils import shuffle
-# from torchvision import transforms
+from jax import random
+import jax.numpy as jnp
 
 dirname = os.path.dirname(__file__)
 
@@ -11,6 +10,8 @@ digit = 'MNIST'
 fashion = 'FMNIST'
 kuzushiji = 'KMNIST'
 cifar = 'CIFAR'
+
+dataset_names = [digit, fashion, kuzushiji, cifar]
 
 DATASET_LABELS = {digit: 0,
                   fashion: 1,
@@ -49,3 +50,73 @@ def read_data_files(dataset_name, split):
     ys_with_label = np.full_like(ys, DATASET_LABELS[dataset_name])
 
     return xs, np.stack([ys, ys_with_label], axis=1)
+
+
+class DatasetUtilClass:
+    """
+    Class to facilitate having separate test sets for the multiple datasets.
+    """
+    def __init__(self, split: str, dataset_names_to_use: list, dataset_dicts: list = None):
+        self.split = split
+        self.dataset_holder = {}
+        self.metrics_holder = {}
+
+        if dataset_dicts:
+            self.dataset_holder = dict(zip(dataset_names_to_use, dataset_dicts))
+        else:
+            for dataset_name in dataset_names_to_use:
+                self.setup_dataset(dataset_name)
+
+    def setup_dataset(self, dataset_name):
+        """
+        Method to set up the separated test datasets - as is useful to get test metrics for each dataset type.
+        """
+        test_dataset = {}
+        x_array_test, y_array_test = [], []
+
+        x_test, y_test = read_data_files(dataset_name, 'test')
+        x_array_test.append(x_test)
+        y_array_test.append(y_test)
+
+        test_dataset['image'] = jnp.float32(np.concatenate(x_array_test)) / 255.
+        test_dataset['label'] = jnp.int16(np.concatenate(y_array_test))
+
+        self.dataset_holder[dataset_name] = test_dataset
+
+
+def full_data_loader() -> Tuple[DatasetUtilClass, DatasetUtilClass, DatasetUtilClass]:
+    """
+    Load up DatasetUtilClass for train/val/test splits of the datasets.
+    """
+    x_array_train, y_array_train = [], []
+    for dataset_name in dataset_names:
+        x_train, y_train = read_data_files(dataset_name, 'train')
+        x_array_train.append(x_train)
+        y_array_train.append(y_train)
+
+    full_train_images = jnp.float32(np.concatenate(x_array_train)) / 255.
+    full_train_labels = jnp.int16(np.concatenate(y_array_train))
+
+    number_of_points = full_train_images.shape[0]
+    number_for_validation = number_of_points // 5
+
+    ix = random.permutation(key=random.PRNGKey(0), x=number_of_points)
+    validation_ix = ix[:number_for_validation]
+    train_ix = ix[number_for_validation:]
+
+    train_dataset = {'image': jnp.take(full_train_images, indices=train_ix, axis=0),
+                     'label': jnp.take(full_train_labels, indices=train_ix, axis=0)}
+
+    validation_dataset = {'image': jnp.take(full_train_images, indices=validation_ix, axis=0),
+                          'label': jnp.take(full_train_labels, indices=validation_ix, axis=0)}
+
+    train_dataset_class = DatasetUtilClass('train', ['combined'], [train_dataset])
+    validation_dataset_class = DatasetUtilClass('validation', ['combined'], [validation_dataset])
+
+    train_dataset['image'] = jnp.float32(np.concatenate(x_array_train)) / 255.
+    train_dataset['label'] = jnp.int16(np.concatenate(y_array_train))
+
+    # Sets up a separate test set for each of the datasets
+    test_dataset_class = DatasetUtilClass('test', dataset_names)
+
+    return train_dataset_class, validation_dataset_class, test_dataset_class

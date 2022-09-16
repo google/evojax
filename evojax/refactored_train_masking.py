@@ -32,7 +32,7 @@ from evojax.policy.mask_policy import MaskPolicy
 from evojax.algo import PGPE, OpenES, CMA_ES_JAX
 from evojax import util
 
-from evojax.train_mnist_cnn import run_mnist_training, full_data_loader, eval_model
+from evojax.mnist_cnn import run_mnist_training, full_data_loader, epoch_step
 from evojax.models import cnn_final_layer_name, CNN
 from evojax.datasets import DATASET_LABELS
 
@@ -97,8 +97,9 @@ def main(config):
     logger.info('=' * 50)
 
     if config.cnn_epochs:
-        best_cnn_state, best_cnn_acc = run_mnist_training(logger, num_epochs=config.cnn_epochs, early_stopping=True,
-                                                          return_model=True)
+        best_cnn_state, best_cnn_acc = run_mnist_training(logger,
+                                                          num_epochs=config.cnn_epochs,
+                                                          early_stopping=True)
     else:
         best_cnn_state = None
 
@@ -158,8 +159,9 @@ def main(config):
     )
 
     best_score, best_mask_params = trainer.run(demo_mode=False)
+    mask_params = policy.external_format_params_fn(best_mask_params)
+    _, final_test_accuracy = run_mnist_training(logger, eval_only=True, mask_params=mask_params)
 
-    _, final_test_accuracy = run_mnist_training(logger, return_model=True, eval_only=True, mask_params=best_mask_params)
     logger.info(f'Final test accuracy was: {final_test_accuracy}')
 
     # src_file = os.path.join(log_dir, 'best.npz')

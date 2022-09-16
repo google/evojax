@@ -22,9 +22,26 @@ from typing import Callable
 import jax.numpy as jnp
 from jax import tree_util
 from flax.core import FrozenDict
+import jax
+import optax
 
 # Imports the Cloud Logging client library
 import google.cloud.logging
+
+
+def cross_entropy_loss(*, logits, labels):
+    labels_onehot = jax.nn.one_hot(labels, num_classes=10)
+    return optax.softmax_cross_entropy(logits=logits, labels=labels_onehot).sum()
+
+
+def compute_metrics(*, logits, labels):
+    loss = cross_entropy_loss(logits=logits, labels=labels)
+    accuracy = jnp.mean(jnp.argmax(logits, -1) == labels)
+    metrics = {
+        'loss': loss,
+        'accuracy': accuracy,
+    }
+    return metrics
 
 
 def get_params_format_fn(init_params: FrozenDict) -> Tuple[int, Callable]:

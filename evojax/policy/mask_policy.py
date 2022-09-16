@@ -20,13 +20,13 @@ import jax.numpy as jnp
 from jax import random
 from flax.training import train_state
 from flax.struct import dataclass
-from flax.core.frozen_dict import FrozenDict, unfreeze, freeze
+from flax.core.frozen_dict import FrozenDict
 import optax
 
 from evojax.policy.base import PolicyNetwork, PolicyState
 from evojax.task.masking_task import MaskTaskState
 from evojax.util import create_logger, get_params_format_fn
-from evojax.models import Mask, CNN, cnn_final_layer_name
+from evojax.models import Mask, cnn_final_layer_name, create_train_state
 
 
 @dataclass
@@ -35,29 +35,21 @@ class MaskPolicyState(PolicyState):
     cnn_params: jnp.ndarray
 
 
-def create_train_state(rng, learning_rate):
-    """Creates initial `TrainState`."""
-    params = CNN().init(rng, jnp.ones([1, 28, 28, 1]))['params']
-    tx = optax.adam(learning_rate)
-    return train_state.TrainState.create(
-        apply_fn=CNN().apply, params=params, tx=tx)
+# def cross_entropy_loss(*, logits, labels):
+#     labels_onehot = jax.nn.one_hot(labels, num_classes=10)
+#     return optax.softmax_cross_entropy(logits=logits, labels=labels_onehot).sum()
 
 
-def cross_entropy_loss(*, logits, labels):
-    labels_onehot = jax.nn.one_hot(labels, num_classes=10)
-    return optax.softmax_cross_entropy(logits=logits, labels=labels_onehot).sum()
-
-
-def cnn_train_step(cnn_params: FrozenDict, images: jnp.ndarray, labels: jnp.ndarray, masks: jnp.ndarray):
-    """Train for a single step."""
-    def loss_fn(params):
-        output_logits = CNN().apply({'params': params}, images, masks)
-        loss = cross_entropy_loss(logits=output_logits, labels=labels)
-        return loss, output_logits
-
-    grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
-    (_, logits), grads = grad_fn(cnn_params)
-    return grads, logits
+# def cnn_train_step(cnn_params: FrozenDict, images: jnp.ndarray, labels: jnp.ndarray, masks: jnp.ndarray):
+#     """Train for a single step."""
+#     def loss_fn(params):
+#         output_logits = CNN().apply({'params': params}, images, masks)
+#         loss = cross_entropy_loss(logits=output_logits, labels=labels)
+#         return loss, output_logits
+#
+#     grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
+#     (_, logits), grads = grad_fn(cnn_params)
+#     return grads, logits
 
 
 class MaskPolicy(PolicyNetwork):
@@ -91,19 +83,21 @@ class MaskPolicy(PolicyNetwork):
         params = mask_model.init(random.PRNGKey(0), jnp.ones([1, ]))
 
         self.num_params, format_params_fn = get_params_format_fn(params)
+        self.external_format_params_fn = format_params_fn
+
         self._format_params_fn = jax.vmap(format_params_fn)
         self._forward_fn = jax.vmap(mask_model.apply)
 
-    @staticmethod
-    def flatten_params(dict_params: FrozenDict):
-        flat, _ = jax.tree_util.tree_flatten(dict_params)
-        return jnp.concatenate([i.ravel() for i in flat])
-
-    def update_from_state(self, policy_state: MaskPolicyState):
-        """ Func to update the cnn from the pmapped policy state. """
-        mean_params = jnp.mean(policy_state.cnn_params, axis=0)
-        param_dict = self._cnn_format_params_fn(mean_params)
-        self.cnn_state = self.cnn_state.replace(params=param_dict)
+    # @staticmethod
+    # def flatten_params(dict_params: FrozenDict):
+    #     flat, _ = jax.tree_util.tree_flatten(dict_params)
+    #     return jnp.concatenate([i.ravel() for i in flat])
+    #
+    # def update_from_state(self, policy_state: MaskPolicyState):
+    #     """ Func to update the cnn from the pmapped policy state. """
+    #     mean_params = jnp.mean(policy_state.cnn_params, axis=0)
+    #     param_dict = self._cnn_format_params_fn(mean_params)
+    #     self.cnn_state = self.cnn_state.replace(params=param_dict)
 
     # def reset(self, states: MaskTaskState) -> MaskPolicyState:
     #     """Reset the policy.
@@ -128,9 +122,6 @@ class MaskPolicy(PolicyNetwork):
                     t_states: MaskTaskState,
                     params: jnp.ndarray,
                     p_states: MaskPolicyState) -> Tuple[jnp.ndarray, MaskPolicyState]:
-
-        # import ipdb
-        # ipdb.set_trace()
 
         params = self._format_params_fn(params)
         masking_output = self._forward_fn(params, t_states.obs)

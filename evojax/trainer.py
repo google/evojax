@@ -116,7 +116,7 @@ class Trainer(object):
         )
 
         # # This will store the masking network, so masks can be checked throughout training
-        # self.policy_network = policy
+        self.policy_network = policy
         # self.dataset_labels = dataset_labels
         # self.masks_array = []
 
