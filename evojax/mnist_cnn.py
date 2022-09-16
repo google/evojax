@@ -32,16 +32,14 @@ def get_batch_masks(state, task_labels, mask_params=None, l1_pruning_proportion=
 @jax.jit
 def train_step(state,
                batch,
-               mask_params=None,
-               use_task_labels=None,
+               mask_params: FrozenDict = None,
+               task_labels: jnp.ndarray = None,
                l1_pruning_proportion: float = None,
                l1_reg_lambda: float = None,
                dropout_rate: float = None,
                ):
 
     class_labels = batch['label'][:, 0]
-    task_labels = batch['label'][:, 1] if use_task_labels else None
-
     batch_masks = get_batch_masks(state, task_labels, mask_params, l1_pruning_proportion)
 
     def loss_fn(params):
@@ -67,8 +65,8 @@ def train_step(state,
 @jax.jit
 def eval_step(state: train_state.TrainState,
               batch: dict,
-              mask_params=None,
-              use_task_labels=None,
+              mask_params: FrozenDict = None,
+              task_labels: jnp.ndarray = None,
               l1_pruning_proportion: float = None,
               l1_reg_lambda: float = None,
               dropout_rate: float = None,
@@ -76,7 +74,7 @@ def eval_step(state: train_state.TrainState,
 
     params = state.params
     class_labels = batch['label'][:, 0]
-    task_labels = batch['label'][:, 1] if use_task_labels else None
+    # task_labels = batch['label'][:, 1] if use_task_labels else None
 
     batch_masks = get_batch_masks(state, task_labels, mask_params, l1_pruning_proportion)
 
@@ -142,10 +140,11 @@ def epoch_step(test: bool,
         batch_metrics = []
         for perm in perms:
             batch = {k: v[perm, ...] for k, v in dataset.items()}
+            task_labels = batch['label'][:, 1] if use_task_labels else None
             state, metrics = step_func(state,
                                        batch,
                                        mask_params,
-                                       use_task_labels,
+                                       task_labels,
                                        l1_pruning_proportion,
                                        l1_reg_lambda,
                                        dropout_rate)
