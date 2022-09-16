@@ -42,6 +42,9 @@ def train_step(state: train_state.TrainState,
     class_labels = batch['label'][:, 0]
     batch_masks = get_batch_masks(state, task_labels, mask_params, l1_pruning_proportion)
 
+    import ipdb
+    ipdb.set_trace()
+
     def loss_fn(params):
         output_logits = CNN(dropout_rate=dropout_rate).apply({'params': params},
                                                              batch['image'],
