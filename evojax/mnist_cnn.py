@@ -227,7 +227,7 @@ def run_mnist_training(
                                                l1_reg_lambda=l1_reg_lambda,
                                                dropout_rate=dropout_rate)
 
-        return state, np.mean([i['accuracy'] for i in test_dataset_class.metrics_holder.values()])[0]
+        return state, float(np.mean([i['accuracy'] for i in test_dataset_class.metrics_holder.values()]))
 
     previous_state = None
     current_test_accuracy = previous_test_accuracy = previous_validation_accuracy = 0.

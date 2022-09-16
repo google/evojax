@@ -161,8 +161,8 @@ def main(config):
     best_score, best_mask_params = trainer.run(demo_mode=False)
     mask_params = policy.external_format_params_fn(best_mask_params)
 
-    import ipdb
-    ipdb.set_trace()
+    # import ipdb
+    # ipdb.set_trace()
 
     _, final_test_accuracy = run_mnist_training(logger, eval_only=True, mask_params=mask_params)
 
