@@ -29,8 +29,9 @@ def get_batch_masks(state, task_labels, mask_params=None, l1_pruning_proportion=
 
 
 # @jax.jit
-def train_step(state,
-               batch,
+def train_step(state: train_state.TrainState,
+               batch: dict,
+               rng: jnp.ndarray,
                mask_params: FrozenDict = None,
                task_labels: jnp.ndarray = None,
                l1_pruning_proportion: float = None,
@@ -40,13 +41,15 @@ def train_step(state,
 
     class_labels = batch['label'][:, 0]
     batch_masks = get_batch_masks(state, task_labels, mask_params, l1_pruning_proportion)
+    rng, dropout_rng = random.split(rng)
 
     def loss_fn(params):
         output_logits = CNN(dropout_rate=dropout_rate).apply({'params': params},
                                                              batch['image'],
                                                              batch_masks,
                                                              task_labels,
-                                                             train=True)
+                                                             train=True,
+                                                             rngs={'dropout': dropout_rng})
 
         loss = cross_entropy_loss(logits=output_logits, labels=class_labels)
 
@@ -65,6 +68,7 @@ def train_step(state,
 # @jax.jit
 def eval_step(state: train_state.TrainState,
               batch: dict,
+              rng: jnp.ndarray,
               mask_params: FrozenDict = None,
               task_labels: jnp.ndarray = None,
               l1_pruning_proportion: float = None,
@@ -80,6 +84,7 @@ def eval_step(state: train_state.TrainState,
 
     logits = CNN().apply({'params': params},
                          batch['image'],
+                         rng,
                          batch_masks,
                          task_labels,
                          train=False)
