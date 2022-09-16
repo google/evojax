@@ -1,4 +1,5 @@
 import jax.numpy as jnp
+# from jax import random
 from flax import linen as nn
 from flax.training import train_state
 import optax
@@ -30,6 +31,7 @@ class CNN(nn.Module):
             x = jnp.concatenate([x, label_input], axis=1)
 
         if self.dropout_rate:
+            dropout_rng = self.make_rng('dropout')
             x = nn.Dropout(rate=self.dropout_rate)(x, deterministic=not train)
 
         if mask is not None:
@@ -41,7 +43,8 @@ class CNN(nn.Module):
 
 def create_train_state(rng, learning_rate, task_labels: jnp.ndarray = None, dropout_rate: float = None):
     """Creates initial `TrainState`."""
-    params = CNN(dropout_rate=dropout_rate).init(rng, jnp.ones([1, 28, 28, 1]), None, task_labels, True)['params']
+    init_rngs = {'params': rng, 'dropout': rng}
+    params = CNN(dropout_rate=dropout_rate).init(init_rngs, jnp.ones([1, 28, 28, 1]), None, task_labels, True)['params']
     tx = optax.adam(learning_rate)
     return train_state.TrainState.create(
         apply_fn=CNN().apply, params=params, tx=tx)
