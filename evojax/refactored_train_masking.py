@@ -60,6 +60,8 @@ def parse_args():
         '--gpu-id', type=str, help='GPU(s) to use.')
     parser.add_argument(
         '--debug', action='store_true', help='Debug mode.')
+    parser.add_argument(
+        '--cnn-lr', type=float, default=0.001, help='Learning rate for the CNN model.')
     parser.add_argument('--algo', type=str, default=None, help='Evolutionary algorithm to use.',
                         choices=['PGPE', 'CMA', 'OpenES'])
     parser.add_argument('--use-task-labels', action='store_true', help='Input the task labels to the CNN.')
@@ -98,7 +100,7 @@ def main(config):
                                                           seed=config.seed,
                                                           num_epochs=config.cnn_epochs,
                                                           evo_epoch=0,
-                                                          learning_rate=config.learning_rate,
+                                                          learning_rate=config.cnn_lr,
                                                           cnn_batch_size=config.batch_size,
                                                           state=None,
                                                           mask_params=None,
