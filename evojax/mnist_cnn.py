@@ -176,12 +176,8 @@ def calc_and_log_metrics(dataset_class: DatasetUtilClass, logger: logging.Logger
             # wandb.log({f'{dataset_name} Test Accuracy': ds_test_accuracy}, step=relative_epoch, commit=False)
             wandb.log({f'{dataset_name} Test Accuracy': ds_test_accuracy})
     else:
-        try:
-            total_accuracy = dataset_class.metrics_holder[combined_dataset_key]['accuracy']
-            total_loss = dataset_class.metrics_holder[combined_dataset_key]['loss']
-        except:
-            import ipdb
-            ipdb.set_trace()
+        total_accuracy = dataset_class.metrics_holder[combined_dataset_key]['accuracy']
+        total_loss = dataset_class.metrics_holder[combined_dataset_key]['loss']
 
     logger.debug(f'{dataset_class.split.upper()}, epoch={epoch}, loss={total_loss}, accuracy={total_accuracy}')
 
@@ -260,7 +256,7 @@ def run_mnist_training(
                                                 l1_reg_lambda=l1_reg_lambda,
                                                 dropout_rate=dropout_rate)
 
-        current_train_accuracy = calc_and_log_metrics(validation_dataset_class, logger, epoch)
+        current_train_accuracy = calc_and_log_metrics(train_dataset_class, logger, epoch)
 
         # Check the validation dataset
         state, validation_dataset_class = epoch_step(test=True,
@@ -306,9 +302,3 @@ def run_mnist_training(
             pass
 
     return state, current_test_accuracy
-
-
-if __name__ == '__main__':
-
-    log = logging.Logger(level=logging.INFO, name='mnist_logger')
-    _ = run_mnist_training(logger=log)
