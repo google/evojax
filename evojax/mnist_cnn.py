@@ -42,9 +42,6 @@ def train_step(state: train_state.TrainState,
     class_labels = batch['label'][:, 0]
     batch_masks = get_batch_masks(state, task_labels, mask_params, l1_pruning_proportion)
 
-    import ipdb
-    ipdb.set_trace()
-
     def loss_fn(params):
         output_logits = CNN(dropout_rate=dropout_rate).apply({'params': params},
                                                              batch['image'],
@@ -80,8 +77,6 @@ def eval_step(state: train_state.TrainState,
 
     params = state.params
     class_labels = batch['label'][:, 0]
-    # task_labels = batch['label'][:, 1] if use_task_labels else None
-
     batch_masks = get_batch_masks(state, task_labels, mask_params, l1_pruning_proportion)
 
     logits = CNN().apply({'params': params},
@@ -151,6 +146,7 @@ def epoch_step(test: bool,
             task_labels = batch['label'][:, 1] if use_task_labels else None
             state, metrics = step_func(state,
                                        batch,
+                                       rng,
                                        mask_params,
                                        task_labels=task_labels,
                                        l1_pruning_proportion=l1_pruning_proportion,
