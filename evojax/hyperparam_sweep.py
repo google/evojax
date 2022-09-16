@@ -15,6 +15,7 @@ def objective(trial):
     batch_size = trial.suggest_categorical("batch_size", [2**i for i in range(7, 11)])
 
     _, best_cnn_acc = run_mnist_training(logger,
+                                         wandb_logging=False,
                                          seed=0,
                                          num_epochs=50,
                                          evo_epoch=0,

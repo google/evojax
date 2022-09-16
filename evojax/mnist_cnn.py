@@ -167,7 +167,8 @@ def epoch_step(test: bool,
     return state, dataset_class
 
 
-def calc_and_log_metrics(dataset_class: DatasetUtilClass, logger: logging.Logger, epoch: int) -> float:
+def calc_and_log_metrics(dataset_class: DatasetUtilClass, logger: logging.Logger, epoch: int,
+                         wandb_logging: bool) -> float:
 
     if dataset_class.split == 'test':
         total_accuracy = np.mean([i['accuracy'] for i in dataset_class.metrics_holder.values()])
@@ -177,7 +178,8 @@ def calc_and_log_metrics(dataset_class: DatasetUtilClass, logger: logging.Logger
             ds_test_accuracy = dataset_class.metrics_holder[dataset_name].get("accuracy")
             logger.debug(f'TEST, {dataset_name} 'f'accuracy={ds_test_accuracy:.2f}')
 
-            wandb.log({f'{dataset_name} Test Accuracy': ds_test_accuracy})
+            if wandb_logging:
+                wandb.log({f'{dataset_name} Test Accuracy': ds_test_accuracy})
     else:
         total_accuracy = dataset_class.metrics_holder[combined_dataset_key]['accuracy']
         total_loss = dataset_class.metrics_holder[combined_dataset_key]['loss']
@@ -189,6 +191,7 @@ def calc_and_log_metrics(dataset_class: DatasetUtilClass, logger: logging.Logger
 
 def run_mnist_training(
         logger: logging.Logger = None,
+        wandb_logging: bool = True,
         eval_only: bool = False,
         seed: int = 0,
         num_epochs: int = 20,
@@ -262,7 +265,7 @@ def run_mnist_training(
                                                 l1_reg_lambda=l1_reg_lambda,
                                                 dropout_rate=dropout_rate)
 
-        current_train_accuracy = calc_and_log_metrics(train_dataset_class, logger, epoch)
+        current_train_accuracy = calc_and_log_metrics(train_dataset_class, logger, epoch, wandb_logging)
 
         # Check the validation dataset
         state, validation_dataset_class = epoch_step(test=True,
@@ -276,7 +279,7 @@ def run_mnist_training(
                                                      l1_reg_lambda=l1_reg_lambda,
                                                      dropout_rate=dropout_rate)
 
-        current_validation_accuracy = calc_and_log_metrics(validation_dataset_class, logger, epoch)
+        current_validation_accuracy = calc_and_log_metrics(validation_dataset_class, logger, epoch, wandb_logging)
 
         # Evaluate on the test set after each training epoch
         state, test_dataset_class = epoch_step(test=True,
@@ -290,11 +293,12 @@ def run_mnist_training(
                                                l1_reg_lambda=l1_reg_lambda,
                                                dropout_rate=dropout_rate)
 
-        current_test_accuracy = calc_and_log_metrics(test_dataset_class, logger, epoch)
+        current_test_accuracy = calc_and_log_metrics(test_dataset_class, logger, epoch, wandb_logging)
 
-        wandb.log({'Combined Train Accuracy': current_train_accuracy,
-                   'Combined Validation Accuracy': current_validation_accuracy,
-                   'Combined Test Accuracy': current_test_accuracy})
+        if wandb_logging:
+            wandb.log({'Combined Train Accuracy': current_train_accuracy,
+                       'Combined Validation Accuracy': current_validation_accuracy,
+                       'Combined Test Accuracy': current_test_accuracy})
 
         # If the validation accuracy decreases will want to end if doing early stopping
         if current_validation_accuracy > previous_validation_accuracy and early_stopping:
