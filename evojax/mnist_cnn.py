@@ -144,7 +144,7 @@ def epoch_step(test: bool,
             state, metrics = step_func(state,
                                        batch,
                                        mask_params,
-                                       use_task_labels=use_task_labels,
+                                       task_labels=task_labels,
                                        l1_pruning_proportion=l1_pruning_proportion,
                                        l1_reg_lambda=l1_reg_lambda,
                                        dropout_rate=dropout_rate)
