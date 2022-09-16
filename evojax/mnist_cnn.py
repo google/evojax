@@ -4,7 +4,6 @@ from typing import Tuple
 
 import wandb
 
-import optax
 import jax
 from jax import random
 import jax.numpy as jnp
@@ -46,7 +45,8 @@ def train_step(state,
         output_logits = CNN(dropout_rate=dropout_rate).apply({'params': params},
                                                              batch['image'],
                                                              batch_masks,
-                                                             task_labels)
+                                                             task_labels,
+                                                             train=True)
 
         loss = cross_entropy_loss(logits=output_logits, labels=class_labels)
 
@@ -81,7 +81,8 @@ def eval_step(state: train_state.TrainState,
     logits = CNN().apply({'params': params},
                          batch['image'],
                          batch_masks,
-                         task_labels)
+                         task_labels,
+                         train=False)
 
     return state, compute_metrics(logits=logits, labels=class_labels)
 
@@ -173,7 +174,6 @@ def calc_and_log_metrics(dataset_class: DatasetUtilClass, logger: logging.Logger
             ds_test_accuracy = dataset_class.metrics_holder[dataset_name].get("accuracy")
             logger.debug(f'TEST, {dataset_name} 'f'accuracy={ds_test_accuracy:.2f}')
 
-            # wandb.log({f'{dataset_name} Test Accuracy': ds_test_accuracy}, step=relative_epoch, commit=False)
             wandb.log({f'{dataset_name} Test Accuracy': ds_test_accuracy})
     else:
         total_accuracy = dataset_class.metrics_holder[combined_dataset_key]['accuracy']

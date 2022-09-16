@@ -14,9 +14,12 @@ class CNN(nn.Module):
     dropout_rate: float = None
 
     @nn.compact
-    def __call__(self, x,
+    def __call__(self,
+                 x: jnp.ndarray,
                  mask: jnp.ndarray = None,
-                 task_labels: jnp.ndarray = None):
+                 task_labels: jnp.ndarray = None,
+                 train: bool = None
+                 ):
 
         x = nn.relu(nn.Conv(features=32, kernel_size=(3, 3), padding="SAME", name="CONV1")(x))
         x = nn.relu(nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")(x))
@@ -27,7 +30,7 @@ class CNN(nn.Module):
             x = jnp.concatenate([x, label_input], axis=1)
 
         if self.dropout_rate:
-            x = nn.Dropout(rate=self.dropout_rate, deterministic=False)(x)
+            x = nn.Dropout(rate=self.dropout_rate)(x, deterministic=not train)
 
         if mask is not None:
             x = x * mask
