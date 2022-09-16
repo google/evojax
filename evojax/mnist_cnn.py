@@ -28,7 +28,7 @@ def get_batch_masks(state, task_labels, mask_params=None, l1_pruning_proportion=
     return batch_masks
 
 
-@jax.jit
+# @jax.jit
 def train_step(state,
                batch,
                mask_params: FrozenDict = None,
@@ -62,7 +62,7 @@ def train_step(state,
     return state, metrics
 
 
-@jax.jit
+# @jax.jit
 def eval_step(state: train_state.TrainState,
               batch: dict,
               mask_params: FrozenDict = None,
