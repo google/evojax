@@ -35,7 +35,7 @@ def train_step(state: train_state.TrainState,
                mask_params: FrozenDict = None,
                task_labels: jnp.ndarray = None,
                l1_pruning_proportion: float = None,
-               l1_reg_lambda: float = None,
+               l1_reg_lambda: float = 0.0,
                dropout_rate: float = None,
                ):
 
@@ -51,9 +51,7 @@ def train_step(state: train_state.TrainState,
                                                              rngs={'dropout': rng})
 
         loss = cross_entropy_loss(logits=output_logits, labels=class_labels)
-
-        if l1_reg_lambda:
-            loss += l1_reg_lambda * jnp.sum(jnp.abs(params[cnn_final_layer_name]["kernel"]))
+        loss += l1_reg_lambda * jnp.sum(jnp.abs(params[cnn_final_layer_name]["kernel"]))
 
         return loss, output_logits
 
@@ -308,10 +306,10 @@ def run_mnist_training(
         elif early_stopping:
             logger.info(f'Validation accuracy decreased on epoch {epoch}, stopping early')
             logger.info(f'Final Test Accuracy: {previous_test_accuracy}')
-            return previous_state, previous_test_accuracy
+            return previous_state, previous_validation_accuracy
         else:
             pass
 
     logger.info(f'Final Test Accuracy: {current_test_accuracy}')
 
-    return state, current_test_accuracy
+    return state, current_validation_accuracy
