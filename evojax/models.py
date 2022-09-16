@@ -19,7 +19,7 @@ class CNN(nn.Module):
                  x: jnp.ndarray,
                  mask: jnp.ndarray = None,
                  task_labels: jnp.ndarray = None,
-                 train: bool = None
+                 train: bool = True
                  ):
 
         x = nn.relu(nn.Conv(features=32, kernel_size=(3, 3), padding="SAME", name="CONV1")(x))
@@ -48,7 +48,7 @@ def create_train_state(rng, learning_rate, task_labels: jnp.ndarray = None, drop
                                                  jnp.ones([1, 28, 28, 1]),
                                                  None,  # No need to provide mask as will not change model trace
                                                  task_labels,
-                                                 None,  # Same with train/test bool
+                                                 True,  # Set train to True, not sure if needed though
                                                  )['params']
     tx = optax.adam(learning_rate)
     return train_state.TrainState.create(
