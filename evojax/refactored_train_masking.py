@@ -19,22 +19,15 @@ Example command to run this script: `python train_masking.py`
 
 import os
 import time
-import shutil
 import argparse
 import wandb
-
-from jax import random
-import jax.numpy as jnp
 
 from evojax import Trainer
 from evojax.task.masking_task import Masking
 from evojax.policy.mask_policy import MaskPolicy
 from evojax.algo import PGPE, OpenES, CMA_ES_JAX
 from evojax import util
-
-from evojax.mnist_cnn import run_mnist_training, full_data_loader, epoch_step
-from evojax.models import cnn_final_layer_name, CNN
-from evojax.datasets import DATASET_LABELS
+from evojax.mnist_cnn import run_mnist_training, full_data_loader
 
 
 def parse_args():
@@ -67,9 +60,13 @@ def parse_args():
         '--gpu-id', type=str, help='GPU(s) to use.')
     parser.add_argument(
         '--debug', action='store_true', help='Debug mode.')
-    parser.add_argument('--algo', type=str, default='', help='Evolutionary algorithm to use.',
+    parser.add_argument('--algo', type=str, default=None, help='Evolutionary algorithm to use.',
                         choices=['PGPE', 'CMA', 'OpenES'])
-    parser.add_argument('--pixel-input', action='store_true', help='Input the pixel values to the masking model.')
+    parser.add_argument('--use-task-labels', action='store_true', help='Input the task labels to the CNN.')
+    parser.add_argument('--l1-pruning-proportion', type=float,
+                        help='The proportion of weights to remove with L1 pruning.')
+    parser.add_argument('--l1-reg-lambda', type=float, help='The lambda to use with L1 regularisation.')
+    parser.add_argument('--dropout-rate', type=float, help='The rate for dropout layers in CNN.')
     config, _ = parser.parse_known_args()
     return config
 
@@ -98,85 +95,92 @@ def main(config):
 
     if config.cnn_epochs:
         best_cnn_state, best_cnn_acc = run_mnist_training(logger,
+                                                          seed=config.seed,
                                                           num_epochs=config.cnn_epochs,
-                                                          early_stopping=True)
+                                                          evo_epoch=0,
+                                                          learning_rate=config.learning_rate,
+                                                          cnn_batch_size=config.batch_size,
+                                                          state=None,
+                                                          mask_params=None,
+                                                          datasets_tuple=None,
+                                                          early_stopping=True,
+                                                          # These are the parameters for the other
+                                                          # sparsity baseline types
+                                                          use_task_labels=config.use_task_labels,
+                                                          l1_pruning_proportion=config.l1_pruning_proportion,
+                                                          l1_reg_lambda=config.l1_reg_lambda,
+                                                          dropout_rate=config.dropout_rate)
     else:
         best_cnn_state = None
 
-    policy = MaskPolicy(logger=logger,
-                        mask_threshold=config.mask_threshold,
-                        pretrained_cnn_state=best_cnn_state)
+    if config.algo:
+        policy = MaskPolicy(logger=logger,
+                            mask_threshold=config.mask_threshold,
+                            pretrained_cnn_state=best_cnn_state)
 
-    train_task = Masking(batch_size=config.batch_size, test=False)
-    test_task = Masking(batch_size=config.batch_size, test=True)
+        train_task = Masking(batch_size=config.batch_size, test=False)
+        test_task = Masking(batch_size=config.batch_size, test=True)
 
-    if config.algo == 'PGPE':
-        solver = PGPE(
-            pop_size=config.pop_size,
-            param_size=policy.num_params,
-            optimizer='adam',
-            center_learning_rate=config.center_lr,
-            stdev_learning_rate=config.std_lr,
-            init_stdev=config.init_std,
-            logger=logger,
+        if config.algo == 'PGPE':
+            solver = PGPE(
+                pop_size=config.pop_size,
+                param_size=policy.num_params,
+                optimizer='adam',
+                center_learning_rate=config.center_lr,
+                stdev_learning_rate=config.std_lr,
+                init_stdev=config.init_std,
+                logger=logger,
+                seed=config.seed,
+            )
+        elif config.algo == 'CMA':
+            solver = CMA_ES_JAX(
+                pop_size=config.pop_size,
+                param_size=policy.num_params,
+                init_stdev=config.init_std,
+                logger=logger,
+                seed=config.seed,
+            )
+        elif config.algo == 'OpenES':
+            solver = OpenES(
+                pop_size=config.pop_size,
+                param_size=policy.num_params,
+                optimizer='adam',
+                init_stdev=config.init_std,
+                logger=logger,
+                seed=config.seed,
+            )
+        else:
+            raise NotImplementedError
+
+        # Train.
+        trainer = Trainer(
+            policy=policy,
+            solver=solver,
+            train_task=train_task,
+            test_task=test_task,
+            max_iter=config.max_iter,
+            log_interval=config.log_interval,
+            test_interval=config.test_interval,
+            n_repeats=1,
+            n_evaluations=1,
             seed=config.seed,
-        )
-    elif config.algo == 'CMA':
-        solver = CMA_ES_JAX(
-            pop_size=config.pop_size,
-            param_size=policy.num_params,
-            init_stdev=config.init_std,
+            log_dir=log_dir,
             logger=logger,
-            seed=config.seed,
+            use_for_loop=False
         )
-    elif config.algo == 'OpenES':
-        solver = OpenES(
-            pop_size=config.pop_size,
-            param_size=policy.num_params,
-            optimizer='adam',
-            init_stdev=config.init_std,
-            logger=logger,
-            seed=config.seed,
-        )
-    else:
-        raise NotImplementedError
 
-    # Train.
-    trainer = Trainer(
-        policy=policy,
-        solver=solver,
-        train_task=train_task,
-        test_task=test_task,
-        max_iter=config.max_iter,
-        log_interval=config.log_interval,
-        test_interval=config.test_interval,
-        n_repeats=1,
-        n_evaluations=1,
-        seed=config.seed,
-        log_dir=log_dir,
-        logger=logger,
-        use_for_loop=False
-    )
-
-    best_score, best_mask_params = trainer.run(demo_mode=False)
-    mask_params = policy.external_format_params_fn(best_mask_params)
-
-    # import ipdb
-    # ipdb.set_trace()
-
-    _, final_test_accuracy = run_mnist_training(logger, state=best_cnn_state, eval_only=True, mask_params=mask_params)
-
-    logger.info(f'Final test accuracy was: {final_test_accuracy}')
+        best_score, best_mask_params = trainer.run(demo_mode=False)
+        mask_params = policy.external_format_params_fn(best_mask_params)
+        _, final_test_accuracy = run_mnist_training(logger,
+                                                    state=best_cnn_state,
+                                                    eval_only=True,
+                                                    mask_params=mask_params)
 
     # src_file = os.path.join(log_dir, 'best.npz')
     # tar_file = os.path.join(log_dir, 'model.npz')
     # shutil.copy(src_file, tar_file)
     # trainer.model_dir = log_dir
     # trainer.run(demo_mode=True)
-
-    # # Run a final evaluation with the mask params found
-    # _ = eval_model(cnn_params, datasets_tuple[-1], config.batch_size,
-    #                mask_params=mask_params, pixel_input=config.pixel_input, cnn_labels=config.cnn_labels)
 
     end_time = time.time()
     logger.info(f'Total time taken: {end_time-start_time:.2f}s')
