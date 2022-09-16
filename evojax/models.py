@@ -41,7 +41,7 @@ class CNN(nn.Module):
 
 def create_train_state(rng, learning_rate, task_labels: jnp.ndarray = None, dropout_rate: float = None):
     """Creates initial `TrainState`."""
-    params = CNN(dropout_rate=dropout_rate).init(rng, jnp.ones([1, 28, 28, 1]), None, task_labels)['params']
+    params = CNN(dropout_rate=dropout_rate).init(rng, jnp.ones([1, 28, 28, 1]), None, task_labels, True)['params']
     tx = optax.adam(learning_rate)
     return train_state.TrainState.create(
         apply_fn=CNN().apply, params=params, tx=tx)
