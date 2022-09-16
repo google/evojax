@@ -4,7 +4,7 @@ from evojax.mnist_cnn import run_mnist_training
 from evojax.datasets import full_data_loader
 from evojax.util import create_logger
 
-log_dir = './log/masking'
+log_dir = './log/optuna'
 if not os.path.exists(log_dir):
     os.makedirs(log_dir, exist_ok=True)
 logger = create_logger(name='SWEEP', log_dir=log_dir, debug=False)
@@ -16,7 +16,8 @@ study = optuna.create_study(direction="maximize")
 for _ in range(20):
     trial = study.ask()
 
-    learning_rate_init = trial.suggest_float("learning_rate_init", 1e-5, 1e-3, log=True)
+    learning_rate = trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True)
+    l1_reg_lambda = trial.suggest_float("l1_reg_lambda", 1e-6, 1e-1, log=True)
     batch_size = trial.suggest_categorical("batch_size", [2**i for i in range(7, 11)])
 
     _, val_accuracy = run_mnist_training(logger,
@@ -24,7 +25,7 @@ for _ in range(20):
                                          seed=0,
                                          num_epochs=50,
                                          evo_epoch=0,
-                                         learning_rate=learning_rate_init,
+                                         learning_rate=learning_rate,
                                          cnn_batch_size=batch_size,
                                          state=None,
                                          mask_params=None,
@@ -34,6 +35,6 @@ for _ in range(20):
                                          # sparsity baseline types
                                          use_task_labels=False,
                                          l1_pruning_proportion=None,
-                                         l1_reg_lambda=None,
+                                         l1_reg_lambda=l1_reg_lambda,
                                          dropout_rate=None)
     study.tell(trial, val_accuracy)
