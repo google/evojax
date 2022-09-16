@@ -12,7 +12,7 @@ from flax.training import train_state
 from flax.core import FrozenDict
 
 from evojax.models import CNN, Mask, cnn_final_layer_name, create_train_state
-from evojax.datasets import dataset_names, DatasetUtilClass, full_data_loader
+from evojax.datasets import dataset_names, DatasetUtilClass, full_data_loader, combined_dataset_key
 from evojax.util import cross_entropy_loss, compute_metrics
 
 
@@ -176,8 +176,12 @@ def calc_and_log_metrics(dataset_class: DatasetUtilClass, logger: logging.Logger
             # wandb.log({f'{dataset_name} Test Accuracy': ds_test_accuracy}, step=relative_epoch, commit=False)
             wandb.log({f'{dataset_name} Test Accuracy': ds_test_accuracy})
     else:
-        total_accuracy = dataset_class.metrics_holder['combined']['accuracy']
-        total_loss = dataset_class.metrics_holder['combined']['loss']
+        try:
+            total_accuracy = dataset_class.metrics_holder[combined_dataset_key]['accuracy']
+            total_loss = dataset_class.metrics_holder[combined_dataset_key]['loss']
+        except:
+            import ipdb
+            ipdb.set_trace()
 
     logger.debug(f'{dataset_class.split.upper()}, epoch={epoch}, loss={total_loss}, accuracy={total_accuracy}')
 

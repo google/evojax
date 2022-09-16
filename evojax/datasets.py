@@ -23,6 +23,8 @@ FOLDER_NAMES = {digit: 'MNIST',
                 kuzushiji: 'KMNIST',
                 cifar: 'CIFAR'}
 
+combined_dataset_key = 'combined'
+
 
 def read_data_files(dataset_name, split):
     assert dataset_name in set(FOLDER_NAMES.keys())
@@ -110,8 +112,8 @@ def full_data_loader() -> Tuple[DatasetUtilClass, DatasetUtilClass, DatasetUtilC
     validation_dataset = {'image': jnp.take(full_train_images, indices=validation_ix, axis=0),
                           'label': jnp.take(full_train_labels, indices=validation_ix, axis=0)}
 
-    train_dataset_class = DatasetUtilClass('train', ['combined'], [train_dataset])
-    validation_dataset_class = DatasetUtilClass('validation', ['combined'], [validation_dataset])
+    train_dataset_class = DatasetUtilClass('train', [combined_dataset_key], [train_dataset])
+    validation_dataset_class = DatasetUtilClass('validation', [combined_dataset_key], [validation_dataset])
 
     train_dataset['image'] = jnp.float32(np.concatenate(x_array_train)) / 255.
     train_dataset['label'] = jnp.int16(np.concatenate(y_array_train))
