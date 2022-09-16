@@ -40,7 +40,7 @@ setup(
     zip_safe=False,
     install_requires=[
         "flax",
-        "jax>=0.2.17",
+        "jax[tpu]>=0.2.16",
         "jaxlib>=0.1.65",
         "Pillow",
         "cma",
@@ -51,15 +51,16 @@ setup(
         "ipdb",
         "evosax",  # Needed for some evolutionary algorithms
         "wandb",
+        "optuna"
         # The following are for flaxmodels
-        'h5py>=2.10.0',
-        'numpy>=1.19.5',
-        'requests>=2.23.0',
-        'packaging>=20.9',
-        'dataclasses>=0.6',
-        'filelock>=3.0.12',
-        'regex>=2021.4.4',
-        'tqdm>=4.60.0'
+        # 'h5py>=2.10.0',
+        # 'numpy>=1.19.5',
+        # 'requests>=2.23.0',
+        # 'packaging>=20.9',
+        # 'dataclasses>=0.6',
+        # 'filelock>=3.0.12',
+        # 'regex>=2021.4.4',
+        # 'tqdm>=4.60.0'
     ],
     extras_require={
         "extra": ['evosax', 'torchvision', 'pandas', 'procgen', 'brax'],

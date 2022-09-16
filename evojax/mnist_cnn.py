@@ -188,7 +188,7 @@ def calc_and_log_metrics(dataset_class: DatasetUtilClass, logger: logging.Logger
 
 
 def run_mnist_training(
-        logger: logging.Logger,
+        logger: logging.Logger = None,
         eval_only: bool = False,
         seed: int = 0,
         num_epochs: int = 20,

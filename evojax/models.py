@@ -31,7 +31,7 @@ class CNN(nn.Module):
             x = jnp.concatenate([x, label_input], axis=1)
 
         # Default prob is 0, so will only drop if this is increased
-        x = nn.Dropout(rate=self.dropout_rate)(x, deterministic=not train)
+        # x = nn.Dropout(rate=self.dropout_rate)(x, deterministic=not train)
 
         if mask is not None:
             x = x * mask
