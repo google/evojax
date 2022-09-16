@@ -144,10 +144,10 @@ def epoch_step(test: bool,
             state, metrics = step_func(state,
                                        batch,
                                        mask_params,
-                                       task_labels,
-                                       l1_pruning_proportion,
-                                       l1_reg_lambda,
-                                       dropout_rate)
+                                       use_task_labels=use_task_labels,
+                                       l1_pruning_proportion=l1_pruning_proportion,
+                                       l1_reg_lambda=l1_reg_lambda,
+                                       dropout_rate=dropout_rate)
 
             batch_metrics.append(metrics)
 
@@ -229,7 +229,9 @@ def run_mnist_training(
                                                l1_reg_lambda=l1_reg_lambda,
                                                dropout_rate=dropout_rate)
 
-        return state, float(np.mean([i['accuracy'] for i in test_dataset_class.metrics_holder.values()]))
+        eval_accuracy = float(np.mean([i['accuracy'] for i in test_dataset_class.metrics_holder.values()]))
+        logger.info(f'Final Test Accuracy: {eval_accuracy}')
+        return state, eval_accuracy
 
     logger.info('Starting training MNIST CNN')
 
@@ -297,8 +299,11 @@ def run_mnist_training(
             previous_state = state
         elif early_stopping:
             logger.info(f'Validation accuracy decreased on epoch {epoch}, stopping early')
+            logger.info(f'Final Test Accuracy: {previous_test_accuracy}')
             return previous_state, previous_test_accuracy
         else:
             pass
+
+    logger.info(f'Final Test Accuracy: {current_test_accuracy}')
 
     return state, current_test_accuracy
