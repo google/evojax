@@ -286,7 +286,7 @@ def run_mnist_training(
                                                l1_reg_lambda=l1_reg_lambda,
                                                dropout_rate=dropout_rate)
 
-        current_test_accuracy = calc_and_log_metrics(validation_dataset_class, logger, epoch)
+        current_test_accuracy = calc_and_log_metrics(test_dataset_class, logger, epoch)
 
         wandb.log({'Combined Train Accuracy': current_train_accuracy,
                    'Combined Validation Accuracy': current_validation_accuracy,
