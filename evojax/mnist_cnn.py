@@ -203,8 +203,6 @@ def run_mnist_training(
         dropout_rate: float = None,
 ) -> Tuple[train_state.TrainState, float]:
 
-    logger.info('Starting training MNIST CNN')
-
     rng = random.PRNGKey(seed)
 
     # Allow passing of a state, so only init if this is none
@@ -232,6 +230,8 @@ def run_mnist_training(
                                                dropout_rate=dropout_rate)
 
         return state, float(np.mean([i['accuracy'] for i in test_dataset_class.metrics_holder.values()]))
+
+    logger.info('Starting training MNIST CNN')
 
     previous_state = None
     current_test_accuracy = previous_test_accuracy = previous_validation_accuracy = 0.
