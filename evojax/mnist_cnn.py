@@ -164,20 +164,24 @@ def epoch_step(test: bool,
 
 
 def calc_and_log_metrics(dataset_class: DatasetUtilClass, logger: logging.Logger, epoch: int) -> float:
-    total_accuracy = np.mean([i['accuracy'] for i in dataset_class.metrics_holder.values()])
-    total_loss = np.mean([i['loss'] for i in dataset_class.metrics_holder.values()])
-
-    logger.debug(f'{dataset_class.split.upper()}, epoch={epoch}, loss={total_loss}, accuracy={total_accuracy}')
 
     if dataset_class.split == 'test':
+        total_accuracy = np.mean([i['accuracy'] for i in dataset_class.metrics_holder.values()])
+        total_loss = np.mean([i['loss'] for i in dataset_class.metrics_holder.values()])
+
         for dataset_name in dataset_names:
             ds_test_accuracy = dataset_class.metrics_holder[dataset_name].get("accuracy")
             logger.debug(f'TEST, {dataset_name} 'f'accuracy={ds_test_accuracy:.2f}')
 
             # wandb.log({f'{dataset_name} Test Accuracy': ds_test_accuracy}, step=relative_epoch, commit=False)
             wandb.log({f'{dataset_name} Test Accuracy': ds_test_accuracy})
+    else:
+        total_accuracy = dataset_class.metrics_holder['combined']['accuracy']
+        total_loss = dataset_class.metrics_holder['combined']['loss']
 
-    return total_accuracy.item()
+    logger.debug(f'{dataset_class.split.upper()}, epoch={epoch}, loss={total_loss}, accuracy={total_accuracy}')
+
+    return total_accuracy
 
 
 def run_mnist_training(

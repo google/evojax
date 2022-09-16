@@ -164,7 +164,7 @@ def main(config):
     # import ipdb
     # ipdb.set_trace()
 
-    _, final_test_accuracy = run_mnist_training(logger, eval_only=True, mask_params=mask_params)
+    _, final_test_accuracy = run_mnist_training(logger, state=best_cnn_state, eval_only=True, mask_params=mask_params)
 
     logger.info(f'Final test accuracy was: {final_test_accuracy}')
 
