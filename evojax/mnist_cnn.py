@@ -81,10 +81,10 @@ def eval_step(state: train_state.TrainState,
 
     logits = CNN().apply({'params': params},
                          batch['image'],
-                         rng,
                          batch_masks,
                          task_labels,
-                         train=False)
+                         train=False,
+                         rngs={'dropout': rng})
 
     return state, compute_metrics(logits=logits, labels=class_labels)
 
