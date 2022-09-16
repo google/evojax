@@ -28,7 +28,7 @@ def get_batch_masks(state, task_labels, mask_params=None, l1_pruning_proportion=
     return batch_masks
 
 
-# @jax.jit
+@jax.jit
 def train_step(state: train_state.TrainState,
                batch: dict,
                rng: jnp.ndarray,
@@ -64,7 +64,7 @@ def train_step(state: train_state.TrainState,
     return state, metrics
 
 
-# @jax.jit
+@jax.jit
 def eval_step(state: train_state.TrainState,
               batch: dict,
               rng: jnp.ndarray,
@@ -114,7 +114,7 @@ def eval_step(state: train_state.TrainState,
 #
 #     return state, epoch_metrics_np
 
-
+# @jax.jit
 def epoch_step(test: bool,
                state: train_state.TrainState,
                dataset_class: DatasetUtilClass,
