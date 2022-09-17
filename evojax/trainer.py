@@ -239,4 +239,4 @@ class Trainer(object):
             # stacked_masks = np.stack(self.masks_array).astype('b')
             # np.savez_compressed(save_path, masks=stacked_masks)
 
-            return val_best_params if val_best_params else self.solver.best_params, best_score
+            return val_best_params if val_best_params is not None else self.solver.best_params, best_score
