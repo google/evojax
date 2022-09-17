@@ -10,9 +10,10 @@ if not os.path.exists(log_dir):
     os.makedirs(log_dir, exist_ok=True)
 logger = create_logger(name='SWEEP', log_dir=log_dir, debug=False)
 
+seed = 0
 datasets_tuple = full_data_loader()
 study = optuna.create_study(direction="maximize",
-                            study_name="mnist_baselines",
+                            study_name=f"mnist_baselines_seed_{seed}",
                             storage=f'sqlite:///{log_dir}/optuna_hparam_search.db',
                             )
 
