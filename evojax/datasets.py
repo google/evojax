@@ -85,6 +85,14 @@ class DatasetUtilClass:
 
         self.dataset_holder[dataset_name] = test_dataset
 
+    def return_data_arrays(self):
+        if self.split == 'test':
+            raise NotImplementedError
+
+        dataset = self.dataset_holder[combined_dataset_key]
+        images, labels = dataset['image'], dataset['label']
+        return images, labels[:, 0], labels[:, 1]
+
 
 def get_train_val_split(validation: bool) -> Tuple[jnp.ndarray, jnp.ndarray]:
     x_array_train, y_array_train = [], []

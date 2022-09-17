@@ -83,7 +83,8 @@ def run_train_masking(algo=None,
                       cnn_lr=1e-3,
                       debug=False,
                       logger=None,
-                      config_dict=None) -> float:
+                      config_dict=None,
+                      datasets_tuple=None) -> float:
 
     log_dir = './log/masking'
     if not os.path.exists(log_dir):
@@ -105,8 +106,43 @@ def run_train_masking(algo=None,
     logger.info(f'Start Time - {time.strftime("%H:%M")}')
     logger.info('=' * 50)
 
-    cnn_state = cnn_val_acc = mask_params = best_mask_params = None
-    datasets_tuple = full_data_loader()
+    if not datasets_tuple:
+        datasets_tuple = full_data_loader()
+
+    policy = MaskPolicy(logger=logger,
+                        mask_threshold=mask_threshold,
+                        pretrained_cnn_state=None)
+
+    train_task = Masking(batch_size=batch_size, validation=False,
+                         datasets_tuple=datasets_tuple, max_steps=max_steps)
+    validation_task = Masking(batch_size=batch_size, validation=True,
+                              datasets_tuple=datasets_tuple, max_steps=max_steps)
+
+    if algo == 'PGPE':
+        solver = PGPE(
+            pop_size=pop_size,
+            param_size=policy.num_params,
+            optimizer='adam',
+            center_learning_rate=center_lr,
+            stdev_learning_rate=std_lr,
+            init_stdev=init_std,
+            logger=logger,
+            seed=seed,
+            init_params=None
+        )
+    elif algo == 'OpenES':
+        solver = OpenES(
+            pop_size=pop_size,
+            param_size=policy.num_params,
+            optimizer='adam',
+            init_stdev=init_std,
+            logger=logger,
+            seed=seed,
+        )
+    else:
+        raise NotImplementedError
+
+    cnn_state = cnn_val_acc = mask_params = None
     for i in range(evo_epochs):
         cnn_state, cnn_val_acc = run_mnist_training(logger,
                                                     seed=seed,
@@ -125,69 +161,33 @@ def run_train_masking(algo=None,
                                                     l1_reg_lambda=None,
                                                     dropout_rate=None)
 
-        if algo:
-            policy = MaskPolicy(logger=logger,
-                                mask_threshold=mask_threshold,
-                                pretrained_cnn_state=cnn_state)
+        policy.cnn_state = cnn_state
 
-            train_task = Masking(batch_size=batch_size, validation=False)
-            validation_task = Masking(batch_size=batch_size, validation=True)
+        # Train.
+        trainer = Trainer(
+            policy=policy,
+            solver=solver,
+            train_task=train_task,
+            validation_task=validation_task,
+            max_iter=max_iter,
+            log_interval=log_interval,
+            test_interval=test_interval,
+            n_repeats=1,
+            n_evaluations=1,
+            seed=seed,
+            log_dir=log_dir,
+            logger=logger,
+            use_for_loop=False
+        )
 
-            if algo == 'PGPE':
-                solver = PGPE(
-                    pop_size=pop_size,
-                    param_size=policy.num_params,
-                    optimizer='adam',
-                    center_learning_rate=center_lr,
-                    stdev_learning_rate=std_lr,
-                    init_stdev=init_std,
-                    logger=logger,
-                    seed=seed,
-                    init_params=best_mask_params
-                )
-            elif algo == 'OpenES':
-                solver = OpenES(
-                    pop_size=pop_size,
-                    param_size=policy.num_params,
-                    optimizer='adam',
-                    init_stdev=init_std,
-                    logger=logger,
-                    seed=seed,
-                )
-            else:
-                raise NotImplementedError
-
-            # Train.
-            trainer = Trainer(
-                policy=policy,
-                solver=solver,
-                train_task=train_task,
-                validation_task=validation_task,
-                max_iter=max_iter,
-                log_interval=log_interval,
-                test_interval=test_interval,
-                n_repeats=1,
-                n_evaluations=1,
-                seed=seed,
-                log_dir=log_dir,
-                logger=logger,
-                use_for_loop=False
-            )
-
-            best_mask_params, best_score = trainer.run(demo_mode=False)
-            mask_params = policy.external_format_params_fn(best_mask_params)
-            _, final_test_accuracy = run_mnist_training(logger,
-                                                        state=cnn_state,
-                                                        eval_only=True,
-                                                        mask_params=mask_params,
-                                                        cnn_batch_size=batch_size,
-                                                        )
-
-            # src_file = os.path.join(log_dir, 'best.npz')
-            # tar_file = os.path.join(log_dir, 'model.npz')
-            # shutil.copy(src_file, tar_file)
-            # trainer.model_dir = log_dir
-            # trainer.run(demo_mode=True)
+        best_mask_params, best_score = trainer.run(demo_mode=False)
+        mask_params = policy.external_format_params_fn(best_mask_params)
+        _, final_test_accuracy = run_mnist_training(logger,
+                                                    state=cnn_state,
+                                                    eval_only=True,
+                                                    mask_params=mask_params,
+                                                    cnn_batch_size=batch_size,
+                                                    )
 
     end_time = time.time()
     logger.info(f'Total time taken: {end_time-start_time:.2f}s')
@@ -195,6 +195,9 @@ def run_train_masking(algo=None,
     logger.info('=' * 50)
 
     wandb.finish()
+
+    del train_task
+    del validation_task
 
     return cnn_val_acc
 

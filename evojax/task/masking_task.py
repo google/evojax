@@ -22,7 +22,7 @@ from flax.struct import dataclass
 
 from evojax.task.base import VectorizedTask
 from evojax.task.base import TaskState
-from evojax.datasets import get_train_val_split
+from evojax.datasets import get_train_val_split, DatasetUtilClass
 
 
 # This will allow training the CNN on the train data and mask on the validation split
@@ -80,13 +80,18 @@ class Masking(VectorizedTask):
     def __init__(self,
                  batch_size: int = 1024,
                  max_steps: int = 100,
-                 validation: bool = False):
+                 validation: bool = False,
+                 datasets_tuple: Tuple[DatasetUtilClass, DatasetUtilClass, DatasetUtilClass] = None):
 
         self.max_steps = max_steps
         self.obs_shape = tuple([1, ])
         self.act_shape = tuple([10, ])
 
-        image_data, class_labels, task_labels = setup_task_data(validation)
+        if not datasets_tuple:
+            image_data, class_labels, task_labels = setup_task_data(validation)
+        else:
+            dataset_class = datasets_tuple[int(validation)]
+            image_data, class_labels, task_labels = dataset_class.return_data_arrays()
 
         def reset_fn(key):
             next_key, key = random.split(key)
