@@ -42,7 +42,7 @@ for _ in range(6):
         algo=trial.suggest_categorical("algo", ["PGPE", "OpenES"]),
         pop_size=trial.suggest_categorical("pop_size", [8, 16, 32]),
         mask_threshold=trial.suggest_float("mask_threshold", 0.3, 0.7),
-        max_iter=trial.suggest_int("max_iter", 100, 1000, log=False),
+        max_iter=trial.suggest_int("max_iter", 2, 3, log=True),
         evo_epochs=trial.suggest_int("evo_epochs", 1, 10, log=False),
         test_interval=trial.suggest_int("test_interval", 1, 20, log=False),
         center_lr=trial.suggest_float("center_lr", 0, 0.1),
