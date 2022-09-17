@@ -16,7 +16,7 @@ datasets_tuple = full_data_loader()
 study = optuna.create_study(direction="maximize",
                             study_name=f"mnist_evo_seed_{seed}",
                             storage=f'sqlite:///{log_dir}/optuna_hparam_search.db',
-                            )
+                            load_if_exists=True)
 
 params_dict = dict(
     algo=None,
