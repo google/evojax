@@ -52,7 +52,7 @@ def train_step(state: train_state.TrainState,
                                                              rngs={'dropout': rng})
 
         loss = cross_entropy_loss(logits=output_logits, labels=class_labels)
-        loss += l1_reg_lambda * jnp.sum(jnp.abs(params[cnn_final_layer_name]["kernel"]))
+        # loss += l1_reg_lambda * jnp.sum(jnp.abs(params[cnn_final_layer_name]["kernel"]))
 
         return loss, output_logits
 
