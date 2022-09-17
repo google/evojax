@@ -57,5 +57,5 @@ logger.info(f'Corresponding Best Test Accuracy: {best_params_test_acc:.4}')
 
 df = study.trials_dataframe()
 dataframe_dir = os.path.join(log_dir, "dataframes")
-os.makedirs(dataframe_dir)
+os.makedirs(dataframe_dir, exist_ok=True)
 df.to_csv(f'{os.path.join(dataframe_dir, time.strftime("%m%d_%H%M"))}.csv')

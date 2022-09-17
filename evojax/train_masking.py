@@ -96,26 +96,26 @@ def run_train_masking(config):
     logger.info('=' * 50)
 
     for i in range(config.evo_epochs):
-        best_cnn_state, best_cnn_acc = run_mnist_training(logger,
-                                                          seed=config.seed,
-                                                          num_epochs=config.cnn_epochs,
-                                                          evo_epoch=0,
-                                                          learning_rate=config.cnn_lr,
-                                                          cnn_batch_size=config.batch_size,
-                                                          state=None,
-                                                          mask_params=None,
-                                                          datasets_tuple=None,
-                                                          early_stopping=True,
-                                                          # These are the parameters for the other
-                                                          # sparsity baseline types
-                                                          use_task_labels=config.use_task_labels,
-                                                          l1_pruning_proportion=config.l1_pruning_proportion,
-                                                          l1_reg_lambda=config.l1_reg_lambda,
-                                                          dropout_rate=config.dropout_rate)
+        cnn_state, cnn_val_acc = run_mnist_training(logger,
+                                                    seed=config.seed,
+                                                    num_epochs=config.cnn_epochs,
+                                                    evo_epoch=0,
+                                                    learning_rate=config.cnn_lr,
+                                                    cnn_batch_size=config.batch_size,
+                                                    state=None,
+                                                    mask_params=None,
+                                                    datasets_tuple=None,
+                                                    early_stopping=True,
+                                                    # These are the parameters for the other
+                                                    # sparsity baseline types
+                                                    use_task_labels=config.use_task_labels,
+                                                    l1_pruning_proportion=config.l1_pruning_proportion,
+                                                    l1_reg_lambda=config.l1_reg_lambda,
+                                                    dropout_rate=config.dropout_rate)
 
         policy = MaskPolicy(logger=logger,
                             mask_threshold=config.mask_threshold,
-                            pretrained_cnn_state=best_cnn_state)
+                            pretrained_cnn_state=cnn_state)
 
         train_task = Masking(batch_size=config.batch_size, test=False)
         test_task = Masking(batch_size=config.batch_size, test=True)
@@ -171,7 +171,7 @@ def run_train_masking(config):
         best_score, best_mask_params = trainer.run(demo_mode=False)
         mask_params = policy.external_format_params_fn(best_mask_params)
         _, final_test_accuracy = run_mnist_training(logger,
-                                                    state=best_cnn_state,
+                                                    state=cnn_state,
                                                     eval_only=True,
                                                     mask_params=mask_params)
 
