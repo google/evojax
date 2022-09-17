@@ -1,7 +1,7 @@
 import os
 import time
 import optuna
-from evojax.mnist_cnn import run_mnist_training
+from evojax.train_masking import run_train_masking
 from evojax.datasets import full_data_loader
 from evojax.util import create_logger
 
@@ -17,35 +17,40 @@ study = optuna.create_study(direction="maximize",
                             storage=f'sqlite:///{log_dir}/optuna_hparam_search.db',
                             )
 
+params_dict = dict(
+    algo=None,
+    pop_size=8,
+    batch_size=1024,
+    mask_threshold=0.5,
+    max_iter=100,
+    max_steps=1,
+    evo_epochs=1,
+    test_interval=10,
+    log_interval=10,
+    center_lr=0.006,
+    std_lr=0.089,
+    init_std=0.039,
+    cnn_epochs=20,
+    cnn_lr=1e-3,
+)
 
-for _ in range(3):
+for _ in range(20):
     trial = study.ask()
 
-    # learning_rate = trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True)
-    learning_rate = 1e-3
-    l1_reg_lambda = trial.suggest_float("l1_reg_lambda", 1e-6, 1e-1, log=True)
-    # batch_size = trial.suggest_categorical("batch_size", [2**i for i in range(7, 11)])
-    batch_size = 1024
-    use_task_labels = trial.suggest_categorical("use_task_labels", [True, False])
-
-    # _, val_accuracy = run_mnist_training(logger,
-    #                                      wandb_logging=False,
-    #                                      seed=0,
-    #                                      num_epochs=50,
-    #                                      evo_epoch=0,
-    #                                      learning_rate=learning_rate,
-    #                                      cnn_batch_size=batch_size,
-    #                                      state=None,
-    #                                      mask_params=None,
-    #                                      datasets_tuple=datasets_tuple,
-    #                                      early_stopping=True,
-    #                                      # These are the parameters for the other
-    #                                      # sparsity baseline types
-    #                                      use_task_labels=use_task_labels,
-    #                                      l1_pruning_proportion=None,
-    #                                      l1_reg_lambda=l1_reg_lambda,
-    #                                      dropout_rate=None)
-    # study.tell(trial, val_accuracy)
+    test_params = dict(
+        algo=trial.suggest_categorical("algo", ["PGPE", "OpenES"]),
+        pop_size=trial.suggest_categorical("pop_size", [8, 16, 32]),
+        mask_threshold=trial.suggest_float("mask_threshold", 0.3, 0.7),
+        max_iter=trial.suggest_int("max_iter", 1, 4, log=True),
+        evo_epochs=trial.suggest_int("evo_epochs", 1, 20, log=False),
+        test_interval=trial.suggest_int("test_interval", 1, 20, log=False),
+        center_lr=trial.suggest_float("center_lr", 0, 0.1),
+        std_lr=trial.suggest_float("std_lr", 0, 0.2),
+        init_std=trial.suggest_float("init_std", 0, 0.1),
+    )
+    params_dict.update(test_params)
+    _, val_accuracy = run_train_masking(**params_dict)
+    study.tell(trial, val_accuracy)
 
 trial = study.best_trial
 logger.info(f'Best Validation Accuracy: {trial.value:.4}')
@@ -55,5 +60,5 @@ for key, value in trial.params.items():
 
 df = study.trials_dataframe()
 dataframe_dir = os.path.join(log_dir, "dataframes")
-os.makedirs(dataframe_dir)
-df.to_csv(f'{os.path.join(dataframe_dir, time.strftime("%m%d_%H%M"))}.csv')
+os.makedirs(dataframe_dir, exist_ok=True)
+df.to_csv(f'{os.path.join(dataframe_dir, "evo")}_{time.strftime("%m%d_%H%M")}.csv')
