@@ -55,7 +55,8 @@ class Trainer(object):
                  model_dir: str = None,
                  log_dir: str = None,
                  logger: logging.Logger = None,
-                 log_scores_fn: Optional[Callable[[int, jnp.ndarray, str], None]] = None):
+                 log_scores_fn: Optional[Callable[[int, jnp.ndarray, str], None]] = None,
+                 log_evo: bool = True):
         """Initialization.
 
         Args:
@@ -113,12 +114,16 @@ class Trainer(object):
             logger=self._logger,
         )
 
+        self.log_evo = log_evo
         # # This will store the masking network, so masks can be checked throughout training
         # self.policy_network = policy
         # self.dataset_labels = dataset_labels
         # self.masks_array = []
 
     def wand_log_scores(self, score_array: jnp.ndarray, split: str):
+        if not self.log_evo:
+            return
+
         best_score = score_array.max()
         mean_score = score_array.mean()
         worst_score = score_array.min()

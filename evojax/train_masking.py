@@ -30,6 +30,16 @@ from evojax import util
 from evojax.mnist_cnn import run_mnist_training, full_data_loader
 
 
+def parse_cnn_args(arg_parser: argparse.ArgumentParser):
+    arg_parser.add_argument('--cnn-epochs', type=int, default=20, help='Number of epochs for cnn pretraining.')
+    arg_parser.add_argument('--cnn-lr', type=float, default=0.001, help='Learning rate for the CNN model.')
+    arg_parser.add_argument('--use-task-labels', action='store_true', help='Input the task labels to the CNN.')
+    arg_parser.add_argument('--l1-pruning-proportion', type=float,
+                            help='The proportion of weights to remove with L1 pruning.')
+    arg_parser.add_argument('--l1-reg-lambda', type=float, help='The lambda to use with L1 regularisation.')
+    arg_parser.add_argument('--dropout-rate', type=float, help='The rate for dropout layers in CNN.')
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
 
@@ -49,13 +59,7 @@ def parse_args():
     parser.add_argument('--init-std', type=float, default=0.039, help='Initial std.')
 
     # Params for the CNN
-    parser.add_argument('--cnn-epochs', type=int, default=20, help='Number of epochs for cnn pretraining.')
-    parser.add_argument('--cnn-lr', type=float, default=0.001, help='Learning rate for the CNN model.')
-    parser.add_argument('--use-task-labels', action='store_true', help='Input the task labels to the CNN.')
-    parser.add_argument('--l1-pruning-proportion', type=float,
-                        help='The proportion of weights to remove with L1 pruning.')
-    parser.add_argument('--l1-reg-lambda', type=float, help='The lambda to use with L1 regularisation.')
-    parser.add_argument('--dropout-rate', type=float, help='The rate for dropout layers in CNN.')
+    parse_cnn_args(parser)
 
     # General params
     parser.add_argument('--seed', type=int, default=42, help='Random seed for training.')
@@ -84,7 +88,8 @@ def run_train_masking(algo=None,
                       debug=False,
                       logger=None,
                       config_dict=None,
-                      datasets_tuple=None) -> float:
+                      datasets_tuple=None,
+                      log_evo=True) -> float:
 
     log_dir = './log/masking'
     if not os.path.exists(log_dir):
@@ -177,7 +182,8 @@ def run_train_masking(algo=None,
             seed=seed,
             log_dir=log_dir,
             logger=logger,
-            use_for_loop=False
+            use_for_loop=False,
+            log_evo=log_evo
         )
 
         best_mask_params, best_score = trainer.run(demo_mode=False)
