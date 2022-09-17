@@ -148,7 +148,7 @@ def run_train_masking(algo=None,
             elif algo == 'OpenES':
                 solver = OpenES(
                     pop_size=pop_size,
-                    param_size=policynum_params,
+                    param_size=policy.num_params,
                     optimizer='adam',
                     init_stdev=init_std,
                     logger=logger,
@@ -196,7 +196,7 @@ def run_train_masking(algo=None,
 
             wandb.finish()
 
-            return cnn_val_acc
+    return cnn_val_acc
 
 
 if __name__ == '__main__':
