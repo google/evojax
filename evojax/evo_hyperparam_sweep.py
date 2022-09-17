@@ -35,7 +35,7 @@ params_dict = dict(
     log_evo=False
 )
 
-for _ in range(6):
+for _ in range(10):
     trial = study.ask()
 
     test_params = dict(
