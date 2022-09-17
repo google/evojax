@@ -28,9 +28,9 @@ base_config = dict(logger=logger,
                    # These are the parameters for the other
                    # sparsity baseline types
                    use_task_labels=False,
-                   l1_pruning_proportion=0.,
-                   l1_reg_lambda=0.,
-                   dropout_rate=0.)
+                   l1_pruning_proportion=None,
+                   l1_reg_lambda=None,
+                   dropout_rate=None)
 
 
 for _ in range(3):
