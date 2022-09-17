@@ -13,12 +13,12 @@ logger = create_logger(name='SWEEP', log_dir=log_dir, debug=False)
 seed = 0
 datasets_tuple = full_data_loader()
 study = optuna.create_study(direction="maximize",
-                            study_name=f"mnist_baselines_seed_{seed}",
+                            study_name=f"mnist_evo_seed_{seed}",
                             storage=f'sqlite:///{log_dir}/optuna_hparam_search.db',
                             )
 
 
-for _ in range(10):
+for _ in range(3):
     trial = study.ask()
 
     # learning_rate = trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True)
@@ -28,24 +28,24 @@ for _ in range(10):
     batch_size = 1024
     use_task_labels = trial.suggest_categorical("use_task_labels", [True, False])
 
-    _, val_accuracy = run_mnist_training(logger,
-                                         wandb_logging=False,
-                                         seed=0,
-                                         num_epochs=50,
-                                         evo_epoch=0,
-                                         learning_rate=learning_rate,
-                                         cnn_batch_size=batch_size,
-                                         state=None,
-                                         mask_params=None,
-                                         datasets_tuple=datasets_tuple,
-                                         early_stopping=True,
-                                         # These are the parameters for the other
-                                         # sparsity baseline types
-                                         use_task_labels=use_task_labels,
-                                         l1_pruning_proportion=None,
-                                         l1_reg_lambda=l1_reg_lambda,
-                                         dropout_rate=None)
-    study.tell(trial, val_accuracy)
+    # _, val_accuracy = run_mnist_training(logger,
+    #                                      wandb_logging=False,
+    #                                      seed=0,
+    #                                      num_epochs=50,
+    #                                      evo_epoch=0,
+    #                                      learning_rate=learning_rate,
+    #                                      cnn_batch_size=batch_size,
+    #                                      state=None,
+    #                                      mask_params=None,
+    #                                      datasets_tuple=datasets_tuple,
+    #                                      early_stopping=True,
+    #                                      # These are the parameters for the other
+    #                                      # sparsity baseline types
+    #                                      use_task_labels=use_task_labels,
+    #                                      l1_pruning_proportion=None,
+    #                                      l1_reg_lambda=l1_reg_lambda,
+    #                                      dropout_rate=None)
+    # study.tell(trial, val_accuracy)
 
 trial = study.best_trial
 logger.info(f'Best Validation Accuracy: {trial.value:.4}')

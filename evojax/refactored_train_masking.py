@@ -73,7 +73,7 @@ def parse_args():
     return config
 
 
-def main(config):
+def run_mask_training(config):
 
     log_dir = './log/masking'
     if not os.path.exists(log_dir):
@@ -194,4 +194,4 @@ def main(config):
 
 if __name__ == '__main__':
     configs = parse_args()
-    main(configs)
+    run_mask_training(configs)
