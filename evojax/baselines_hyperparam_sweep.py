@@ -20,9 +20,11 @@ study = optuna.create_study(direction="maximize",
 for _ in range(10):
     trial = study.ask()
 
-    learning_rate = trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True)
+    # learning_rate = trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True)
+    learning_rate = 1e-3
     l1_reg_lambda = trial.suggest_float("l1_reg_lambda", 1e-6, 1e-1, log=True)
-    batch_size = trial.suggest_categorical("batch_size", [2**i for i in range(7, 11)])
+    # batch_size = trial.suggest_categorical("batch_size", [2**i for i in range(7, 11)])
+    batch_size = 1024
     use_task_labels = trial.suggest_categorical("use_task_labels", [True, False])
 
     _, val_accuracy = run_mnist_training(logger,
