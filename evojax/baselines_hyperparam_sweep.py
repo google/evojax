@@ -32,6 +32,7 @@ base_config = dict(logger=logger,
                    l1_reg_lambda=None,
                    dropout_rate=None)
 
+trial_states = {}
 
 for _ in range(3):
     trial = study.ask()
@@ -42,7 +43,8 @@ for _ in range(3):
     # use_task_labels = trial.suggest_categorical("use_task_labels", [True, False])
     base_config.update({"l1_reg_lambda": l1_reg_lambda})
 
-    _, val_accuracy = run_mnist_training(**base_config)
+    cnn_state, val_accuracy = run_mnist_training(**base_config)
+    trial_states[trial.number] = cnn_state
     study.tell(trial, val_accuracy)
 
 trial = study.best_trial
@@ -52,6 +54,7 @@ for key, value in trial.params.items():
     logger.info(f'-> {key}: {value}')
 
 base_config.update(trial.params)
+base_config["state"] = trial_states[trial.number]
 _, best_params_test_acc = run_mnist_training(eval_only=True, **base_config)
 logger.info(f'Corresponding Best Test Accuracy: {best_params_test_acc:.4}')
 
