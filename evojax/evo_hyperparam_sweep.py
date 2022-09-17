@@ -34,7 +34,7 @@ params_dict = dict(
     cnn_lr=1e-3,
 )
 
-for _ in range(20):
+for _ in range(6):
     trial = study.ask()
 
     test_params = dict(
