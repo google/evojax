@@ -43,7 +43,9 @@ def parse_args():
     parser.add_argument(
         '--max-steps', type=int, default=100, help='Max steps for the tasks.')
     parser.add_argument(
-        '--cnn-epochs', type=int, default=0, help='Number of epochs for cnn pretraining.')
+        '--cnn-epochs', type=int, default=20, help='Number of epochs for cnn pretraining.')
+    parser.add_argument(
+        '--evo-epochs', type=int, default=1, help='Number of epochs for evo process.')
     parser.add_argument(
         '--test-interval', type=int, default=1000, help='Test interval.')
     parser.add_argument(
