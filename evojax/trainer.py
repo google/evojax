@@ -163,7 +163,7 @@ class Trainer(object):
                 self.solver.best_params = params
 
             best_score = -float('Inf')
-            best_params = None
+            val_best_params = None
             for i in range(self._max_iter):
                 start_time = time.perf_counter()
                 params = self.solver.ask()
@@ -204,7 +204,7 @@ class Trainer(object):
                     # )
                     if mean_test_score > best_score:
                         best_score = mean_test_score
-                        best_params = self.solver.best_params
+                        val_best_params = self.solver.best_params
 
             # Test and save the final model.
             # best_params = self.solver.best_params
@@ -239,4 +239,4 @@ class Trainer(object):
             # stacked_masks = np.stack(self.masks_array).astype('b')
             # np.savez_compressed(save_path, masks=stacked_masks)
 
-            return best_params, best_score
+            return val_best_params if val_best_params else self.solver.best_params, best_score

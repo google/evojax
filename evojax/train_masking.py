@@ -189,10 +189,10 @@ def run_train_masking(algo=None,
             # trainer.model_dir = log_dir
             # trainer.run(demo_mode=True)
 
-            end_time = time.time()
-            logger.info(f'Total time taken: {end_time-start_time:.2f}s')
-            logger.info('RUN COMPLETE\n')
-            logger.info('=' * 50)
+    end_time = time.time()
+    logger.info(f'Total time taken: {end_time-start_time:.2f}s')
+    logger.info('RUN COMPLETE\n')
+    logger.info('=' * 50)
 
     wandb.finish()
 
