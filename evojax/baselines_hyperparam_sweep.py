@@ -15,10 +15,10 @@ datasets_tuple = full_data_loader()
 study = optuna.create_study(direction="maximize",
                             study_name=f"mnist_baselines_seed_{seed}",
                             storage=f'sqlite:///{log_dir}/optuna_hparam_search.db',
-                            )
+                            load_if_exists=True)
 
 
-for _ in range(10):
+for _ in range(3):
     trial = study.ask()
 
     # learning_rate = trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True)
