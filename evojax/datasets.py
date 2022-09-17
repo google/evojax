@@ -86,10 +86,7 @@ class DatasetUtilClass:
         self.dataset_holder[dataset_name] = test_dataset
 
 
-def full_data_loader() -> Tuple[DatasetUtilClass, DatasetUtilClass, DatasetUtilClass]:
-    """
-    Load up DatasetUtilClass for train/val/test splits of the datasets.
-    """
+def get_train_val_split(test: bool) -> Tuple[jnp.ndarray, jnp.ndarray]:
     x_array_train, y_array_train = [], []
     for dataset_name in dataset_names:
         x_train, y_train = read_data_files(dataset_name, 'train')
@@ -105,6 +102,23 @@ def full_data_loader() -> Tuple[DatasetUtilClass, DatasetUtilClass, DatasetUtilC
     ix = random.permutation(key=random.PRNGKey(0), x=number_of_points)
     validation_ix = ix[:number_for_validation]
     train_ix = ix[number_for_validation:]
+
+    # Just select the section of the data corresponding to train/val indices
+    if test:
+        image_data = jnp.take(full_train_images, indices=validation_ix, axis=0)
+        labels = jnp.take(full_train_labels, indices=validation_ix, axis=0)
+    else:
+        image_data = jnp.take(full_train_images, indices=train_ix, axis=0)
+        labels = jnp.take(full_train_labels, indices=train_ix, axis=0)
+
+    return image_data, labels
+
+
+def full_data_loader() -> Tuple[DatasetUtilClass, DatasetUtilClass, DatasetUtilClass]:
+    """
+    Load up DatasetUtilClass for train/val/test splits of the datasets.
+    """
+
 
     train_dataset = {'image': jnp.take(full_train_images, indices=train_ix, axis=0),
                      'label': jnp.take(full_train_labels, indices=train_ix, axis=0)}

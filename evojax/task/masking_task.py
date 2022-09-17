@@ -22,7 +22,7 @@ from flax.struct import dataclass
 
 from evojax.task.base import VectorizedTask
 from evojax.task.base import TaskState
-from evojax.datasets import read_data_files, DATASET_LABELS
+from evojax.datasets import get_train_val_split
 
 
 # This will allow training the CNN on the train data and mask on the validation split
@@ -66,33 +66,7 @@ def step_accuracy(prediction: jnp.ndarray, target: jnp.ndarray) -> jnp.float32:
 
 
 def setup_task_data(test: bool) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
-    x_array, y_array = [], []
-    for dataset_name in list(DATASET_LABELS.keys()):
-        x, y = read_data_files(dataset_name, 'test' if test else 'train')
-        x_array.append(x)
-        y_array.append(y)
-
-    # # A validation set will be split out from the train set
-    # if not test:
-    #     full_train_images = jnp.float32(np.concatenate(x_array)) / 255.
-    #     full_train_labels = jnp.int16(np.concatenate(y_array))
-    #
-    #     number_of_points = full_train_images.shape[0]
-    #     number_for_validation = number_of_points // 5
-    #
-    #     # Use these indices every time for consistency
-    #     ix = random.permutation(key=random.PRNGKey(0), x=number_of_points)
-    #     validation_ix = ix[:number_for_validation]
-    #     train_ix = ix[number_for_validation:]
-    #
-    #     # Just select the section of the data corresponding to train/val indices
-    #     train_image_data = jnp.take(full_train_images, indices=train_ix, axis=0)
-    #     train_labels = jnp.take(full_train_labels, indices=train_ix, axis=0)
-    #     val_image_data = jnp.take(full_train_images, indices=validation_ix, axis=0)
-    #     val_labels = jnp.take(full_train_labels, indices=validation_ix, axis=0)
-    # else:
-    image_data = jnp.float32(np.concatenate(x_array)) / 255.
-    labels = jnp.int16(np.concatenate(y_array))
+    image_data, labels = get_train_val_split(test)
 
     class_labels = labels[:, 0]
     task_labels = labels[:, 1]
