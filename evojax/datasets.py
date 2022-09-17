@@ -86,7 +86,7 @@ class DatasetUtilClass:
         self.dataset_holder[dataset_name] = test_dataset
 
 
-def get_train_val_split(test: bool) -> Tuple[jnp.ndarray, jnp.ndarray]:
+def get_train_val_split(validation: bool) -> Tuple[jnp.ndarray, jnp.ndarray]:
     x_array_train, y_array_train = [], []
     for dataset_name in dataset_names:
         x_train, y_train = read_data_files(dataset_name, 'train')
@@ -104,7 +104,7 @@ def get_train_val_split(test: bool) -> Tuple[jnp.ndarray, jnp.ndarray]:
     train_ix = ix[number_for_validation:]
 
     # Just select the section of the data corresponding to train/val indices
-    if test:
+    if validation:
         image_data = jnp.take(full_train_images, indices=validation_ix, axis=0)
         labels = jnp.take(full_train_labels, indices=validation_ix, axis=0)
     else:
@@ -118,19 +118,17 @@ def full_data_loader() -> Tuple[DatasetUtilClass, DatasetUtilClass, DatasetUtilC
     """
     Load up DatasetUtilClass for train/val/test splits of the datasets.
     """
+    train_images, train_labels = get_train_val_split(validation=False)
+    val_images, val_labels = get_train_val_split(validation=True)
 
+    train_dataset = {'image': train_images,
+                     'label': train_labels}
 
-    train_dataset = {'image': jnp.take(full_train_images, indices=train_ix, axis=0),
-                     'label': jnp.take(full_train_labels, indices=train_ix, axis=0)}
-
-    validation_dataset = {'image': jnp.take(full_train_images, indices=validation_ix, axis=0),
-                          'label': jnp.take(full_train_labels, indices=validation_ix, axis=0)}
+    validation_dataset = {'image': val_images,
+                          'label': val_labels}
 
     train_dataset_class = DatasetUtilClass('train', [combined_dataset_key], [train_dataset])
     validation_dataset_class = DatasetUtilClass('validation', [combined_dataset_key], [validation_dataset])
-
-    train_dataset['image'] = jnp.float32(np.concatenate(x_array_train)) / 255.
-    train_dataset['label'] = jnp.int16(np.concatenate(y_array_train))
 
     # Sets up a separate test set for each of the datasets
     test_dataset_class = DatasetUtilClass('test', dataset_names)
