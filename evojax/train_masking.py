@@ -62,26 +62,43 @@ def parse_args():
     parser.add_argument('--gpu-id', type=str, help='GPU(s) to use.')
     parser.add_argument('--debug', action='store_true', help='Debug mode.')
 
-    config, _ = parser.parse_known_args()
-    return config
+    parsed_config, _ = parser.parse_known_args()
+    return parsed_config
 
 
-def run_train_masking(config, logger=None) -> float:
+def run_train_masking(algo=None,
+                      seed=0,
+                      pop_size=8,
+                      batch_size=1024,
+                      mask_threshold=0.5,
+                      max_iter=100,
+                      max_steps=1,
+                      evo_epochs=1,
+                      test_interval=10,
+                      log_interval=10,
+                      center_lr=0.006,
+                      std_lr=0.089,
+                      init_std=0.039,
+                      cnn_epochs=20,
+                      cnn_lr=1e-3,
+                      debug=False,
+                      logger=None,
+                      config_dict=None) -> float:
 
     log_dir = './log/masking'
     if not os.path.exists(log_dir):
         os.makedirs(log_dir, exist_ok=True)
     if not logger:
-        logger = util.create_logger(name='MASK', log_dir=log_dir, debug=config.debug)
+        logger = util.create_logger(name='MASK', log_dir=log_dir, debug=debug)
 
     time_str = time.strftime("%m%d_%H%M")
-    run_name = f'evojax_masking_{config.algo}_{time_str}'
+    run_name = f'evojax_masking_{algo}_{time_str}'
     wandb.init(name=run_name,
                project="evojax-masking",
                entity="ucl-dark",
                dir=log_dir,
                reinit=True,
-               config=config)
+               config=config_dict)
 
     start_time = time.time()
     logger.info('\n\nEvoJAX Masking Tests\n')
@@ -90,52 +107,52 @@ def run_train_masking(config, logger=None) -> float:
 
     cnn_state = cnn_val_acc = mask_params = best_mask_params = None
     datasets_tuple = full_data_loader()
-    for i in range(config.evo_epochs):
+    for i in range(evo_epochs):
         cnn_state, cnn_val_acc = run_mnist_training(logger,
-                                                    seed=config.seed,
-                                                    num_epochs=config.cnn_epochs,
+                                                    seed=seed,
+                                                    num_epochs=cnn_epochs,
                                                     evo_epoch=i,
-                                                    learning_rate=config.cnn_lr,
-                                                    cnn_batch_size=config.batch_size,
+                                                    learning_rate=cnn_lr,
+                                                    cnn_batch_size=batch_size,
                                                     state=cnn_state,
                                                     mask_params=mask_params,
                                                     datasets_tuple=datasets_tuple,
                                                     early_stopping=True,
                                                     # These are the parameters for the other
                                                     # sparsity baseline types
-                                                    use_task_labels=config.use_task_labels,
-                                                    l1_pruning_proportion=config.l1_pruning_proportion,
-                                                    l1_reg_lambda=config.l1_reg_lambda,
-                                                    dropout_rate=config.dropout_rate)
+                                                    use_task_labels=False,
+                                                    l1_pruning_proportion=None,
+                                                    l1_reg_lambda=None,
+                                                    dropout_rate=None)
 
-        if config.algo:
+        if algo:
             policy = MaskPolicy(logger=logger,
-                                mask_threshold=config.mask_threshold,
+                                mask_threshold=mask_threshold,
                                 pretrained_cnn_state=cnn_state)
 
-            train_task = Masking(batch_size=config.batch_size, validation=False)
-            validation_task = Masking(batch_size=config.batch_size, validation=True)
+            train_task = Masking(batch_size=batch_size, validation=False)
+            validation_task = Masking(batch_size=batch_size, validation=True)
 
-            if config.algo == 'PGPE':
+            if algo == 'PGPE':
                 solver = PGPE(
-                    pop_size=config.pop_size,
+                    pop_size=pop_size,
                     param_size=policy.num_params,
                     optimizer='adam',
-                    center_learning_rate=config.center_lr,
-                    stdev_learning_rate=config.std_lr,
-                    init_stdev=config.init_std,
+                    center_learning_rate=center_lr,
+                    stdev_learning_rate=std_lr,
+                    init_stdev=init_std,
                     logger=logger,
-                    seed=config.seed,
+                    seed=seed,
                     init_params=best_mask_params
                 )
-            elif config.algo == 'OpenES':
+            elif algo == 'OpenES':
                 solver = OpenES(
-                    pop_size=config.pop_size,
-                    param_size=policy.num_params,
+                    pop_size=pop_size,
+                    param_size=policynum_params,
                     optimizer='adam',
-                    init_stdev=config.init_std,
+                    init_stdev=init_std,
                     logger=logger,
-                    seed=config.seed,
+                    seed=seed,
                 )
             else:
                 raise NotImplementedError
@@ -146,12 +163,12 @@ def run_train_masking(config, logger=None) -> float:
                 solver=solver,
                 train_task=train_task,
                 validation_task=validation_task,
-                max_iter=config.max_iter,
-                log_interval=config.log_interval,
-                test_interval=config.test_interval,
+                max_iter=max_iter,
+                log_interval=log_interval,
+                test_interval=test_interval,
                 n_repeats=1,
                 n_evaluations=1,
-                seed=config.seed,
+                seed=seed,
                 log_dir=log_dir,
                 logger=logger,
                 use_for_loop=False
@@ -163,25 +180,39 @@ def run_train_masking(config, logger=None) -> float:
                                                         state=cnn_state,
                                                         eval_only=True,
                                                         mask_params=mask_params,
-                                                        cnn_batch_size=config.batch_size,
+                                                        cnn_batch_size=batch_size,
                                                         )
 
-    # src_file = os.path.join(log_dir, 'best.npz')
-    # tar_file = os.path.join(log_dir, 'model.npz')
-    # shutil.copy(src_file, tar_file)
-    # trainer.model_dir = log_dir
-    # trainer.run(demo_mode=True)
+            # src_file = os.path.join(log_dir, 'best.npz')
+            # tar_file = os.path.join(log_dir, 'model.npz')
+            # shutil.copy(src_file, tar_file)
+            # trainer.model_dir = log_dir
+            # trainer.run(demo_mode=True)
 
-    end_time = time.time()
-    logger.info(f'Total time taken: {end_time-start_time:.2f}s')
-    logger.info('RUN COMPLETE\n')
-    logger.info('=' * 50)
+            end_time = time.time()
+            logger.info(f'Total time taken: {end_time-start_time:.2f}s')
+            logger.info('RUN COMPLETE\n')
+            logger.info('=' * 50)
 
-    wandb.finish()
+            wandb.finish()
 
-    return cnn_val_acc
+            return cnn_val_acc
 
 
 if __name__ == '__main__':
-    configs = parse_args()
-    run_train_masking(configs)
+    config = parse_args()
+    run_train_masking(algo=config.algo,
+                      pop_size=config.pop_size,
+                      batch_size=config.batch_size,
+                      mask_threshold=config.mask_threshold,
+                      max_iter=config.max_iter,
+                      max_steps=config.max_steps,
+                      evo_epochs=config.evo_epochs,
+                      test_interval=config.test_interval,
+                      log_interval=config.log_interval,
+                      center_lr=config.center_lr,
+                      std_lr=config.std_lr,
+                      init_std=config.init_std,
+                      cnn_epochs=config.cnn_epochs,
+                      cnn_lr=config.cnn_lr,
+                      config_dict=config)

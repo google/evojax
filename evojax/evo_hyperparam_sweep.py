@@ -1,3 +1,4 @@
+import configparser
 import os
 import time
 import optuna
@@ -49,7 +50,8 @@ for _ in range(6):
         init_std=trial.suggest_float("init_std", 0, 0.1),
     )
     params_dict.update(test_params)
-    _, val_accuracy = run_train_masking(**params_dict)
+
+    _, val_accuracy = run_train_masking(**params_dict, logger=logger, config_dict=params_dict)
     study.tell(trial, val_accuracy)
 
 trial = study.best_trial
