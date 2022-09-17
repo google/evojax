@@ -1,4 +1,5 @@
 import os
+import time
 import optuna
 from evojax.mnist_cnn import run_mnist_training
 from evojax.datasets import full_data_loader
@@ -10,10 +11,13 @@ if not os.path.exists(log_dir):
 logger = create_logger(name='SWEEP', log_dir=log_dir, debug=False)
 
 datasets_tuple = full_data_loader()
-study = optuna.create_study(direction="maximize")
+study = optuna.create_study(direction="maximize",
+                            study_name="mnist_baselines",
+                            storage=f'sqlite:///{log_dir}/optuna_hparam_search.db',
+                            )
 
 
-for _ in range(100):
+for _ in range(10):
     trial = study.ask()
 
     learning_rate = trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True)
@@ -39,3 +43,12 @@ for _ in range(100):
                                          l1_reg_lambda=l1_reg_lambda,
                                          dropout_rate=None)
     study.tell(trial, val_accuracy)
+
+trial = study.best_trial
+logger.info(f'Best Validation Accuracy: {trial.value:.4}')
+logger.info(f'Best Params:')
+for key, value in trial.params.items():
+    logger.info(f'-> {key}: {value}')
+
+df = study.trials_dataframe()
+df.to_csv(f'{os.path.join(log_dir, "dataframes",time.strftime("%m%d_%H%M"))}.csv')
