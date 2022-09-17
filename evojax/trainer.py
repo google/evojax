@@ -41,10 +41,9 @@ class Trainer(object):
                  policy: PolicyNetwork,
                  solver: NEAlgorithm,
                  train_task: VectorizedTask,
-                 test_task: VectorizedTask,
+                 validation_task: VectorizedTask,
                  max_iter: int = 1000,
                  log_interval: int = 20,
-                 val_interval: int = 10,
                  test_interval: int = 100,
                  n_repeats: int = 1,
                  test_n_repeats: int = 1,
@@ -87,7 +86,6 @@ class Trainer(object):
             self._logger = logger
 
         self._log_interval = log_interval
-        self._val_interval = val_interval
         self._test_interval = test_interval
         self._max_iter = max_iter
         self.model_dir = model_dir
@@ -108,7 +106,7 @@ class Trainer(object):
             n_evaluations=n_evaluations,
             policy_net=policy,
             train_vec_task=train_task,
-            test_vec_task=test_task,
+            test_vec_task=validation_task,
             seed=seed,
             obs_normalizer=self._obs_normalizer,
             use_for_loop=use_for_loop,
@@ -116,7 +114,7 @@ class Trainer(object):
         )
 
         # # This will store the masking network, so masks can be checked throughout training
-        self.policy_network = policy
+        # self.policy_network = policy
         # self.dataset_labels = dataset_labels
         # self.masks_array = []
 
@@ -135,7 +133,7 @@ class Trainer(object):
                    f'Evo Worst {split.capitalize()} accuracy': worst_score,
                    f'Evo {split.capitalize()} STD': std_score})
 
-    def run(self, demo_mode: bool = False) -> Tuple[float, jnp.ndarray]:
+    def run(self, demo_mode: bool = False) -> Tuple[jnp.ndarray, float]:
         """Start the training / test process."""
 
         if self.model_dir is not None:
@@ -165,7 +163,7 @@ class Trainer(object):
                 self.solver.best_params = params
 
             best_score = -float('Inf')
-
+            best_params = None
             for i in range(self._max_iter):
                 start_time = time.perf_counter()
                 params = self.solver.ask()
@@ -190,15 +188,6 @@ class Trainer(object):
                 if i > 0 and i % self._test_interval == 0:
                     best_params = self.solver.best_params
 
-                    # # Test and save the mask used for each dataset
-                    # current_masks, _ = self.policy_network.get_actions(None, best_params, None)
-                    # self.masks_array.append(current_masks)
-                    #
-                    # mean_mask = jnp.mean(current_masks, axis=1)
-                    # for k, v in self.dataset_labels.items():
-                    #     self._logger.info(f'[MASK] Mean mask value for {k}: {mean_mask[v]}')
-                    #     wandb.log({f'Mean mask {k}': mean_mask[v]})
-
                     test_scores, _ = self.sim_mgr.eval_params(
                         params=best_params, test=True)
 
@@ -206,41 +195,43 @@ class Trainer(object):
 
                     self._log_scores_fn(i, test_scores, "test")
                     mean_test_score = test_scores.mean()
-                    save_model(
-                        model_dir=self._log_dir,
-                        model_name=f'iter_{i}',
-                        params=best_params,
-                        obs_params=self.sim_mgr.obs_params,
-                        best=mean_test_score > best_score,
-                    )
-                    best_score = max(best_score, mean_test_score)
+                    # save_model(
+                    #     model_dir=self._log_dir,
+                    #     model_name=f'iter_{i}',
+                    #     params=best_params,
+                    #     obs_params=self.sim_mgr.obs_params,
+                    #     best=mean_test_score > best_score,
+                    # )
+                    if mean_test_score > best_score:
+                        best_score = mean_test_score
+                        best_params = self.solver.best_params
 
             # Test and save the final model.
-            best_params = self.solver.best_params
-            test_scores, _ = self.sim_mgr.eval_params(
-                params=best_params, test=True)
-            self._logger.info(
-                f'[TEST] Iter={self._max_iter}, #tests={test_scores.size}, max={test_scores.max():.4f}, '
-                f'avg={test_scores.mean():.4f}, min={test_scores.min():.4f}, std={test_scores.std():.4f}')
-            mean_test_score = test_scores.mean()
-            save_model(
-                model_dir=self._log_dir,
-                model_name='final',
-                params=best_params,
-                obs_params=self.sim_mgr.obs_params,
-                best=mean_test_score > best_score,
-            )
-            best_score = max(best_score, mean_test_score)
-            if isinstance(self.solver, QualityDiversityMethod):
-                save_lattices(
-                    log_dir=self._log_dir,
-                    file_name='qd_lattices',
-                    fitness_lattice=self.solver.fitness_lattice,
-                    params_lattice=self.solver.params_lattice,
-                    occupancy_lattice=self.solver.occupancy_lattice,
-                )
-            self._logger.info(
-                f'Training done, best_score={best_score:.4f}')
+            # best_params = self.solver.best_params
+            # test_scores, _ = self.sim_mgr.eval_params(
+            #     params=best_params, test=True)
+            # self._logger.info(
+            #     f'[TEST] Iter={self._max_iter}, #tests={test_scores.size}, max={test_scores.max():.4f}, '
+            #     f'avg={test_scores.mean():.4f}, min={test_scores.min():.4f}, std={test_scores.std():.4f}')
+            # mean_test_score = test_scores.mean()
+            # save_model(
+            #     model_dir=self._log_dir,
+            #     model_name='final',
+            #     params=best_params,
+            #     obs_params=self.sim_mgr.obs_params,
+            #     best=mean_test_score > best_score,
+            # )
+            # best_score = max(best_score, mean_test_score)
+            # if isinstance(self.solver, QualityDiversityMethod):
+            #     save_lattices(
+            #         log_dir=self._log_dir,
+            #         file_name='qd_lattices',
+            #         fitness_lattice=self.solver.fitness_lattice,
+            #         params_lattice=self.solver.params_lattice,
+            #         occupancy_lattice=self.solver.occupancy_lattice,
+            #     )
+            # self._logger.info(
+            #     f'Training done, best_score={best_score:.4f}')
 
             # Save all the masks for the run
             # time_str = time.strftime("%Y%m%d_%H%M%S")
@@ -248,4 +239,4 @@ class Trainer(object):
             # stacked_masks = np.stack(self.masks_array).astype('b')
             # np.savez_compressed(save_path, masks=stacked_masks)
 
-            return best_score, best_params
+            return best_params, best_score

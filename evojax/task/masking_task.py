@@ -80,13 +80,13 @@ class Masking(VectorizedTask):
     def __init__(self,
                  batch_size: int = 1024,
                  max_steps: int = 100,
-                 test: bool = False):
+                 validation: bool = False):
 
         self.max_steps = max_steps
         self.obs_shape = tuple([1, ])
         self.act_shape = tuple([10, ])
 
-        image_data, class_labels, task_labels = setup_task_data(test)
+        image_data, class_labels, task_labels = setup_task_data(validation)
 
         def reset_fn(key):
             next_key, key = random.split(key)
@@ -109,7 +109,7 @@ class Masking(VectorizedTask):
 
         def step_fn(state: MaskTaskState, action: jnp.ndarray):
 
-            if test:
+            if validation:
                 reward = step_accuracy(action, state.labels)
             else:
                 reward = step_accuracy(action, state.labels)

@@ -25,7 +25,7 @@ import wandb
 from evojax import Trainer
 from evojax.task.masking_task import Masking
 from evojax.policy.mask_policy import MaskPolicy
-from evojax.algo import PGPE, OpenES, CMA_ES_JAX
+from evojax.algo import PGPE, OpenES
 from evojax import util
 from evojax.mnist_cnn import run_mnist_training, full_data_loader
 
@@ -63,7 +63,7 @@ def parse_args():
     parser.add_argument(
         '--cnn-lr', type=float, default=0.001, help='Learning rate for the CNN model.')
     parser.add_argument('--algo', type=str, default=None, help='Evolutionary algorithm to use.',
-                        choices=['PGPE', 'CMA', 'OpenES'])
+                        choices=['PGPE', 'OpenES'])
     parser.add_argument('--use-task-labels', action='store_true', help='Input the task labels to the CNN.')
     parser.add_argument('--l1-pruning-proportion', type=float,
                         help='The proportion of weights to remove with L1 pruning.')
@@ -95,16 +95,18 @@ def run_train_masking(config):
     logger.info(f'Start Time - {time.strftime("%H:%M")}')
     logger.info('=' * 50)
 
+    cnn_state = mask_params = best_mask_params = None
+    datasets_tuple = full_data_loader()
     for i in range(config.evo_epochs):
         cnn_state, cnn_val_acc = run_mnist_training(logger,
                                                     seed=config.seed,
                                                     num_epochs=config.cnn_epochs,
-                                                    evo_epoch=0,
+                                                    evo_epoch=i,
                                                     learning_rate=config.cnn_lr,
                                                     cnn_batch_size=config.batch_size,
-                                                    state=None,
-                                                    mask_params=None,
-                                                    datasets_tuple=None,
+                                                    state=cnn_state,
+                                                    mask_params=mask_params,
+                                                    datasets_tuple=datasets_tuple,
                                                     early_stopping=True,
                                                     # These are the parameters for the other
                                                     # sparsity baseline types
@@ -113,67 +115,63 @@ def run_train_masking(config):
                                                     l1_reg_lambda=config.l1_reg_lambda,
                                                     dropout_rate=config.dropout_rate)
 
-        policy = MaskPolicy(logger=logger,
-                            mask_threshold=config.mask_threshold,
-                            pretrained_cnn_state=cnn_state)
+        if config.algo:
+            policy = MaskPolicy(logger=logger,
+                                mask_threshold=config.mask_threshold,
+                                pretrained_cnn_state=cnn_state)
 
-        train_task = Masking(batch_size=config.batch_size, test=False)
-        test_task = Masking(batch_size=config.batch_size, test=True)
+            train_task = Masking(batch_size=config.batch_size, validation=False)
+            validation_task = Masking(batch_size=config.batch_size, validation=True)
 
-        if config.algo == 'PGPE':
-            solver = PGPE(
-                pop_size=config.pop_size,
-                param_size=policy.num_params,
-                optimizer='adam',
-                center_learning_rate=config.center_lr,
-                stdev_learning_rate=config.std_lr,
-                init_stdev=config.init_std,
-                logger=logger,
+            if config.algo == 'PGPE':
+                solver = PGPE(
+                    pop_size=config.pop_size,
+                    param_size=policy.num_params,
+                    optimizer='adam',
+                    center_learning_rate=config.center_lr,
+                    stdev_learning_rate=config.std_lr,
+                    init_stdev=config.init_std,
+                    logger=logger,
+                    seed=config.seed,
+                    init_params=best_mask_params
+                )
+            elif config.algo == 'OpenES':
+                solver = OpenES(
+                    pop_size=config.pop_size,
+                    param_size=policy.num_params,
+                    optimizer='adam',
+                    init_stdev=config.init_std,
+                    logger=logger,
+                    seed=config.seed,
+                )
+            else:
+                raise NotImplementedError
+
+            # Train.
+            trainer = Trainer(
+                policy=policy,
+                solver=solver,
+                train_task=train_task,
+                validation_task=validation_task,
+                max_iter=config.max_iter,
+                log_interval=config.log_interval,
+                test_interval=config.test_interval,
+                n_repeats=1,
+                n_evaluations=1,
                 seed=config.seed,
-            )
-        elif config.algo == 'CMA':
-            solver = CMA_ES_JAX(
-                pop_size=config.pop_size,
-                param_size=policy.num_params,
-                init_stdev=config.init_std,
+                log_dir=log_dir,
                 logger=logger,
-                seed=config.seed,
+                use_for_loop=False
             )
-        elif config.algo == 'OpenES':
-            solver = OpenES(
-                pop_size=config.pop_size,
-                param_size=policy.num_params,
-                optimizer='adam',
-                init_stdev=config.init_std,
-                logger=logger,
-                seed=config.seed,
-            )
-        else:
-            raise NotImplementedError
 
-        # Train.
-        trainer = Trainer(
-            policy=policy,
-            solver=solver,
-            train_task=train_task,
-            test_task=test_task,
-            max_iter=config.max_iter,
-            log_interval=config.log_interval,
-            test_interval=config.test_interval,
-            n_repeats=1,
-            n_evaluations=1,
-            seed=config.seed,
-            log_dir=log_dir,
-            logger=logger,
-            use_for_loop=False
-        )
-
-        best_score, best_mask_params = trainer.run(demo_mode=False)
-        mask_params = policy.external_format_params_fn(best_mask_params)
-        _, final_test_accuracy = run_mnist_training(logger,
-                                                    state=cnn_state,
-                                                    eval_only=True,
-                                                    mask_params=mask_params)
+            best_mask_params, best_score = trainer.run(demo_mode=False)
+            mask_params = policy.external_format_params_fn(best_mask_params)
+            _, final_test_accuracy = run_mnist_training(logger,
+                                                        state=cnn_state,
+                                                        eval_only=True,
+                                                        mask_params=mask_params,
+                                                        cnn_batch_size=config.batch_size,
+                                                        )
 
     # src_file = os.path.join(log_dir, 'best.npz')
     # tar_file = os.path.join(log_dir, 'model.npz')

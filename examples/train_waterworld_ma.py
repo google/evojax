@@ -105,7 +105,7 @@ def main(config):
         policy=policy,
         solver=solver,
         train_task=train_task,
-        test_task=test_task,
+        validation_task=test_task,
         max_iter=config.max_iter,
         log_interval=config.log_interval,
         test_interval=config.test_interval,
