@@ -194,7 +194,7 @@ def run_train_masking(algo=None,
             logger.info('RUN COMPLETE\n')
             logger.info('=' * 50)
 
-            wandb.finish()
+    wandb.finish()
 
     return cnn_val_acc
 
