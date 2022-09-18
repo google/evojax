@@ -27,7 +27,7 @@ if __name__ == "__main__":
     seed = config.seed
     datasets_tuple = full_data_loader()
     study = optuna.create_study(direction="maximize",
-                                study_name=f"new_mnist{'_test' if config.test else ''}_evo_seed_{seed}",
+                                study_name=f"no_stopping_mnist{'_test' if config.test else ''}_evo_seed_{seed}",
                                 storage=f'sqlite:///{log_dir}/optuna_hparam_search.db',
                                 load_if_exists=True)
 
@@ -47,6 +47,7 @@ if __name__ == "__main__":
         cnn_epochs=5,
         cnn_lr=1e-3,
         log_evo=False,
+        early_stopping=False,
         datasets_tuple=datasets_tuple
     )
 
@@ -62,7 +63,7 @@ if __name__ == "__main__":
             mask_threshold=trial.suggest_float("mask_threshold", 0.3, 0.7),
             max_iter=trial.suggest_int("max_iter", 20, 300, log=True),
             evo_epochs=trial.suggest_int("evo_epochs", 0, 10, log=False),
-            cnn_epochs=trial.suggest_int("cnn_epochs", 1, 10, log=False),
+            cnn_epochs=trial.suggest_int("cnn_epochs", 1, 5, log=False),
             test_interval=trial.suggest_int("test_interval", 5, 20, log=False),
             center_lr=trial.suggest_float("center_lr", 0, 0.1),
             std_lr=trial.suggest_float("std_lr", 0, 0.2),
