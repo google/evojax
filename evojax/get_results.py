@@ -21,7 +21,7 @@ def run_and_format_results(config_dict, run_name):
     results = {}
     for s in range(number_of_seeds):
         results[s] = run_train_masking(**config_dict, config_dict=config_dict)
-    return {(run_name, k2, k1): v2 for k1, v1 in baseline_results.items() for k2, v2 in v1.items()}
+    return {(run_name, k2, k1): v2 for k1, v1 in results.items() for k2, v2 in v1.items()}
 
 
 if __name__ == "__main__":
@@ -47,6 +47,7 @@ if __name__ == "__main__":
         cnn_epochs=20,
         evo_epochs=0,
         cnn_lr=1e-3,
+        early_stopping=False,
         datasets_tuple=datasets_tuple,
         logger=logger
     )
