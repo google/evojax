@@ -47,7 +47,6 @@ if __name__ == "__main__":
         cnn_epochs=5,
         cnn_lr=1e-3,
         log_evo=False,
-        return_test=config.test
     )
 
     logger.info(f'Running {config.trial_count} Trials')
