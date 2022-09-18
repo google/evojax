@@ -193,6 +193,7 @@ def run_train_masking(algo=None,
                                                     eval_only=True,
                                                     mask_params=mask_params,
                                                     cnn_batch_size=batch_size,
+                                                    datasets_tuple=datasets_tuple
                                                     )
 
     end_time = time.time()
