@@ -20,7 +20,7 @@ def parse_args():
 def run_and_format_results(config_dict, run_name):
     results = {}
     for s in range(number_of_seeds):
-        results[s] = run_train_masking(**config_dict, config_dict=config_dict)
+        results[s] = run_train_masking(**config_dict, config_dict=config_dict, seed=s)
     return {(run_name, k2, k1): v2 for k1, v1 in results.items() for k2, v2 in v1.items()}
 
 
