@@ -207,7 +207,7 @@ def run_mnist_training(
         l1_pruning_proportion: float = None,
         l1_reg_lambda: float = None,
         dropout_rate: float = None,
-) -> Tuple[train_state.TrainState, float]:
+) -> Tuple[train_state.TrainState, dict]:
 
     rng = random.PRNGKey(seed)
 
@@ -238,12 +238,13 @@ def run_mnist_training(
 
         eval_accuracy = float(np.mean([i['accuracy'] for i in test_dataset_class.metrics_holder.values()]))
         logger.info(f'Final Test Accuracy: {eval_accuracy}')
-        return state, eval_accuracy
+        return state, {'train': [], 'validation': [], 'test': [eval_accuracy]}
 
     logger.info('Starting training MNIST CNN')
 
     previous_state = None
-    current_test_accuracy = previous_test_accuracy = previous_validation_accuracy = 0.
+    accuracy_dict = {'train': [], 'validation': [], 'test': []}
+    current_test_accuracy = previous_validation_accuracy = 0.
     for epoch in range(1, num_epochs + 1):
         # Since there can be multiple evo epochs count from the start of them
         relative_epoch = evo_epoch * num_epochs + epoch - 1
@@ -265,8 +266,6 @@ def run_mnist_training(
                                                 l1_reg_lambda=l1_reg_lambda,
                                                 dropout_rate=dropout_rate)
 
-        current_train_accuracy = calc_and_log_metrics(train_dataset_class, logger, epoch, wandb_logging)
-
         # Check the validation dataset
         state, validation_dataset_class = epoch_step(test=True,
                                                      state=state,
@@ -279,7 +278,18 @@ def run_mnist_training(
                                                      l1_reg_lambda=l1_reg_lambda,
                                                      dropout_rate=dropout_rate)
 
-        current_validation_accuracy = calc_and_log_metrics(validation_dataset_class, logger, epoch, wandb_logging)
+        current_validation_accuracy = validation_dataset_class.metrics_holder[combined_dataset_key]['accuracy']
+
+        # If the validation accuracy decreases will want to end if doing early stopping
+        if current_validation_accuracy > previous_validation_accuracy and early_stopping:
+            previous_validation_accuracy = current_validation_accuracy
+            previous_state = state
+        elif early_stopping:
+            logger.info(f'Validation accuracy decreased on epoch {epoch}, stopping early')
+            logger.info(f'Final Test Accuracy: {current_test_accuracy}')
+            return previous_state, accuracy_dict
+        else:
+            pass
 
         # Evaluate on the test set after each training epoch
         state, test_dataset_class = epoch_step(test=True,
@@ -293,25 +303,19 @@ def run_mnist_training(
                                                l1_reg_lambda=l1_reg_lambda,
                                                dropout_rate=dropout_rate)
 
+        current_train_accuracy = calc_and_log_metrics(train_dataset_class, logger, epoch, wandb_logging)
+        _ = calc_and_log_metrics(validation_dataset_class, logger, epoch,wandb_logging)
         current_test_accuracy = calc_and_log_metrics(test_dataset_class, logger, epoch, wandb_logging)
+
+        accuracy_dict['train'].append(current_train_accuracy)
+        accuracy_dict['validation'].append(current_validation_accuracy)
+        accuracy_dict['test'].append(current_test_accuracy)
 
         if wandb_logging:
             wandb.log({'Combined Train Accuracy': current_train_accuracy,
                        'Combined Validation Accuracy': current_validation_accuracy,
                        'Combined Test Accuracy': current_test_accuracy})
 
-        # If the validation accuracy decreases will want to end if doing early stopping
-        if current_validation_accuracy > previous_validation_accuracy and early_stopping:
-            previous_validation_accuracy = current_validation_accuracy
-            previous_test_accuracy = current_test_accuracy
-            previous_state = state
-        elif early_stopping:
-            logger.info(f'Validation accuracy decreased on epoch {epoch}, stopping early')
-            logger.info(f'Final Test Accuracy: {previous_test_accuracy}')
-            return previous_state, previous_validation_accuracy
-        else:
-            pass
-
     logger.info(f'Final Test Accuracy: {current_test_accuracy}')
 
-    return state, current_validation_accuracy
+    return state, accuracy_dict

@@ -71,8 +71,8 @@ if __name__ == "__main__":
             dropout_rate = trial.suggest_float("dropout_rate", 0.05, 0.5, step=0.05, log=False)
             base_config.update({"dropout_rate": dropout_rate})
 
-        cnn_state, val_accuracy = run_mnist_training(**base_config)
-        trial_states[trial.number] = cnn_state
+        cnn_state, accuracy_dict = run_mnist_training(**base_config)
+        val_accuracy = accuracy_dict['validation'][-1]
         study.tell(trial, val_accuracy)
 
     trial = study.best_trial
@@ -80,11 +80,6 @@ if __name__ == "__main__":
     logger.info(f'Best Params:')
     for key, value in trial.params.items():
         logger.info(f'-> {key}: {value}')
-
-    # base_config.update(trial.params)
-    # base_config["state"] = trial_states[trial.number]
-    # _, best_params_test_acc = run_mnist_training(eval_only=True, **base_config)
-    # logger.info(f'Corresponding Best Test Accuracy: {best_params_test_acc:.4}')
 
     df = study.trials_dataframe()
     dataframe_dir = os.path.join(log_dir, "dataframes")

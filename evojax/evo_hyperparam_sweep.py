@@ -11,6 +11,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--trial-count', type=int, default=5, help='How many trials to run.')
     parser.add_argument('--seed', type=int, default=0, help='Random seed for training.')
+    parser.add_argument('--test', action='store_true', help='Test dropout rate.')
     parsed_config, _ = parser.parse_known_args()
     return parsed_config
 
@@ -26,7 +27,7 @@ if __name__ == "__main__":
     seed = config.seed
     datasets_tuple = full_data_loader()
     study = optuna.create_study(direction="maximize",
-                                study_name=f"mnist_evo_seed_{seed}",
+                                study_name=f"mnist{'_test' if config.test else ''}_evo_seed_{seed}",
                                 storage=f'sqlite:///{log_dir}/optuna_hparam_search.db',
                                 load_if_exists=True)
 
@@ -45,7 +46,8 @@ if __name__ == "__main__":
         init_std=0.039,
         cnn_epochs=5,
         cnn_lr=1e-3,
-        log_evo=False
+        log_evo=False,
+        return_test=config.test
     )
 
     logger.info(f'Running {config.trial_count} Trials')
@@ -58,9 +60,9 @@ if __name__ == "__main__":
             algo=trial.suggest_categorical("algo", ["PGPE", "OpenES"]),
             pop_size=trial.suggest_categorical("pop_size", [8, 16, 32]),
             mask_threshold=trial.suggest_float("mask_threshold", 0.3, 0.7),
-            max_iter=trial.suggest_int("max_iter", 20, 1000, log=True),
-            evo_epochs=trial.suggest_int("evo_epochs", 1, 10, log=False),
-            cnn_epochs=trial.suggest_int("cnn_epochs", 1, 10, log=False),
+            max_iter=trial.suggest_int("max_iter", 20, 400, log=True),
+            evo_epochs=trial.suggest_int("evo_epochs", 0, 10, log=False),
+            cnn_epochs=trial.suggest_int("cnn_epochs", 1, 20, log=False),
             test_interval=trial.suggest_int("test_interval", 5, 20, log=False),
             center_lr=trial.suggest_float("center_lr", 0, 0.1),
             std_lr=trial.suggest_float("std_lr", 0, 0.2),
@@ -68,8 +70,13 @@ if __name__ == "__main__":
         )
         params_dict.update(test_params)
 
-        val_accuracy = run_train_masking(**params_dict, logger=logger, config_dict=params_dict)
-        study.tell(trial, val_accuracy)
+        accuracy_dict = run_train_masking(**params_dict, logger=logger, config_dict=params_dict)
+        if config.test:
+            opt_value = accuracy_dict['test'][-1]
+        else:
+            opt_value = accuracy_dict['validation'][-1]
+
+        study.tell(trial, opt_value)
 
     trial = study.best_trial
     logger.info(f'Best Validation Accuracy: {trial.value:.4}')
