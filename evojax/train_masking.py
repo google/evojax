@@ -133,10 +133,10 @@ def run_train_masking(algo=None,
                                                        early_stopping=early_stopping,
                                                        # These are the parameters for the other
                                                        # sparsity baseline types
-                                                       use_task_labels=False,
-                                                       l1_pruning_proportion=None,
-                                                       l1_reg_lambda=None,
-                                                       dropout_rate=None)
+                                                       use_task_labels=use_task_labels,
+                                                       l1_pruning_proportion=l1_pruning_proportion,
+                                                       l1_reg_lambda=l1_reg_lambda,
+                                                       dropout_rate=dropout_rate)
 
     if evo_epochs:
         policy = MaskPolicy(logger=logger,
@@ -188,10 +188,10 @@ def run_train_masking(algo=None,
                                                           early_stopping=early_stopping,
                                                           # These are the parameters for the other
                                                           # sparsity baseline types
-                                                          use_task_labels=False,
-                                                          l1_pruning_proportion=None,
-                                                          l1_reg_lambda=None,
-                                                          dropout_rate=None)
+                                                          use_task_labels=use_task_labels,
+                                                          l1_pruning_proportion=l1_pruning_proportion,
+                                                          l1_reg_lambda=l1_reg_lambda,
+                                                          dropout_rate=dropout_rate)
 
             # Update the full accuracy dict for that run
             full_accuracy_dict = {k: v+accuracy_dict[k] for k, v in full_accuracy_dict.items()}
