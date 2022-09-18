@@ -60,7 +60,7 @@ if __name__ == "__main__":
     dropout_dict = dict(**baseline_dict, dropout_rate=0.5)
     dropout_results = run_and_format_results(dropout_dict, 'dropout')
 
-    l1_reg_dict = dict(**baseline_dict, l1_reg_rate=3e-5)
+    l1_reg_dict = dict(**baseline_dict, l1_reg_lambda=3e-5)
     l1_reg_results = run_and_format_results(l1_reg_dict, 'l1_reg')
 
     # l1_pruning_dict = dict(**baseline_dict, l1_pruning_proportion=1e-5)
