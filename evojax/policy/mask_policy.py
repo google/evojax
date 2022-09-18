@@ -118,6 +118,11 @@ class MaskPolicy(PolicyNetwork):
     #     return MaskPolicyState(keys=keys,
     #                            cnn_params=flat_params)
 
+    def get_masks(self, params):
+        masking_output = self._forward_fn(params, jnp.arange(4))
+        masks = jnp.where(masking_output > self.mask_threshold, 1, 0)
+        return masks
+
     def get_actions(self,
                     t_states: MaskTaskState,
                     params: jnp.ndarray,

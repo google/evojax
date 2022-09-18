@@ -61,7 +61,7 @@ class Mask(nn.Module):
     """Mask network for to provide a mask based on either dataset label or image input."""
     mask_size: int
     dataset_number: int = current_dataset_number
-    pixel_input: bool = False
+    # pixel_input: bool = False
 
     @nn.compact
     def __call__(self, x):

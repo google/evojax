@@ -28,6 +28,7 @@ from evojax.policy.mask_policy import MaskPolicy
 from evojax.algo import PGPE, OpenES
 from evojax import util
 from evojax.mnist_cnn import run_mnist_training, full_data_loader
+from evojax.models import Mask
 
 
 def parse_cnn_args(arg_parser: argparse.ArgumentParser):
@@ -218,6 +219,9 @@ def run_train_masking(algo=None,
 
         best_mask_params, best_score = trainer.run(demo_mode=False)
         mask_params = policy.external_format_params_fn(best_mask_params)
+
+        masks = policy.get_masks(mask_params)
+
         _, eval_accuracy_dict = run_mnist_training(logger,
                                                    state=cnn_state,
                                                    eval_only=True,

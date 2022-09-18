@@ -12,6 +12,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--number-of-seeds', type=int, default=5, help='How many seeds to test.')
+    parser.add_argument('--epochs', type=int, default=20, help='Number of epochs.')
 
     parsed_config, _ = parser.parse_known_args()
     return parsed_config
@@ -44,7 +45,7 @@ if __name__ == "__main__":
         algo=None,
         pop_size=16,
         batch_size=1024,
-        cnn_epochs=20,
+        cnn_epochs=config.epochs,
         evo_epochs=0,
         cnn_lr=1e-3,
         early_stopping=False,
@@ -63,11 +64,14 @@ if __name__ == "__main__":
     l1_reg_dict = dict(**baseline_dict, l1_reg_lambda=3e-5)
     l1_reg_results = run_and_format_results(l1_reg_dict, 'l1_reg')
 
-    # l1_pruning_dict = dict(**baseline_dict, l1_pruning_proportion=1e-5)
-    # l1_pruning_results = run_and_format_results(l1_pruning_dict, 'l1_pruning')
+    l1_pruning_dict = dict(**baseline_dict, l1_pruning_proportion=0.05)
+    l1_pruning_results = run_and_format_results(l1_pruning_dict, 'l1_pruning')
 
-    all_baselines = {**baseline_results, **task_labels_results, **dropout_results, **l1_reg_results}
-    # , **l1_pruning_results}
+    all_baselines = dict(**baseline_results,
+                         **task_labels_results,
+                         **dropout_results,
+                         **l1_reg_results,
+                         **l1_pruning_results)
 
     df = pd.DataFrame(all_baselines).T
     df.to_csv(file_path)
