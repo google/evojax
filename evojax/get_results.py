@@ -51,11 +51,10 @@ if __name__ == "__main__":
     l1_reg_dict = dict(**baseline_dict, l1_reg_rate=3e-5)
     l1_reg_results = run_and_format_results(l1_reg_dict, 'l1_reg')
 
-    l1_pruning_dict = dict(**baseline_dict, l1_pruning_proportion=1e-5)
-    l1_pruning_results = run_and_format_results(l1_pruning_dict, 'l1_pruning')
+    # l1_pruning_dict = dict(**baseline_dict, l1_pruning_proportion=1e-5)
+    # l1_pruning_results = run_and_format_results(l1_pruning_dict, 'l1_pruning')
 
-    all_baselines = {**baseline_results, **task_labels_results, **dropout_results,
-                     **l1_reg_results, **l1_pruning_results}
+    all_baselines = {**baseline_results, **task_labels_results, **dropout_results, **l1_reg_results}  #, **l1_pruning_results}
 
     df = pd.DataFrame(all_baselines).T
     df.to_csv(file_path)
