@@ -168,26 +168,27 @@ def run_train_masking(algo=None,
     else:
         policy = solver = train_task = validation_task = None
 
-    for i in range(1, evo_epochs):
-        cnn_state, accuracy_dict = run_mnist_training(logger,
-                                                      seed=seed,
-                                                      num_epochs=cnn_epochs,
-                                                      evo_epoch=i,
-                                                      learning_rate=cnn_lr,
-                                                      cnn_batch_size=batch_size,
-                                                      state=cnn_state,
-                                                      mask_params=mask_params,
-                                                      datasets_tuple=datasets_tuple,
-                                                      early_stopping=True,
-                                                      # These are the parameters for the other
-                                                      # sparsity baseline types
-                                                      use_task_labels=False,
-                                                      l1_pruning_proportion=None,
-                                                      l1_reg_lambda=None,
-                                                      dropout_rate=None)
+    for i in range(evo_epochs):
+        if i:
+            cnn_state, accuracy_dict = run_mnist_training(logger,
+                                                          seed=seed,
+                                                          num_epochs=cnn_epochs,
+                                                          evo_epoch=i,
+                                                          learning_rate=cnn_lr,
+                                                          cnn_batch_size=batch_size,
+                                                          state=cnn_state,
+                                                          mask_params=mask_params,
+                                                          datasets_tuple=datasets_tuple,
+                                                          early_stopping=True,
+                                                          # These are the parameters for the other
+                                                          # sparsity baseline types
+                                                          use_task_labels=False,
+                                                          l1_pruning_proportion=None,
+                                                          l1_reg_lambda=None,
+                                                          dropout_rate=None)
 
-        # Update the full accuracy dict for that run
-        full_accuracy_dict = {k: v+accuracy_dict[k] for k, v in full_accuracy_dict.items()}
+            # Update the full accuracy dict for that run
+            full_accuracy_dict = {k: v+accuracy_dict[k] for k, v in full_accuracy_dict.items()}
 
         policy.cnn_state = cnn_state
 
