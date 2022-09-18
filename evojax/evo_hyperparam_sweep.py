@@ -15,7 +15,7 @@ def parse_args():
     return parsed_config
 
 
-if __name__ == "main":
+if __name__ == "__main__":
     config = parse_args()
 
     log_dir = './log/optuna'
