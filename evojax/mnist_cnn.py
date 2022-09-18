@@ -22,7 +22,9 @@ def get_batch_masks(state, task_labels, mask_params=None, l1_pruning_proportion=
         batch_masks = Mask(mask_size=mask_size).apply(mask_params, task_labels)
     elif l1_pruning_proportion is not None:
         linear_weights = state.params[cnn_final_layer_name]["kernel"]
-        batch_masks = None
+        mask_size = linear_weights.shape[0]
+        sorted_weights = linear_weights.sort()
+        batch_masks = jnp.where(linear_weights > sorted_weights[mask_size*l1_pruning_proportion], 1, 0)
     else:
         batch_masks = None
 
