@@ -89,7 +89,12 @@ def run_train_masking(algo=None,
                       logger=None,
                       config_dict=None,
                       datasets_tuple=None,
-                      log_evo=True) -> dict:
+                      log_evo=True,
+                      use_task_labels=False,
+                      l1_pruning_proportion=None,
+                      l1_reg_lambda=None,
+                      dropout_rate=None
+                      ) -> dict:
 
     log_dir = './log/masking'
     if not os.path.exists(log_dir):

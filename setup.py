@@ -48,6 +48,7 @@ setup(
         "pyyaml",
         # My additions
         "google-cloud-logging",
+        "google-cloud-storage",
         "ipdb",
         "evosax",  # Needed for some evolutionary algorithms
         "wandb",
