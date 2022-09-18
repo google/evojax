@@ -67,11 +67,26 @@ if __name__ == "__main__":
     l1_pruning_dict = dict(**baseline_dict, l1_pruning_proportion=0.05)
     l1_pruning_results = run_and_format_results(l1_pruning_dict, 'l1_pruning')
 
+    masking_params = dict(algo="PGPE",
+                          pop_size=32,
+                          mask_threshold=0.60,
+                          max_iter=48,
+                          evo_epochs=9,
+                          test_interval=16,
+                          log_interval=1000,
+                          center_lr=0.0018,
+                          std_lr=0.15,
+                          init_std=0.039)
+    masking_dict = dict(**baseline_dict, **masking_params)
+    masking_dict["cnn_epochs"] = 3
+    masking_results = run_and_format_results(masking_dict, 'masking')
+
     all_baselines = dict(**baseline_results,
                          **task_labels_results,
                          **dropout_results,
                          **l1_reg_results,
-                         **l1_pruning_results)
+                         **l1_pruning_results,
+                         **masking_results)
 
     df = pd.DataFrame(all_baselines).T
     df.to_csv(file_path)
