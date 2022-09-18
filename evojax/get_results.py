@@ -42,11 +42,9 @@ if __name__ == "__main__":
     datasets_tuple = full_data_loader()
 
     baseline_dict = dict(
-        algo=None,
         pop_size=16,
         batch_size=1024,
         cnn_epochs=config.epochs,
-        evo_epochs=0,
         cnn_lr=1e-3,
         early_stopping=False,
         datasets_tuple=datasets_tuple,
