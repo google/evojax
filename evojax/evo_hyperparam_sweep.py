@@ -48,7 +48,10 @@ if __name__ == "main":
         log_evo=False
     )
 
-    for _ in range(config.trial_count):
+    logger.info(f'Running {config.trial_count} Trials')
+    for i in range(config.trial_count):
+        logger.info(f'Starting Trial {i}/{config.trial_count}')
+
         trial = study.ask()
 
         test_params = dict(
