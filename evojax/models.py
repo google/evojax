@@ -12,7 +12,7 @@ current_dataset_number = 4
 class CNN(nn.Module):
     """CNN for MNIST."""
     dataset_number: int = current_dataset_number
-    dropout_rate: float = 0.0
+    dropout_rate: float = None
 
     @nn.compact
     def __call__(self,
@@ -32,7 +32,8 @@ class CNN(nn.Module):
 
         # TODO why won't this work with jit at the moment???
         # Default prob is 0, so will only drop if this is increased
-        # x = nn.Dropout(rate=self.dropout_rate)(x, deterministic=not train)
+        if self.dropout_rate is not None:
+            x = nn.Dropout(rate=self.dropout_rate)(x, deterministic=not train)
 
         if mask is not None:
             x = x * mask

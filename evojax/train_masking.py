@@ -51,7 +51,7 @@ def parse_args():
     parser.add_argument('--mask-threshold', type=float, default=0.5, help='Threshold for setting binary mask.')
     parser.add_argument('--max-iter', type=int, default=1000, help='Max training iterations.')
     parser.add_argument('--max-steps', type=int, default=100, help='Max steps for the tasks.')
-    parser.add_argument('--evo-epochs', type=int, default=1, help='Number of epochs for evo process.')
+    parser.add_argument('--evo-epochs', type=int, default=0, help='Number of epochs for evo process.')
     parser.add_argument('--test-interval', type=int, default=1000, help='Test interval.')
     parser.add_argument('--log-interval', type=int, default=100, help='Logging interval.')
     parser.add_argument('--center-lr', type=float, default=0.006, help='Center learning rate.')

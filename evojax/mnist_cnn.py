@@ -36,7 +36,7 @@ def train_step(state: train_state.TrainState,
                mask_params: FrozenDict = None,
                task_labels: jnp.ndarray = None,
                l1_pruning_proportion: float = None,
-               l1_reg_lambda: float = 0.0,
+               l1_reg_lambda: float = None,
                dropout_rate: float = None,
                ):
 
@@ -52,7 +52,8 @@ def train_step(state: train_state.TrainState,
                                                              rngs={'dropout': rng})
 
         loss = cross_entropy_loss(logits=output_logits, labels=class_labels)
-        # loss += l1_reg_lambda * jnp.sum(jnp.abs(params[cnn_final_layer_name]["kernel"]))
+        if l1_reg_lambda is not None:
+            loss += l1_reg_lambda * jnp.sum(jnp.abs(params[cnn_final_layer_name]["kernel"]))
 
         return loss, output_logits
 
@@ -78,12 +79,12 @@ def eval_step(state: train_state.TrainState,
     class_labels = batch['label'][:, 0]
     batch_masks = get_batch_masks(state, task_labels, mask_params, l1_pruning_proportion)
 
-    logits = CNN().apply({'params': params},
-                         batch['image'],
-                         batch_masks,
-                         task_labels,
-                         train=False,
-                         rngs={'dropout': rng})
+    logits = CNN(dropout_rate=dropout_rate).apply({'params': params},
+                                                  batch['image'],
+                                                  batch_masks,
+                                                  task_labels,
+                                                  train=False,
+                                                  rngs={'dropout': rng})
 
     return state, compute_metrics(logits=logits, labels=class_labels)
 
