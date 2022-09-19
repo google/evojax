@@ -10,7 +10,7 @@ es_config:
 hidden_size: 100
 num_tests: 100
 n_repeats: 32
-max_iter: 500
+max_iter: 1000
 test_interval: 50
 log_interval: 10
 seed: 42

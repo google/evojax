@@ -4,10 +4,9 @@ normalize: false
 es_config:
   pop_size: 100
   elite_ratio: 0.1
-  init_stdev: 0.03
+  init_stdev: 0.05
   decay_stdev: 0.999
   limit_stdev: 0.01
-hidden_size: 64
 num_tests: 100
 n_repeats: 16
 max_iter: 2000
