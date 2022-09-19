@@ -81,6 +81,7 @@ class Masking(VectorizedTask):
                  batch_size: int = 1024,
                  max_steps: int = 1,
                  validation: bool = False,
+                 test: bool = False,
                  pixel_input: bool = False,
                  datasets_tuple: Tuple[DatasetUtilClass, DatasetUtilClass, DatasetUtilClass] = None):
 
@@ -91,10 +92,11 @@ class Masking(VectorizedTask):
             self.obs_shape = tuple([1, ])
         self.act_shape = tuple([10, ])
 
-        if not datasets_tuple:
-            image_data, class_labels, task_labels = setup_task_data(validation)
-        else:
+        if not test:
             dataset_class = datasets_tuple[int(validation)]
+            image_data, class_labels, task_labels = dataset_class.return_data_arrays()
+        else:
+            dataset_class = datasets_tuple[-1]
             image_data, class_labels, task_labels = dataset_class.return_data_arrays()
 
         def reset_fn(key):

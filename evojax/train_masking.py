@@ -152,6 +152,8 @@ def run_train_masking(algo=None,
                              datasets_tuple=datasets_tuple, max_steps=max_steps)
         validation_task = Masking(batch_size=batch_size, validation=True, pixel_input=pixel_input,
                                   datasets_tuple=datasets_tuple, max_steps=max_steps)
+        test_task = Masking(batch_size=batch_size, test=True, validation=False, pixel_input=pixel_input,
+                            datasets_tuple=datasets_tuple, max_steps=max_steps)
 
         if algo == 'PGPE':
             solver = PGPE(
@@ -177,7 +179,7 @@ def run_train_masking(algo=None,
         else:
             raise NotImplementedError
     else:
-        policy = solver = train_task = validation_task = None
+        policy = solver = train_task = validation_task = test_task = None
 
     for i in range(evo_epochs):
         if i:
@@ -207,8 +209,8 @@ def run_train_masking(algo=None,
         trainer = Trainer(
             policy=policy,
             solver=solver,
-            train_task=train_task,
-            test_task=validation_task,
+            train_task=validation_task,
+            test_task=test_task,
             max_iter=max_iter,
             log_interval=log_interval,
             test_interval=test_interval,
