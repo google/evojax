@@ -44,6 +44,7 @@ if __name__ == "__main__":
     baseline_dict = dict(
         batch_size=1024,
         cnn_epochs=config.epochs,
+        evo_epochs=0,
         cnn_lr=1e-3,
         early_stopping=False,
         datasets_tuple=datasets_tuple,
@@ -74,7 +75,6 @@ if __name__ == "__main__":
                           pop_size=32,
                           mask_threshold=0.50,
                           max_iter=48,
-                          evo_epochs=9,
                           test_interval=16,
                           log_interval=1000,
                           center_lr=0.0018,
@@ -82,6 +82,7 @@ if __name__ == "__main__":
                           init_std=0.039)
     masking_dict = dict(**baseline_dict, **masking_params)
     masking_dict["cnn_epochs"] = 3
+    masking_dict["evo_epochs"] = 9
     masking_results = run_and_format_results(masking_dict, 'masking')
     full_results.update(masking_results)
 
