@@ -95,6 +95,7 @@ class Masking(VectorizedTask):
         if not test:
             dataset_class = datasets_tuple[int(validation)]
             image_data, class_labels, task_labels = dataset_class.return_data_arrays()
+            print(image_data.shape)
         else:
             dataset_class = datasets_tuple[-1]
             image_data, class_labels, task_labels = dataset_class.return_data_arrays()
