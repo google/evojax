@@ -12,7 +12,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--number-of-seeds', type=int, default=5, help='How many seeds to test.')
-    parser.add_argument('--epochs', type=int, default=20, help='Number of epochs.')
+    parser.add_argument('--epochs', type=int, default=30, help='Number of epochs.')
 
     parsed_config, _ = parser.parse_known_args()
     return parsed_config
@@ -89,9 +89,6 @@ if __name__ == "__main__":
     masking_dict["dropout_rate"] = 0.5
     masking_with_dropout_results = run_and_format_results(masking_dict, 'masking_with_dropout')
     full_results.update(masking_with_dropout_results)
-
-    import ipdb
-    ipdb.set_trace()
 
     series_dict = {k: pd.Series(v) for k, v in full_results.items()}
 
