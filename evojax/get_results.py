@@ -66,7 +66,7 @@ if __name__ == "__main__":
     # l1_pruning_results = run_and_format_results(l1_pruning_dict, 'l1_pruning')
 
     masking_params = dict(algo="PGPE",
-                          mask_threshold=0.60,
+                          mask_threshold=0.50,
                           max_iter=48,
                           evo_epochs=9,
                           test_interval=16,
