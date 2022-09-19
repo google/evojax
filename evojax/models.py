@@ -52,7 +52,8 @@ def create_train_state(rng, learning_rate, task_labels: jnp.ndarray = None,
                                                  task_labels,
                                                  True,  # Set train to True, not sure if needed though
                                                  )['params']
-    tx = optax.adamw(learning_rate, weight_decay=weight_decay)
+    # tx = optax.adam(learning_rate)
+    tx = optax.adamw(learning_rate)
     return train_state.TrainState.create(
         apply_fn=CNN().apply, params=params, tx=tx)
 
