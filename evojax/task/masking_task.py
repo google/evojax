@@ -92,13 +92,9 @@ class Masking(VectorizedTask):
             self.obs_shape = tuple([1, ])
         self.act_shape = tuple([10, ])
 
-        import ipdb
-        ipdb.set_trace()
-
         if not test:
             dataset_class = datasets_tuple[int(validation)]
             image_data, class_labels, task_labels = dataset_class.return_data_arrays()
-            print(image_data.shape)
         else:
             dataset_class = datasets_tuple[-1]
             image_data, class_labels, task_labels = dataset_class.return_data_arrays()
