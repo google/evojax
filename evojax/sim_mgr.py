@@ -111,7 +111,7 @@ class SimManager(object):
                  n_evaluations: int,
                  policy_net: PolicyNetwork,
                  train_vec_task: VectorizedTask,
-                 test_vec_task: VectorizedTask,
+                 valid_vec_task: VectorizedTask,
                  seed: int = 0,
                  obs_normalizer: ObsNormalizer = None,
                  use_for_loop: bool = False,
@@ -135,8 +135,6 @@ class SimManager(object):
             self._logger = create_logger(name='SimManager')
         else:
             self._logger = logger
-
-        self.policy_net = policy_net
 
         self._use_for_loop = use_for_loop
         self._logger.info('use_for_loop={}'.format(self._use_for_loop))
@@ -208,9 +206,7 @@ class SimManager(object):
             return accumulated_rewards, obs_set, obs_mask, task_states
 
         self._policy_reset_fn = jax.jit(policy_net.reset)
-        # self._policy_reset_fn = policy_net.reset
         self._policy_act_fn = jax.jit(policy_net.get_actions)
-        # self._policy_act_fn = policy_net.get_actions
 
         if (
                 hasattr(train_vec_task, 'bd_extractor') and
@@ -230,26 +226,20 @@ class SimManager(object):
             step_once_fn=partial(step_once, task=train_vec_task),
             max_steps=train_vec_task.max_steps)
         if self._num_device > 1:
-            # TODO - jit of pmap - check with someone who knows a lot about JAX
-            # self._train_rollout_fn = jax.jit(jax.pmap(
-            #     self._train_rollout_fn, in_axes=(0, 0, 0, None)))
-            self._train_rollout_fn = jax.pmap(self._train_rollout_fn,
-                                              in_axes=(0, 0, 0, None), axis_name='num_devices')
+            self._train_rollout_fn = jax.jit(jax.pmap(
+                self._train_rollout_fn, in_axes=(0, 0, 0, None)))
 
-        # Set up test functions.
-        self._test_reset_fn = test_vec_task.reset
-        self._test_step_fn = test_vec_task.step
-        self._test_max_steps = test_vec_task.max_steps
-        self._test_rollout_fn = partial(
+        # Set up validation functions.
+        self._valid_reset_fn = valid_vec_task.reset
+        self._valid_step_fn = valid_vec_task.step
+        self._valid_max_steps = valid_vec_task.max_steps
+        self._valid_rollout_fn = partial(
             rollout,
-            step_once_fn=partial(step_once, task=test_vec_task),
-            max_steps=test_vec_task.max_steps)
+            step_once_fn=partial(step_once, task=valid_vec_task),
+            max_steps=valid_vec_task.max_steps)
         if self._num_device > 1:
-            # TODO - is this jit of pmap bad???
-            # self._test_rollout_fn = jax.jit(jax.pmap(
-            #     self._test_rollout_fn, in_axes=(0, 0, 0, None)))
-            self._test_rollout_fn = jax.pmap(self._test_rollout_fn,
-                                             in_axes=(0, 0, 0, None), axis_name='num_devices')
+            self._valid_rollout_fn = jax.jit(jax.pmap(
+                self._valid_rollout_fn, in_axes=(0, 0, 0, None)))
 
     def eval_params(self,
                     params: jnp.ndarray,
@@ -275,9 +265,9 @@ class SimManager(object):
         policy_act_func = self._policy_act_fn
         if test:
             n_repeats = self._test_n_repeats
-            task_reset_func = self._test_reset_fn
-            task_step_func = self._test_step_fn
-            task_max_steps = self._test_max_steps
+            task_reset_func = self._valid_reset_fn
+            task_step_func = self._valid_step_fn
+            task_max_steps = self._valid_max_steps
             params = duplicate_params(
                 params[None, :], self._n_evaluations, False)
         else:
@@ -323,8 +313,8 @@ class SimManager(object):
         policy_reset_func = self._policy_reset_fn
         if test:
             n_repeats = self._test_n_repeats
-            task_reset_func = self._test_reset_fn
-            rollout_func = self._test_rollout_fn
+            task_reset_func = self._valid_reset_fn
+            rollout_func = self._valid_rollout_fn
             params = duplicate_params(
                 params[None, :], self._n_evaluations, False)
         else:
@@ -359,15 +349,11 @@ class SimManager(object):
         if self._num_device > 1:
             params = split_params_for_pmap(params)
             task_state = split_states_for_pmap(task_state)
-            # TODO can the policy state not be split???
             policy_state = split_states_for_pmap(policy_state)
 
         # Do the rollouts.
         scores, all_obs, masks, final_states = rollout_func(
             task_state, policy_state, params, self.obs_params)
-
-        # self.policy_net.update_from_state(policy_state)
-
         if self._num_device > 1:
             all_obs = reshape_data_from_pmap(all_obs)
             masks = reshape_data_from_pmap(masks)

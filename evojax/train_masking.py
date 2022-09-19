@@ -204,7 +204,7 @@ def run_train_masking(algo=None,
             policy=policy,
             solver=solver,
             train_task=train_task,
-            validation_task=validation_task,
+            test_task=validation_task,
             max_iter=max_iter,
             log_interval=log_interval,
             test_interval=test_interval,
@@ -214,7 +214,6 @@ def run_train_masking(algo=None,
             log_dir=log_dir,
             logger=logger,
             use_for_loop=False,
-            log_evo=log_evo
         )
 
         best_mask_params, best_score = trainer.run(demo_mode=False)
