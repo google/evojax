@@ -53,7 +53,6 @@ if __name__ == "__main__":
         init_std=0.039,
         cnn_epochs=5,
         cnn_lr=1e-3,
-        log_evo=False,
         early_stopping=False,
         datasets_tuple=datasets_tuple
     )
