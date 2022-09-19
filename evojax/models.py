@@ -30,8 +30,7 @@ class CNN(nn.Module):
             label_input = nn.one_hot(task_labels, self.dataset_number)
             x = jnp.concatenate([x, label_input], axis=1)
 
-        # TODO why won't this work with jit at the moment???
-        # Default prob is 0, so will only drop if this is increased
+        # TODO need to change the dropout code in flax to remove ifs for jit compatibility
         if self.dropout_rate is not None:
             x = nn.Dropout(rate=self.dropout_rate)(x, deterministic=not train)
 
