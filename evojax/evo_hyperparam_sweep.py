@@ -11,7 +11,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--trial-count', type=int, default=5, help='How many trials to run.')
     parser.add_argument('--seed', type=int, default=0, help='Random seed for training.')
-    parser.add_argument('--dropout', type=int, default=0, help='Random seed for training.')
+    parser.add_argument('--dropout', action='store_true', help='Random seed for training.')
     parser.add_argument('--test', action='store_true', help='Check test acc.')
     parsed_config, _ = parser.parse_known_args()
     return parsed_config
