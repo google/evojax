@@ -52,7 +52,7 @@ if __name__ == "__main__":
     full_results = {}
 
     baseline_results = run_and_format_results(baseline_dict, 'baseline')
-    full_results = {**full_results, **baseline_results}
+    full_results.update(baseline_results)
 
     # task_labels_dict = dict(**baseline_dict, use_task_labels=True)
     # task_labels_results = run_and_format_results(task_labels_dict, 'task_labels')
@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
     dropout_dict = dict(**baseline_dict, dropout_rate=0.5)
     dropout_results = run_and_format_results(dropout_dict, 'dropout')
-    full_results = {**full_results, **dropout_results}
+    full_results.update(dropout_results)
 
     # l1_reg_dict = dict(**baseline_dict, l1_reg_lambda=3e-5)
     # l1_reg_results = run_and_format_results(l1_reg_dict, 'l1_reg')
@@ -83,14 +83,16 @@ if __name__ == "__main__":
     masking_dict = dict(**baseline_dict, **masking_params)
     masking_dict["cnn_epochs"] = 3
     masking_results = run_and_format_results(masking_dict, 'masking')
-    full_results = {**full_results, **masking_results}
+    full_results.update(masking_results)
 
     masking_dict["dropout_rate"] = 0.5
     masking_with_dropout_results = run_and_format_results(masking_dict, 'masking_with_dropout')
-    full_results = {**full_results, **masking_with_dropout_results}
+    full_results.update(masking_with_dropout_results)
 
     df = pd.DataFrame(full_results).T
     df.to_csv(file_path)
+
+    logger.info(f'Saving results as: {file_name}')
 
     blob = bucket.blob(file_name)
     blob.upload_from_filename(file_path)
