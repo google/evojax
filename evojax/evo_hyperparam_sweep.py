@@ -28,8 +28,11 @@ if __name__ == "__main__":
 
     seed = config.seed
     datasets_tuple = full_data_loader()
+    prefix = f"using_{'test_' if config.test else ''}" \
+             f"{'dropout_' if config.dropout else ''}" \
+             f"{'pixel_input_' if config.pixel_input else ''}"
     study = optuna.create_study(direction="maximize",
-                                study_name=f"pixel{'_test' if config.test else ''}_evo_seed_{seed}",
+                                study_name=f"{prefix}_evo_seed_{seed}",
                                 storage=f'sqlite:///{log_dir}/optuna_hparam_search.db',
                                 load_if_exists=True)
     # study = optuna.create_study(direction="maximize",
