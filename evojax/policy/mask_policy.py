@@ -26,7 +26,7 @@ import optax
 from evojax.policy.base import PolicyNetwork, PolicyState
 from evojax.task.masking_task import MaskTaskState
 from evojax.util import create_logger, get_params_format_fn
-from evojax.models import Mask, cnn_final_layer_name, create_train_state
+from evojax.models import Mask, PixelMask, cnn_final_layer_name, create_train_state
 
 
 @dataclass
@@ -55,7 +55,8 @@ class MaskPolicyState(PolicyState):
 class MaskPolicy(PolicyNetwork):
     """A dense neural network for masking the MNIST classification task."""
 
-    def __init__(self, logger: logging.Logger = None, learning_rate: float = 1e-3, mask_threshold: float = 0.5,
+    def __init__(self, logger: logging.Logger = None, learning_rate: float = 1e-3,
+                 mask_threshold: float = 0.5, pixel_input: bool = False,
                  pretrained_cnn_state: train_state.TrainState = None):
         if logger is None:
             self._logger = create_logger('MaskNetPolicy')
@@ -79,8 +80,12 @@ class MaskPolicy(PolicyNetwork):
         self._cnn_format_params_fn = jax.vmap(cnn_format_params_fn)
         # self._cnn_format_params_fn = cnn_format_params_fn
 
-        mask_model = Mask(mask_size=self.mask_size)
-        params = mask_model.init(random.PRNGKey(0), jnp.ones([1, ]))
+        if pixel_input:
+            mask_model = PixelMask(mask_size=self.mask_size)
+            params = mask_model.init(random.PRNGKey(0), jnp.ones([1, 28, 28, 1]))
+        else:
+            mask_model = Mask(mask_size=self.mask_size)
+            params = mask_model.init(random.PRNGKey(0), jnp.ones([1, ]))
 
         self.num_params, format_params_fn = get_params_format_fn(params)
         self.external_format_params_fn = format_params_fn

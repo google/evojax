@@ -73,6 +73,7 @@ def parse_args():
 
 
 def run_train_masking(algo=None,
+                      pixel_input=False,
                       seed=0,
                       pop_size=8,
                       batch_size=1024,
@@ -85,13 +86,14 @@ def run_train_masking(algo=None,
                       center_lr=0.006,
                       std_lr=0.089,
                       init_std=0.039,
-                      cnn_epochs=20,
-                      cnn_lr=1e-3,
+                      # Config args
                       debug=False,
                       logger=None,
                       config_dict=None,
                       datasets_tuple=None,
-                      log_evo=True,
+                      # Cnn args
+                      cnn_epochs=20,
+                      cnn_lr=1e-3,
                       early_stopping=True,
                       use_task_labels=False,
                       l1_pruning_proportion=None,

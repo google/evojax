@@ -11,7 +11,8 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--trial-count', type=int, default=5, help='How many trials to run.')
     parser.add_argument('--seed', type=int, default=0, help='Random seed for training.')
-    parser.add_argument('--dropout', action='store_true', help='Random seed for training.')
+    parser.add_argument('--dropout', action='store_true', help='Use dropout and masking.')
+    parser.add_argument('--pixel-input', action='store_true', help='Use pixel input for the mask.')
     parser.add_argument('--test', action='store_true', help='Check test acc.')
     parsed_config, _ = parser.parse_known_args()
     return parsed_config
@@ -28,7 +29,7 @@ if __name__ == "__main__":
     seed = config.seed
     datasets_tuple = full_data_loader()
     study = optuna.create_study(direction="maximize",
-                                study_name=f"dropout{'_test' if config.test else ''}_evo_seed_{seed}",
+                                study_name=f"pixel{'_test' if config.test else ''}_evo_seed_{seed}",
                                 storage=f'sqlite:///{log_dir}/optuna_hparam_search.db',
                                 load_if_exists=True)
     # study = optuna.create_study(direction="maximize",
@@ -38,6 +39,7 @@ if __name__ == "__main__":
     #
     params_dict = dict(
         algo=None,
+        pixel_input=config.pixel_input,
         pop_size=8,
         batch_size=1024,
         mask_threshold=0.5,
