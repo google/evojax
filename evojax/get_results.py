@@ -50,20 +50,20 @@ if __name__ == "__main__":
         datasets_tuple=datasets_tuple,
         logger=logger
     )
-
-    baseline_results = run_and_format_results(baseline_dict, 'baseline')
-
-    task_labels_dict = dict(**baseline_dict, use_task_labels=True)
-    task_labels_results = run_and_format_results(task_labels_dict, 'task_labels')
-
-    dropout_dict = dict(**baseline_dict, dropout_rate=0.5)
-    dropout_results = run_and_format_results(dropout_dict, 'dropout')
-
-    l1_reg_dict = dict(**baseline_dict, l1_reg_lambda=3e-5)
-    l1_reg_results = run_and_format_results(l1_reg_dict, 'l1_reg')
-
-    l1_pruning_dict = dict(**baseline_dict, l1_pruning_proportion=0.05)
-    l1_pruning_results = run_and_format_results(l1_pruning_dict, 'l1_pruning')
+    #
+    # baseline_results = run_and_format_results(baseline_dict, 'baseline')
+    #
+    # task_labels_dict = dict(**baseline_dict, use_task_labels=True)
+    # task_labels_results = run_and_format_results(task_labels_dict, 'task_labels')
+    #
+    # dropout_dict = dict(**baseline_dict, dropout_rate=0.5)
+    # dropout_results = run_and_format_results(dropout_dict, 'dropout')
+    #
+    # l1_reg_dict = dict(**baseline_dict, l1_reg_lambda=3e-5)
+    # l1_reg_results = run_and_format_results(l1_reg_dict, 'l1_reg')
+    #
+    # l1_pruning_dict = dict(**baseline_dict, l1_pruning_proportion=0.05)
+    # l1_pruning_results = run_and_format_results(l1_pruning_dict, 'l1_pruning')
 
     masking_params = dict(algo="PGPE",
                           pop_size=32,
@@ -79,12 +79,13 @@ if __name__ == "__main__":
     masking_dict["cnn_epochs"] = 3
     masking_results = run_and_format_results(masking_dict, 'masking')
 
-    all_baselines = dict(**baseline_results,
-                         **task_labels_results,
-                         **dropout_results,
-                         **l1_reg_results,
-                         **l1_pruning_results,
-                         **masking_results)
+    # all_baselines = dict(**baseline_results,
+    #                      **task_labels_results,
+    #                      **dropout_results,
+    #                      **l1_reg_results,
+    #                      **l1_pruning_results,
+    #                      **masking_results)
+    all_baselines = masking_results
 
     df = pd.DataFrame(all_baselines).T
     df.to_csv(file_path)
