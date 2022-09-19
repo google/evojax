@@ -95,7 +95,7 @@ class DatasetUtilClass:
         return images, labels[:, 0], labels[:, 1]
 
     def get_data_count(self):
-        data_count = jnp.sum([ds['image'].shape[0] for ds in self.dataset_holder.values()])
+        data_count = sum(ds['image'].shape[0] for ds in self.dataset_holder.values())
         return data_count
 
 
