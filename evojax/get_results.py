@@ -12,7 +12,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--number-of-seeds', type=int, default=5, help='How many seeds to test.')
-    parser.add_argument('--epochs', type=int, default=30, help='Number of epochs.')
+    parser.add_argument('--epochs', type=int, default=40, help='Number of epochs.')
 
     parsed_config, _ = parser.parse_known_args()
     return parsed_config
@@ -71,24 +71,25 @@ if __name__ == "__main__":
     # l1_pruning_results = run_and_format_results(l1_pruning_dict, 'l1_pruning')
     # full_results = {**full_results, **l1_pruning_results}
 
-    masking_params = dict(algo="PGPE",
-                          pop_size=32,
-                          mask_threshold=0.50,
-                          max_iter=48,
+    masking_params = dict(algo="OpenES",
+                          pop_size=16,
+                          mask_threshold=0.51,
+                          max_iter=72,
                           test_interval=16,
                           log_interval=1000,
-                          center_lr=0.0018,
-                          std_lr=0.15,
-                          init_std=0.039)
+                          center_lr=0.0825,
+                          std_lr=0.08,
+                          init_std=0.045)
     masking_dict = dict(**baseline_dict, **masking_params)
-    masking_dict["cnn_epochs"] = 3
-    masking_dict["evo_epochs"] = 10
+    masking_dict["cnn_epochs"] = 5
+    masking_dict["evo_epochs"] = 8
     masking_results = run_and_format_results(masking_dict, 'masking')
     full_results.update(masking_results)
 
-    masking_dict["dropout_rate"] = 0.5
+    masking_dict["dropout_rate"] = 0.55
     masking_with_dropout_results = run_and_format_results(masking_dict, 'masking_with_dropout')
     full_results.update(masking_with_dropout_results)
+
     try:
         series_dict = {k: pd.Series(v) for k, v in full_results.items()}
 

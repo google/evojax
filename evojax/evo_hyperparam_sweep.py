@@ -32,10 +32,10 @@ if __name__ == "__main__":
                                 storage=f'sqlite:///{log_dir}/optuna_hparam_search.db',
                                 load_if_exists=True)
     # study = optuna.create_study(direction="maximize",
-    #                             study_name=f"no_stopping_mnist_test_evo_seed_0",
+    #                             study_name=f"dropout_test_evo_seed_0",
     #                             storage=f'sqlite:///{log_dir}/optuna_hparam_search.db',
     #                             load_if_exists=True)
-
+    #
     params_dict = dict(
         algo=None,
         pop_size=8,
