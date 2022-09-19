@@ -66,7 +66,6 @@ if __name__ == "__main__":
     # l1_pruning_results = run_and_format_results(l1_pruning_dict, 'l1_pruning')
 
     masking_params = dict(algo="PGPE",
-                          pop_size=32,
                           mask_threshold=0.60,
                           max_iter=48,
                           evo_epochs=9,
@@ -77,6 +76,7 @@ if __name__ == "__main__":
                           init_std=0.039)
     masking_dict = dict(**baseline_dict, **masking_params)
     masking_dict["cnn_epochs"] = 3
+    masking_dict["pop_size"] = 32
     masking_results = run_and_format_results(masking_dict, 'masking')
 
     # all_baselines = dict(**baseline_results,
