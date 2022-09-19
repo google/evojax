@@ -148,9 +148,9 @@ def run_train_masking(algo=None,
                             pixel_input=pixel_input,
                             pretrained_cnn_state=None)
 
-        train_task = Masking(batch_size=batch_size, validation=False, pixel_input=pixel_input,
-                             datasets_tuple=datasets_tuple, max_steps=max_steps)
-        validation_task = Masking(batch_size=batch_size, validation=True, pixel_input=pixel_input,
+        # train_task = Masking(batch_size=batch_size, validation=False, pixel_input=pixel_input,
+        #                      datasets_tuple=datasets_tuple, max_steps=max_steps)
+        validation_task = Masking(batch_size=batch_size, test=False, validation=True, pixel_input=pixel_input,
                                   datasets_tuple=datasets_tuple, max_steps=max_steps)
         test_task = Masking(batch_size=batch_size, test=True, validation=False, pixel_input=pixel_input,
                             datasets_tuple=datasets_tuple, max_steps=max_steps)
@@ -247,7 +247,7 @@ def run_train_masking(algo=None,
 
     wandb.finish()
 
-    del train_task
+    # del train_task
     del validation_task
     del test_task
 
