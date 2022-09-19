@@ -44,7 +44,7 @@ if __name__ == "__main__":
     #                             load_if_exists=True)
     #
     params_dict = dict(
-        algo=None,
+        algo="OpenES",
         pixel_input=config.pixel_input,
         pop_size=8,
         batch_size=1024,
@@ -71,7 +71,6 @@ if __name__ == "__main__":
 
         test_params = dict(
             # algo=trial.suggest_categorical("algo", ["PGPE", "OpenES"]),
-            algo=trial.suggest_categorical("algo", ["OpenES"]),
             pop_size=trial.suggest_categorical("pop_size", [16, 32, 64]),
             mask_threshold=trial.suggest_float("mask_threshold", 0.4, 0.6),
             max_iter=trial.suggest_int("max_iter", 20, 300, log=True),
