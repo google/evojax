@@ -249,6 +249,7 @@ def run_train_masking(algo=None,
 
     del train_task
     del validation_task
+    del test_task
 
     return full_accuracy_dict
 
