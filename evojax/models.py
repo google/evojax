@@ -41,7 +41,8 @@ class CNN(nn.Module):
         return x
 
 
-def create_train_state(rng, learning_rate, task_labels: jnp.ndarray = None, dropout_rate: float = None):
+def create_train_state(rng, learning_rate, task_labels: jnp.ndarray = None,
+                       dropout_rate: float = None, weight_decay: float = None):
     """Creates initial `TrainState`."""
     p_rng, d_rng = random.split(rng)
     init_rngs = {'params': p_rng, 'dropout': d_rng}
@@ -51,7 +52,7 @@ def create_train_state(rng, learning_rate, task_labels: jnp.ndarray = None, drop
                                                  task_labels,
                                                  True,  # Set train to True, not sure if needed though
                                                  )['params']
-    tx = optax.adam(learning_rate)
+    tx = optax.adamw(learning_rate, weight_decay=weight_decay)
     return train_state.TrainState.create(
         apply_fn=CNN().apply, params=params, tx=tx)
 

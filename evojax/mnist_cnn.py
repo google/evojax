@@ -213,6 +213,7 @@ def run_mnist_training(
         l1_pruning_proportion: float = None,
         l1_reg_lambda: float = None,
         dropout_rate: float = None,
+        weight_decay: float = None,
 ) -> Tuple[train_state.TrainState, dict]:
 
     rng = random.PRNGKey(seed)
@@ -222,7 +223,7 @@ def run_mnist_training(
         rng, init_rng = random.split(rng)
         task_labels = jnp.ones([1, ]) if use_task_labels else None
         state = create_train_state(init_rng, learning_rate, task_labels,
-                                   dropout_rate=dropout_rate)
+                                   dropout_rate=dropout_rate, weight_decay=weight_decay)
         del init_rng  # Must not be used anymore.
 
     if datasets_tuple:
