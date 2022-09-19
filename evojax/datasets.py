@@ -87,8 +87,8 @@ class DatasetUtilClass:
 
     def return_data_arrays(self):
         if self.split == 'test':
-            images = jnp.stack([ds['image'] for ds in self.dataset_holder.values()], axis=0)
-            labels = jnp.stack([ds['label'] for ds in self.dataset_holder.values()], axis=0)
+            images = jnp.concatenate([ds['image'] for ds in self.dataset_holder.values()], axis=0)
+            labels = jnp.concatenate([ds['label'] for ds in self.dataset_holder.values()], axis=0)
         else:
             dataset = self.dataset_holder[combined_dataset_key]
             images, labels = dataset['image'], dataset['label']
