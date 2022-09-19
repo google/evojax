@@ -90,7 +90,12 @@ if __name__ == "__main__":
     masking_with_dropout_results = run_and_format_results(masking_dict, 'masking_with_dropout')
     full_results.update(masking_with_dropout_results)
 
-    df = pd.DataFrame(full_results).T
+    import ipdb
+    ipdb.set_trace()
+
+    series_dict = {k: pd.Series(v) for k, v in full_results.items()}
+
+    df = pd.DataFrame.from_dict(series_dict, orient='index')
     df.to_csv(file_path)
 
     logger.info(f'Saving results as: {file_name}')
