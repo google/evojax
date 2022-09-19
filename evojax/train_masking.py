@@ -152,8 +152,8 @@ def run_train_masking(algo=None,
 
         # train_task = Masking(batch_size=batch_size, validation=False, pixel_input=pixel_input,
         #                      datasets_tuple=datasets_tuple, max_steps=max_steps)
-        # validation_task = Masking(batch_size=batch_size, test=False, validation=True, pixel_input=pixel_input,
-        #                           datasets_tuple=datasets_tuple, max_steps=max_steps)
+        validation_task = Masking(batch_size=batch_size, test=False, validation=True, pixel_input=pixel_input,
+                                  datasets_tuple=datasets_tuple, max_steps=max_steps)
         test_task = Masking(batch_size=batch_size, test=True, validation=False, pixel_input=pixel_input,
                             datasets_tuple=datasets_tuple, max_steps=max_steps)
 
@@ -212,7 +212,7 @@ def run_train_masking(algo=None,
             policy=policy,
             solver=solver,
             # train_task=validation_task,
-            train_task=test_task,
+            train_task=validation_task,
             test_task=test_task,
             max_iter=max_iter,
             log_interval=log_interval,
