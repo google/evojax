@@ -87,11 +87,16 @@ class DatasetUtilClass:
 
     def return_data_arrays(self):
         if self.split == 'test':
-            raise NotImplementedError
-
-        dataset = self.dataset_holder[combined_dataset_key]
-        images, labels = dataset['image'], dataset['label']
+            images = jnp.stack([ds['image'] for ds in self.dataset_holder.values()], axis=0)
+            labels = jnp.stack([ds['label'] for ds in self.dataset_holder.values()], axis=0)
+        else:
+            dataset = self.dataset_holder[combined_dataset_key]
+            images, labels = dataset['image'], dataset['label']
         return images, labels[:, 0], labels[:, 1]
+
+    def get_data_count(self):
+        data_count = jnp.sum([ds['image'].shape[0] for ds in self.dataset_holder.values()])
+        return data_count
 
 
 def get_train_val_split(validation: bool) -> Tuple[jnp.ndarray, jnp.ndarray]:

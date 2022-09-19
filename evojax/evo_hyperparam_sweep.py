@@ -28,6 +28,9 @@ if __name__ == "__main__":
 
     seed = config.seed
     datasets_tuple = full_data_loader()
+    for ds in datasets_tuple:
+        logger.info(f'Split {ds.split} has {ds.get_data_count()} entries.')
+
     prefix = f"using_{'test_' if config.test else ''}" \
              f"{'dropout_' if config.dropout else ''}" \
              f"{'pixel_input_' if config.pixel_input else ''}"
