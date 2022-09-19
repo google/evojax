@@ -89,14 +89,17 @@ if __name__ == "__main__":
     masking_dict["dropout_rate"] = 0.5
     masking_with_dropout_results = run_and_format_results(masking_dict, 'masking_with_dropout')
     full_results.update(masking_with_dropout_results)
+    try:
+        series_dict = {k: pd.Series(v) for k, v in full_results.items()}
 
-    series_dict = {k: pd.Series(v) for k, v in full_results.items()}
+        df = pd.DataFrame.from_dict(series_dict, orient='index')
+        df.to_csv(file_path)
 
-    df = pd.DataFrame.from_dict(series_dict, orient='index')
-    df.to_csv(file_path)
+        logger.info(f'Saving results as: {file_name}')
 
-    logger.info(f'Saving results as: {file_name}')
-
-    blob = bucket.blob(file_name)
-    blob.upload_from_filename(file_path)
+        blob = bucket.blob(file_name)
+        blob.upload_from_filename(file_path)
+    except:
+        import ipdb
+        ipdb.set_trace()
 
