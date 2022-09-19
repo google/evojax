@@ -87,6 +87,7 @@ class MaskPolicy(PolicyNetwork):
 
         self._format_params_fn = jax.vmap(format_params_fn)
         self._forward_fn = jax.vmap(mask_model.apply)
+        self._no_vmap_forward_fn = mask_model.apply
 
     # @staticmethod
     # def flatten_params(dict_params: FrozenDict):
@@ -119,7 +120,7 @@ class MaskPolicy(PolicyNetwork):
     #                            cnn_params=flat_params)
 
     def get_masks(self, params):
-        masking_output = self._forward_fn(params, jnp.arange(4))
+        masking_output = self._no_vmap_forward_fn(params, jnp.arange(4))
         masks = jnp.where(masking_output > self.mask_threshold, 1, 0)
         return masks
 
