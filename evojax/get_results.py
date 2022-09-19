@@ -42,7 +42,6 @@ if __name__ == "__main__":
     datasets_tuple = full_data_loader()
 
     baseline_dict = dict(
-        pop_size=16,
         batch_size=1024,
         cnn_epochs=config.epochs,
         cnn_lr=1e-3,
@@ -50,22 +49,29 @@ if __name__ == "__main__":
         datasets_tuple=datasets_tuple,
         logger=logger
     )
-    #
-    # baseline_results = run_and_format_results(baseline_dict, 'baseline')
-    #
+    full_results = {}
+
+    baseline_results = run_and_format_results(baseline_dict, 'baseline')
+    full_results = {**full_results, **baseline_results}
+
     # task_labels_dict = dict(**baseline_dict, use_task_labels=True)
     # task_labels_results = run_and_format_results(task_labels_dict, 'task_labels')
-    #
-    # dropout_dict = dict(**baseline_dict, dropout_rate=0.5)
-    # dropout_results = run_and_format_results(dropout_dict, 'dropout')
-    #
+    # full_results = {**full_results, **task_labels_results}
+
+    dropout_dict = dict(**baseline_dict, dropout_rate=0.5)
+    dropout_results = run_and_format_results(dropout_dict, 'dropout')
+    full_results = {**full_results, **dropout_results}
+
     # l1_reg_dict = dict(**baseline_dict, l1_reg_lambda=3e-5)
     # l1_reg_results = run_and_format_results(l1_reg_dict, 'l1_reg')
+    # full_results = {**full_results, **l1_reg_results}
     #
     # l1_pruning_dict = dict(**baseline_dict, l1_pruning_proportion=0.05)
     # l1_pruning_results = run_and_format_results(l1_pruning_dict, 'l1_pruning')
+    # full_results = {**full_results, **l1_pruning_results}
 
     masking_params = dict(algo="PGPE",
+                          pop_size=32,
                           mask_threshold=0.50,
                           max_iter=48,
                           evo_epochs=9,
@@ -76,25 +82,16 @@ if __name__ == "__main__":
                           init_std=0.039)
     masking_dict = dict(**baseline_dict, **masking_params)
     masking_dict["cnn_epochs"] = 3
-    masking_dict["pop_size"] = 32
     masking_results = run_and_format_results(masking_dict, 'masking')
+    full_results = {**full_results, **masking_results}
 
-    # all_baselines = dict(**baseline_results,
-    #                      **task_labels_results,
-    #                      **dropout_results,
-    #                      **l1_reg_results,
-    #                      **l1_pruning_results,
-    #                      **masking_results)
-    all_baselines = masking_results
+    masking_dict["dropout_rate"] = 0.5
+    masking_with_dropout_results = run_and_format_results(masking_dict, 'masking_with_dropout')
+    full_results = {**full_results, **masking_with_dropout_results}
 
-    df = pd.DataFrame(all_baselines).T
+    df = pd.DataFrame(full_results).T
     df.to_csv(file_path)
 
     blob = bucket.blob(file_name)
     blob.upload_from_filename(file_path)
-
-
-
-
-
 
