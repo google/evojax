@@ -28,7 +28,7 @@ if __name__ == "__main__":
     seed = config.seed
     datasets_tuple = full_data_loader()
     study = optuna.create_study(direction="maximize",
-                                study_name=f"monday2_mnist{'_test' if config.test else ''}_evo_seed_{seed}",
+                                study_name=f"dropout{'_test' if config.test else ''}_evo_seed_{seed}",
                                 storage=f'sqlite:///{log_dir}/optuna_hparam_search.db',
                                 load_if_exists=True)
     # study = optuna.create_study(direction="maximize",
@@ -53,7 +53,6 @@ if __name__ == "__main__":
         cnn_lr=1e-3,
         log_evo=False,
         early_stopping=False,
-        dropout_rate=0.5 if config.dropout else None,
         datasets_tuple=datasets_tuple
     )
 
@@ -74,6 +73,7 @@ if __name__ == "__main__":
             center_lr=trial.suggest_float("center_lr", 0, 0.1),
             std_lr=trial.suggest_float("std_lr", 0, 0.2),
             init_std=trial.suggest_float("init_std", 0, 0.2),
+            dropout_rate=trial.suggest_float("dropout", 0.3, 0.7) if config.dropout else None,
         )
         params_dict.update(test_params)
 
