@@ -27,7 +27,7 @@ if __name__ == "__main__":
     seed = config.seed
     datasets_tuple = full_data_loader()
     study = optuna.create_study(direction="maximize",
-                                study_name=f"no_stopping_mnist{'_test' if config.test else ''}_evo_seed_{seed}",
+                                study_name=f"monday_mnist{'_test' if config.test else ''}_evo_seed_{seed}",
                                 storage=f'sqlite:///{log_dir}/optuna_hparam_search.db',
                                 load_if_exists=True)
     # study = optuna.create_study(direction="maximize",

@@ -21,6 +21,7 @@ import os
 import time
 import argparse
 import wandb
+import numpy as np
 
 from evojax import Trainer
 from evojax.task.masking_task import Masking
@@ -28,7 +29,7 @@ from evojax.policy.mask_policy import MaskPolicy
 from evojax.algo import PGPE, OpenES
 from evojax import util
 from evojax.mnist_cnn import run_mnist_training, full_data_loader
-from evojax.models import Mask
+from evojax.datasets import DATASET_LABELS
 
 
 def parse_cnn_args(arg_parser: argparse.ArgumentParser):
@@ -221,6 +222,9 @@ def run_train_masking(algo=None,
         mask_params = policy.external_format_params_fn(best_mask_params)
 
         masks = policy.get_masks(mask_params)
+        mean_masks = np.mean(masks, axis=1)
+        for k, v in DATASET_LABELS.items():
+            logger.info(f'Mean mask for {k}: {mean_masks[v]}')
 
         _, eval_accuracy_dict = run_mnist_training(logger,
                                                    state=cnn_state,
