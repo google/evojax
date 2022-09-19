@@ -82,7 +82,7 @@ if __name__ == "__main__":
                           init_std=0.039)
     masking_dict = dict(**baseline_dict, **masking_params)
     masking_dict["cnn_epochs"] = 3
-    masking_dict["evo_epochs"] = 9
+    masking_dict["evo_epochs"] = 10
     masking_results = run_and_format_results(masking_dict, 'masking')
     full_results.update(masking_results)
 
