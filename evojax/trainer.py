@@ -113,8 +113,6 @@ class Trainer(object):
         )
 
     def wand_log_scores(self, current_iter: int, score_array: jnp.ndarray, split: str):
-        if not self.log_evo:
-            return
 
         best_score = score_array.max()
         mean_score = score_array.mean()
@@ -129,6 +127,7 @@ class Trainer(object):
                    f'Evo Mean {split.capitalize()} accuracy': mean_score,
                    f'Evo Worst {split.capitalize()} accuracy': worst_score,
                    f'Evo {split.capitalize()} STD': std_score})
+
     def run(self, demo_mode: bool = False) -> float:
         """Start the training / test process."""
 
@@ -146,10 +145,10 @@ class Trainer(object):
             self._logger.info('Start to test the parameters.')
             scores = np.array(
                 self.sim_mgr.eval_params(params=params, test=True)[0])
-            self._logger.info(
-                '[TEST] #tests={0}, max={1:.4f}, avg={2:.4f}, min={3:.4f}, '
-                'std={4:.4f}'.format(scores.size, scores.max(), scores.mean(),
-                                     scores.min(), scores.std()))
+            # self._logger.info(
+            #     '[TEST] #tests={0}, max={1:.4f}, avg={2:.4f}, min={3:.4f}, '
+            #     'std={4:.4f}'.format(scores.size, scores.max(), scores.mean(),
+            #                          scores.min(), scores.std()))
             return scores.mean()
         else:
             self._logger.info(
@@ -182,23 +181,23 @@ class Trainer(object):
 
                 if i > 0 and i % self._log_interval == 0:
                     scores = np.array(scores)
-                    self._logger.info(
-                        'Iter={0}, size={1}, max={2:.4f}, '
-                        'avg={3:.4f}, min={4:.4f}, std={5:.4f}'.format(
-                            i, scores.size, scores.max(), scores.mean(),
-                            scores.min(), scores.std()))
+                    # self._logger.info(
+                    #     'Iter={0}, size={1}, max={2:.4f}, '
+                    #     'avg={3:.4f}, min={4:.4f}, std={5:.4f}'.format(
+                    #         i, scores.size, scores.max(), scores.mean(),
+                    #         scores.min(), scores.std()))
                     self._log_scores_fn(i, scores, "train")
 
                 if i > 0 and i % self._test_interval == 0:
                     best_params = self.solver.best_params
                     test_scores, _ = self.sim_mgr.eval_params(
                         params=best_params, test=True)
-                    self._logger.info(
-                        '[TEST] Iter={0}, #tests={1}, max={2:.4f} avg={3:.4f}, '
-                        'min={4:.4f}, std={5:.4f}'.format(
-                            i, test_scores.size, test_scores.max(),
-                            test_scores.mean(), test_scores.min(),
-                            test_scores.std()))
+                    # self._logger.info(
+                    #     '[TEST] Iter={0}, #tests={1}, max={2:.4f} avg={3:.4f}, '
+                    #     'min={4:.4f}, std={5:.4f}'.format(
+                    #         i, test_scores.size, test_scores.max(),
+                    #         test_scores.mean(), test_scores.min(),
+                    #         test_scores.std()))
                     self._log_scores_fn(i, test_scores, "test")
                     mean_test_score = test_scores.mean()
                     save_model(
