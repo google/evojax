@@ -216,7 +216,8 @@ def run_train_masking(algo=None,
             use_for_loop=False,
         )
 
-        best_mask_params, best_score = trainer.run(demo_mode=False)
+        best_score = trainer.run(demo_mode=False)
+        best_mask_params = solver.best_params
         mask_params = policy.external_format_params_fn(best_mask_params)
 
         masks = policy.get_masks(mask_params)
