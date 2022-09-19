@@ -77,7 +77,7 @@ class PixelMask(nn.Module):
 
     @nn.compact
     def __call__(self, x):
-        x = nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV1")(x)
+        x = nn.Conv(features=8, kernel_size=(3, 3), padding="SAME", name="CONV1")(x)
         # x = nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")(x)
 
         x = x.reshape((x.shape[0], -1))
