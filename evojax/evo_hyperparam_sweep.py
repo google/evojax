@@ -70,7 +70,8 @@ if __name__ == "__main__":
         trial = study.ask()
 
         test_params = dict(
-            algo=trial.suggest_categorical("algo", ["PGPE", "OpenES"]),
+            # algo=trial.suggest_categorical("algo", ["PGPE", "OpenES"]),
+            algo=trial.suggest_categorical("algo", ["OpenES"]),
             pop_size=trial.suggest_categorical("pop_size", [16, 32, 64]),
             mask_threshold=trial.suggest_float("mask_threshold", 0.4, 0.6),
             max_iter=trial.suggest_int("max_iter", 20, 300, log=True),
