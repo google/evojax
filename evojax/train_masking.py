@@ -145,11 +145,12 @@ def run_train_masking(algo=None,
     if evo_epochs:
         policy = MaskPolicy(logger=logger,
                             mask_threshold=mask_threshold,
+                            pixel_input=pixel_input,
                             pretrained_cnn_state=None)
 
-        train_task = Masking(batch_size=batch_size, validation=False,
+        train_task = Masking(batch_size=batch_size, validation=False, pixel_input=pixel_input,
                              datasets_tuple=datasets_tuple, max_steps=max_steps)
-        validation_task = Masking(batch_size=batch_size, validation=True,
+        validation_task = Masking(batch_size=batch_size, validation=True, pixel_input=pixel_input,
                                   datasets_tuple=datasets_tuple, max_steps=max_steps)
 
         if algo == 'PGPE':
@@ -223,10 +224,11 @@ def run_train_masking(algo=None,
         best_mask_params = solver.best_params
         mask_params = policy.external_format_params_fn(best_mask_params)
 
-        masks = policy.get_masks(mask_params)
-        mean_masks = np.mean(masks, axis=1)
-        for k, v in DATASET_LABELS.items():
-            logger.info(f'Mean mask for {k}: {mean_masks[v]}')
+        if not pixel_input:
+            masks = policy.get_masks(mask_params)
+            mean_masks = np.mean(masks, axis=1)
+            for k, v in DATASET_LABELS.items():
+                logger.info(f'Mean mask for {k}: {mean_masks[v]}')
 
         _, eval_accuracy_dict = run_mnist_training(logger,
                                                    state=cnn_state,
