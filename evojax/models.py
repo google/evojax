@@ -59,7 +59,7 @@ def create_train_state(rng, learning_rate, task_labels: jnp.ndarray = None,
 
 
 class Mask(nn.Module):
-    """Mask network for to provide a mask based on either task label."""
+    """Mask network for to provide a mask based on task label."""
     mask_size: int
     dataset_number: int = current_dataset_number
 
@@ -67,6 +67,8 @@ class Mask(nn.Module):
     def __call__(self, x):
         x = nn.one_hot(x, self.dataset_number)
 
+        x = nn.Dense(features=10, name=mask_final_layer_name)(x)
+        x = nn.Dense(features=100, name=mask_final_layer_name)(x)
         x = nn.Dense(features=self.mask_size, name=mask_final_layer_name)(x)
         x = nn.sigmoid(x)
 
