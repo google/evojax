@@ -135,8 +135,8 @@ class MaskPolicy(PolicyNetwork):
                     p_states: MaskPolicyState) -> Tuple[jnp.ndarray, MaskPolicyState]:
 
         params = self._format_params_fn(params)
-        masking_output = self._forward_fn(params, t_states.obs)
-        masks = jnp.where(masking_output > self.mask_threshold, 1, 0)
+        masks = self._forward_fn(params, t_states.obs)
+        # masks = jnp.where(masks > self.mask_threshold, 1, 0)
 
         cnn_data = t_states.cnn_data
         output_logits = self._train_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)

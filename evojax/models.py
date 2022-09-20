@@ -67,10 +67,10 @@ class Mask(nn.Module):
     def __call__(self, x):
         x = nn.one_hot(x, self.dataset_number)
 
-        x = nn.Dense(features=10, name="LAYER1")(x)
-        x = nn.relu(x)
-        x = nn.Dense(features=100, name="LAYER2")(x)
-        x = nn.relu(x)
+        # x = nn.Dense(features=10, name="LAYER1")(x)
+        # x = nn.relu(x)
+        # x = nn.Dense(features=100, name="LAYER2")(x)
+        # x = nn.relu(x)
         x = nn.Dense(features=self.mask_size, name=mask_final_layer_name)(x)
         # x = nn.sigmoid(x)
         x = nn.tanh(x)
