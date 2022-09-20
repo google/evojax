@@ -125,7 +125,7 @@ class Masking(VectorizedTask):
 
         def step_fn(state: MaskTaskState, action: jnp.ndarray):
 
-            if validation:
+            if test:
                 reward = step_accuracy(action, state.labels)/self.max_steps
             else:
                 reward = -step_loss(action, state.labels)/self.max_steps
