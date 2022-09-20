@@ -128,7 +128,7 @@ class Masking(VectorizedTask):
             if validation:
                 reward = step_accuracy(action, state.labels)/self.max_steps
             else:
-                reward = step_loss(action, state.labels)/self.max_steps
+                reward = -step_loss(action, state.labels)/self.max_steps
 
             next_key, key = random.split(state.key)
             steps = state.steps + 1
