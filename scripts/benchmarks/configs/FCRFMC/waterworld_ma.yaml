@@ -3,7 +3,7 @@ problem_type: "waterworld_ma"
 normalize: false
 es_config:
   pop_size: 16
-  init_stdev: 0.2
+  init_stdev: 0.12
 hidden_size: 100
 num_tests: 16
 n_repeats: 64
