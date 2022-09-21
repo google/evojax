@@ -82,8 +82,8 @@ class Mask(nn.Module):
         x = nn.Dense(features=self.mask_size, name=mask_final_layer_name)(x)
         x = nn.sigmoid(x)
         # x = nn.tanh(x)
-        if self.image_mask is not None:
-            x = x.reshape((x.shape[0], 28, 28, 1))
+        # if self.image_mask is not None:
+        #     x = x.reshape((x.shape[0], 28, 28, 1))
 
         return x
 
