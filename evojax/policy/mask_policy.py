@@ -73,7 +73,7 @@ class MaskPolicy(PolicyNetwork):
 
         self.mask_size = self.cnn_state.params[cnn_final_layer_name]["kernel"].shape[0]
 
-        self._train_fn_cnn = jax.vmap(self.cnn_state.apply_fn, in_axes=(None, 0, 0))
+        self._train_fn_cnn = jax.vmap(self.cnn_state.apply_fn, in_axes=(None, 0, 0, None))
         # self._train_fn_cnn = jax.vmap(cnn_train_step)
 
         self.cnn_num_params, cnn_format_params_fn = get_params_format_fn(self.cnn_state.params)
