@@ -73,7 +73,7 @@ class MaskPolicy(PolicyNetwork):
 
         self.mask_size = self.cnn_state.params[cnn_final_layer_name]["kernel"].shape[0]
 
-        self._train_fn_cnn = jax.vmap(self.cnn_state.apply_fn, in_axes=(None, 0, 0))
+        self._train_fn_cnn = jax.vmap(self.cnn_state.apply_fn, in_axes=(None, 0, 0, None))
         # self._train_fn_cnn = jax.vmap(cnn_train_step)
 
         self.cnn_num_params, cnn_format_params_fn = get_params_format_fn(self.cnn_state.params)
@@ -139,8 +139,8 @@ class MaskPolicy(PolicyNetwork):
         # masks = jnp.where(masks > self.mask_threshold, 1, 0)
 
         cnn_data = t_states.cnn_data
-        output_logits = self._train_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks, train=False,
-                                           rngs={'dropout': t_states.key})
+        output_logits = self._train_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks, train=False)
+                                           # rngs={'dropout': t_states.key})
         #
         #
         # # cnn_params = self._cnn_format_params_fn(p_states.cnn_params)
