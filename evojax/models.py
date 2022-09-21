@@ -27,16 +27,16 @@ class CNN(nn.Module):
         x = nn.relu(nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")(x))
         x = x.reshape((x.shape[0], -1))
 
-        x = nn.relu(nn.Dense(features=512, name="DENSE1")(x))
+        x = nn.relu(nn.Dense(features=256, name="DENSE1")(x))
 
         if task_labels is not None:
             label_input = nn.one_hot(task_labels, self.dataset_number)
             x = jnp.concatenate([x, label_input], axis=1)
 
         # TODO need to change the dropout code in flax to remove ifs for jit compatibility
-        # if self.dropout_rate is not None:
-        #     x = nn.Dropout(rate=self.dropout_rate)(x, deterministic=not train)
-        x = nn.Dropout(rate=0.5)(x, deterministic=not train)
+        if self.dropout_rate is not None:
+            x = nn.Dropout(rate=self.dropout_rate)(x, deterministic=not train)
+        # x = nn.Dropout(rate=0.5)(x, deterministic=not train)
 
         if mask is not None:
             x = x * mask
@@ -56,10 +56,12 @@ def create_train_state(rng, learning_rate, task_labels: jnp.ndarray = None,
                                                  task_labels,
                                                  True,  # Set train to True, not sure if needed though
                                                  )['params']
-    tx = optax.adam(learning_rate)
-    # tx = optax.adamw(learning_rate)
+    if weight_decay is None:
+        tx = optax.adam(learning_rate)
+    else:
+        tx = optax.adamw(learning_rate, weight_decay=weight_decay)
     return train_state.TrainState.create(
-        apply_fn=CNN().apply, params=params, tx=tx)
+        apply_fn=CNN(dropout_rate=dropout_rate).apply, params=params, tx=tx)
 
 
 class Mask(nn.Module):
