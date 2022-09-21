@@ -26,7 +26,7 @@ import numpy as np
 from evojax import Trainer
 from evojax.task.masking_task import Masking
 from evojax.policy.mask_policy import MaskPolicy
-from evojax.algo import PGPE, OpenES, CMA_ES_JAX
+from evojax.algo import PGPE, OpenES, CMA_ES_JAX, CMA_ES
 from evojax import util
 from evojax.mnist_cnn import run_mnist_training, full_data_loader
 from evojax.datasets import DATASET_LABELS
@@ -179,7 +179,7 @@ def run_train_masking(algo=None,
                 seed=seed,
             )
         elif algo == 'CMA':
-            solver = CMA_ES_JAX(
+            solver = CMA_ES(
                 param_size=policy.num_params,
                 pop_size=pop_size,
                 logger=logger,
