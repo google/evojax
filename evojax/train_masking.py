@@ -74,6 +74,7 @@ def parse_args():
 
 def run_train_masking(algo=None,
                       pixel_input=False,
+                      image_mask=False,
                       seed=0,
                       pop_size=8,
                       batch_size=1024,
@@ -219,8 +220,8 @@ def run_train_masking(algo=None,
         trainer = Trainer(
             policy=policy,
             solver=solver,
-            # train_task=validation_task,
-            train_task=test_task,
+            train_task=validation_task,
+            # train_task=test_task,
             test_task=test_task,
             max_iter=max_iter,
             log_interval=log_interval,

@@ -56,7 +56,7 @@ class MaskPolicy(PolicyNetwork):
     """A dense neural network for masking the MNIST classification task."""
 
     def __init__(self, logger: logging.Logger = None, learning_rate: float = 1e-3,
-                 mask_threshold: float = 0.5, pixel_input: bool = False,
+                 mask_threshold: float = 0.5, pixel_input: bool = False, image_mask: bool = None,
                  pretrained_cnn_state: train_state.TrainState = None):
         if logger is None:
             self._logger = create_logger('MaskNetPolicy')
@@ -64,6 +64,7 @@ class MaskPolicy(PolicyNetwork):
             self._logger = logger
 
         self.mask_threshold = mask_threshold
+        self.image_mask = image_mask
         self.lr = learning_rate
 
         if pretrained_cnn_state:
@@ -140,7 +141,13 @@ class MaskPolicy(PolicyNetwork):
             masks = jnp.where(masks > self.mask_threshold, 1, 0)
 
         cnn_data = t_states.cnn_data
-        output_logits = self._train_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)
+        if self.image_mask is not None:
+            obs = cnn_data.obs * masks
+            masks = None
+        else:
+            obs = cnn_data.obs
+
+        output_logits = self._train_fn_cnn({"params": self.cnn_state.params}, obs, masks)
                                            # rngs={'dropout': t_states.key})
         #
         #
