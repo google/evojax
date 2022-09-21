@@ -28,7 +28,7 @@ class CNN(nn.Module):
         x = x.reshape((x.shape[0], -1))
 
         x = nn.relu(nn.Dense(features=512, name="DENSE1")(x))
-        x = nn.relu(nn.Dense(features=256, name="DENSE2")(x))
+        # x = nn.relu(nn.Dense(features=256, name="DENSE2")(x))
 
         if task_labels is not None:
             label_input = nn.one_hot(task_labels, self.dataset_number)
