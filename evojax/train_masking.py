@@ -94,7 +94,7 @@ def run_train_masking(algo=None,
                       # Cnn args
                       cnn_epochs=20,
                       cnn_lr=1e-3,
-                      early_stopping=True,
+                      early_stopping=False,
                       use_task_labels=False,
                       l1_pruning_proportion=None,
                       l1_reg_lambda=None,
