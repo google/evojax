@@ -39,6 +39,7 @@ def parse_cnn_args(arg_parser: argparse.ArgumentParser):
     arg_parser.add_argument('--l1-pruning-proportion', type=float,
                             help='The proportion of weights to remove with L1 pruning.')
     arg_parser.add_argument('--l1-reg-lambda', type=float, help='The lambda to use with L1 regularisation.')
+    arg_parser.add_argument('--weight-decay', type=float, help='The lambda to use with weight decay.')
     arg_parser.add_argument('--dropout-rate', type=float, help='The rate for dropout layers in CNN.')
     arg_parser.add_argument('--early-stopping', action='store_true', help='Stop on decrease in val accuracy.')
 
