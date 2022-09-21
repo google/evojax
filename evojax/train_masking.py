@@ -48,6 +48,10 @@ def parse_args():
     # Evo params
     parser.add_argument('--algo', type=str, default=None, help='Evolutionary algorithm to use.',
                         choices=['PGPE', 'OpenES', 'CMA'])
+    parser.add_argument('--pixel-input', action='store_true',
+                        help='Generate the mask based on pixels rather than task labels.')
+    parser.add_argument('--image-mask', action='store_true', help='Mask the image rather than the internal features.')
+
     parser.add_argument('--pop-size', type=int, default=8, help='NE population size.')
     parser.add_argument('--batch-size', type=int, default=1024, help='Batch size for training.')
     parser.add_argument('--mask-threshold', type=float, default=0.5, help='Threshold for setting binary mask.')
@@ -180,7 +184,7 @@ def run_train_masking(algo=None,
                 seed=seed,
             )
         elif algo == 'CMA':
-            solver = CMA_ES(
+            solver = CMA_ES_JAX(
                 param_size=policy.num_params,
                 pop_size=pop_size,
                 logger=logger,
@@ -269,6 +273,8 @@ def run_train_masking(algo=None,
 if __name__ == '__main__':
     config = parse_args()
     _ = run_train_masking(algo=config.algo,
+                          pixel_input=config.pixel_input,
+                          image_mask=config.image_mask,
                           pop_size=config.pop_size,
                           batch_size=config.batch_size,
                           mask_threshold=config.mask_threshold,
