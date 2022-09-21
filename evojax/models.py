@@ -4,8 +4,8 @@ from flax import linen as nn
 from flax.training import train_state
 import optax
 
-mask_final_layer_name = 'DENSE'
-cnn_final_layer_name = 'DENSE'
+mask_final_layer_name = 'DENSE_FINAL'
+cnn_final_layer_name = 'DENSE_FINAL'
 current_dataset_number = 4
 
 
@@ -27,7 +27,8 @@ class CNN(nn.Module):
         x = nn.relu(nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")(x))
         x = x.reshape((x.shape[0], -1))
 
-        x = nn.relu(nn.Dense(features=256, name="DENSE1")(x))
+        x = nn.relu(nn.Dense(features=512, name="DENSE1")(x))
+        x = nn.relu(nn.Dense(features=256, name="DENSE2")(x))
 
         if task_labels is not None:
             label_input = nn.one_hot(task_labels, self.dataset_number)
@@ -73,8 +74,8 @@ class Mask(nn.Module):
     def __call__(self, x):
         x = nn.one_hot(x, self.dataset_number)
 
-        x = nn.Dense(features=10, name="LAYER1")(x)
-        x = nn.relu(x)
+        # x = nn.Dense(features=10, name="LAYER1")(x)
+        # x = nn.relu(x)
         # x = nn.Dense(features=100, name="LAYER2")(x)
         # x = nn.relu(x)
         x = nn.Dense(features=self.mask_size, name=mask_final_layer_name)(x)
