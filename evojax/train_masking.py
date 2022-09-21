@@ -56,7 +56,7 @@ def parse_args():
 
     parser.add_argument('--pop-size', type=int, default=8, help='NE population size.')
     parser.add_argument('--batch-size', type=int, default=1024, help='Batch size for training.')
-    parser.add_argument('--mask-threshold', type=float, default=0.5, help='Threshold for setting binary mask.')
+    parser.add_argument('--mask-threshold', type=float, help='Threshold for setting binary mask.')
     parser.add_argument('--max-iter', type=int, default=1000, help='Max training iterations.')
     parser.add_argument('--max-steps', type=int, default=100, help='Max steps for the tasks.')
     parser.add_argument('--evo-epochs', type=int, default=0, help='Number of epochs for evo process.')
