@@ -139,7 +139,8 @@ class MaskPolicy(PolicyNetwork):
         # masks = jnp.where(masks > self.mask_threshold, 1, 0)
 
         cnn_data = t_states.cnn_data
-        output_logits = self._train_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks)
+        output_logits = self._train_fn_cnn({"params": self.cnn_state.params}, cnn_data.obs, masks, train=False,
+                                           rngs={'dropout': t_states.key})
         #
         #
         # # cnn_params = self._cnn_format_params_fn(p_states.cnn_params)
