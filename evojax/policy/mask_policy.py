@@ -72,7 +72,10 @@ class MaskPolicy(PolicyNetwork):
         else:
             self.cnn_state = create_train_state(random.PRNGKey(0), learning_rate)
 
-        self.mask_size = self.cnn_state.params[cnn_final_layer_name]["kernel"].shape[0]
+        if image_mask:
+            self.mask_size = 28*28
+        else:
+            self.mask_size = self.cnn_state.params[cnn_final_layer_name]["kernel"].shape[0]
 
         self._train_fn_cnn = jax.vmap(self.cnn_state.apply_fn, in_axes=(None, 0, 0))
         # self._train_fn_cnn = jax.vmap(cnn_train_step)
@@ -141,7 +144,7 @@ class MaskPolicy(PolicyNetwork):
             masks = jnp.where(masks > self.mask_threshold, 1, 0)
 
         cnn_data = t_states.cnn_data
-        if self.image_mask is not None:
+        if self.image_mask:
             obs = cnn_data.obs * masks
             masks = None
         else:
