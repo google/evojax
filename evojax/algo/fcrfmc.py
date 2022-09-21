@@ -87,4 +87,3 @@ class FCRFMC(NEAlgorithm):
     @best_params.setter
     def best_params(self, params: Union[np.ndarray, jnp.ndarray]) -> None:
         self._best_params = np.array(params)
-        self.cma.x0 = self._best_params.copy()
