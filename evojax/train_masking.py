@@ -40,6 +40,7 @@ def parse_cnn_args(arg_parser: argparse.ArgumentParser):
                             help='The proportion of weights to remove with L1 pruning.')
     arg_parser.add_argument('--l1-reg-lambda', type=float, help='The lambda to use with L1 regularisation.')
     arg_parser.add_argument('--dropout-rate', type=float, help='The rate for dropout layers in CNN.')
+    arg_parser.add_argument('--early-stopping', action='store_true', help='Stop on decrease in val accuracy.')
 
 
 def parse_args():
@@ -153,6 +154,7 @@ def run_train_masking(algo=None,
         policy = MaskPolicy(logger=logger,
                             mask_threshold=mask_threshold,
                             pixel_input=pixel_input,
+                            image_mask=image_mask,
                             pretrained_cnn_state=cnn_state)
 
         # train_task = Masking(batch_size=batch_size, validation=False, pixel_input=pixel_input,
@@ -288,4 +290,12 @@ if __name__ == '__main__':
                           init_std=config.init_std,
                           cnn_epochs=config.cnn_epochs,
                           cnn_lr=config.cnn_lr,
+                          # These are the parameters for the other
+                          # sparsity baseline types
+                          use_task_labels=config.use_task_labels,
+                          l1_pruning_proportion=config.l1_pruning_proportion,
+                          l1_reg_lambda=config.l1_reg_lambda,
+                          dropout_rate=config.dropout_rate,
+                          weight_decay=config.weight_decay,
+                          # Config to pass to wandb
                           config_dict=config)
