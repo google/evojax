@@ -2,7 +2,7 @@ es_name: "FCRFMC"
 problem_type: "cartpole_easy"
 normalize: false
 es_config:
-  pop_size: 48
+  pop_size: 64
   init_stdev: 0.3
 hidden_size: 64
 num_tests: 100

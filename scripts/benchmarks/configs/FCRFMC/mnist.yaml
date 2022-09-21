@@ -2,7 +2,7 @@ es_name: "FCRFMC"
 problem_type: "mnist"
 normalize: false
 es_config:
-  pop_size: 96
+  pop_size: 64
   init_stdev: 0.05
 hidden_size: 100
 batch_size: 1024
