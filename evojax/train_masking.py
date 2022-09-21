@@ -148,7 +148,7 @@ def run_train_masking(algo=None,
         policy = MaskPolicy(logger=logger,
                             mask_threshold=mask_threshold,
                             pixel_input=pixel_input,
-                            pretrained_cnn_state=None)
+                            pretrained_cnn_state=cnn_state)
 
         # train_task = Masking(batch_size=batch_size, validation=False, pixel_input=pixel_input,
         #                      datasets_tuple=datasets_tuple, max_steps=max_steps)
