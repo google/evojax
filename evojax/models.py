@@ -23,8 +23,11 @@ class CNN(nn.Module):
                  ):
 
         x = nn.relu(nn.Conv(features=32, kernel_size=(3, 3), padding="SAME", name="CONV1")(x))
+        # x = nn.BatchNorm()(x, use_running_average=not train)
         x = nn.relu(nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")(x))
         x = x.reshape((x.shape[0], -1))
+
+        x = nn.relu(nn.Dense(features=512, name="DENSE1")(x))
 
         if task_labels is not None:
             label_input = nn.one_hot(task_labels, self.dataset_number)
@@ -52,8 +55,8 @@ def create_train_state(rng, learning_rate, task_labels: jnp.ndarray = None,
                                                  task_labels,
                                                  True,  # Set train to True, not sure if needed though
                                                  )['params']
-    # tx = optax.adam(learning_rate)
-    tx = optax.adamw(learning_rate)
+    tx = optax.adam(learning_rate)
+    # tx = optax.adamw(learning_rate)
     return train_state.TrainState.create(
         apply_fn=CNN().apply, params=params, tx=tx)
 
@@ -67,13 +70,13 @@ class Mask(nn.Module):
     def __call__(self, x):
         x = nn.one_hot(x, self.dataset_number)
 
-        # x = nn.Dense(features=10, name="LAYER1")(x)
-        # x = nn.relu(x)
+        x = nn.Dense(features=10, name="LAYER1")(x)
+        x = nn.relu(x)
         # x = nn.Dense(features=100, name="LAYER2")(x)
         # x = nn.relu(x)
         x = nn.Dense(features=self.mask_size, name=mask_final_layer_name)(x)
-        # x = nn.sigmoid(x)
-        x = nn.tanh(x)
+        x = nn.sigmoid(x)
+        # x = nn.tanh(x)
 
         return x
 

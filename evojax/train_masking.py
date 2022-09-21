@@ -26,7 +26,7 @@ import numpy as np
 from evojax import Trainer
 from evojax.task.masking_task import Masking
 from evojax.policy.mask_policy import MaskPolicy
-from evojax.algo import PGPE, OpenES
+from evojax.algo import PGPE, OpenES, CMA_ES_JAX
 from evojax import util
 from evojax.mnist_cnn import run_mnist_training, full_data_loader
 from evojax.datasets import DATASET_LABELS
@@ -47,7 +47,7 @@ def parse_args():
 
     # Evo params
     parser.add_argument('--algo', type=str, default=None, help='Evolutionary algorithm to use.',
-                        choices=['PGPE', 'OpenES'])
+                        choices=['PGPE', 'OpenES', 'CMA'])
     parser.add_argument('--pop-size', type=int, default=8, help='NE population size.')
     parser.add_argument('--batch-size', type=int, default=1024, help='Batch size for training.')
     parser.add_argument('--mask-threshold', type=float, default=0.5, help='Threshold for setting binary mask.')
@@ -77,7 +77,7 @@ def run_train_masking(algo=None,
                       seed=0,
                       pop_size=8,
                       batch_size=1024,
-                      mask_threshold=0.0,
+                      mask_threshold=0.5,
                       max_iter=100,
                       max_steps=1,
                       evo_epochs=1,
@@ -177,6 +177,14 @@ def run_train_masking(algo=None,
                 init_stdev=init_std,
                 logger=logger,
                 seed=seed,
+            )
+        elif algo == 'CMA':
+            solver = CMA_ES_JAX(
+                param_size=policy.num_params,
+                pop_size=pop_size,
+                logger=logger,
+                seed=seed,
+                init_stdev=init_std
             )
         else:
             raise NotImplementedError

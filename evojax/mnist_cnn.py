@@ -21,8 +21,6 @@ def get_batch_masks(state, task_labels, mask_params=None, l1_pruning_proportion=
         mask_size = linear_weights.shape[0]
         batch_masks = Mask(mask_size=mask_size).apply(mask_params, task_labels)
     elif l1_pruning_proportion is not None:
-        # import ipdb
-        # ipdb.set_trace()
         linear_weights = state.params[cnn_final_layer_name]["kernel"]
         avg_weight = jnp.sum(linear_weights, axis=1)
         mask_size = linear_weights.shape[0]
@@ -93,34 +91,7 @@ def eval_step(state: train_state.TrainState,
 
     return state, compute_metrics(logits=logits, labels=class_labels)
 
-#
-# def train_epoch(state, train_ds, batch_size, rng,
-#                 mask_params=None, pixel_input=False, cnn_labels=False):
-#     """Train for a single epoch."""
-#     train_ds_size = len(train_ds['image'])
-#     steps_per_epoch = train_ds_size // batch_size
-#
-#     perms = jax.random.permutation(rng, train_ds_size)
-#     perms = perms[:steps_per_epoch * batch_size]  # skip incomplete batch
-#     perms = perms.reshape((steps_per_epoch, batch_size))
-#     batch_metrics = []
-#
-#     for perm in perms:
-#         batch = {k: v[perm, ...] for k, v in train_ds.items()}
-#         label_input = batch['label'][:, 1] if cnn_labels else None
-#         state, metrics = train_step(state, batch, mask_params, pixel_input, label_input)
-#         batch_metrics.append(metrics)
-#
-#     # compute mean of metrics across each batch in epoch.
-#     batch_metrics_np = jax.device_get(batch_metrics)
-#     epoch_metrics_np = {
-#         k: np.mean([metrics[k] for metrics in batch_metrics_np])
-#         for k in batch_metrics_np[0]}
-#
-#     return state, epoch_metrics_np
 
-
-# @jax.jit
 def epoch_step(test: bool,
                state: train_state.TrainState,
                dataset_class: DatasetUtilClass,
