@@ -167,11 +167,13 @@ def run_train_masking(algo=None,
                         image_mask=image_mask,
                         pretrained_cnn_state=cnn_state)
 
-    train_task = Masking(batch_size=batch_size, validation=False, pixel_input=pixel_input,
+    train_task = Masking(batch_size=batch_size, validation=False, pixel_input=pixel_input, dropout_rate=dropout_rate,
                          datasets_tuple=datasets_tuple, max_steps=max_steps)
     validation_task = Masking(batch_size=batch_size, test=False, validation=True, pixel_input=pixel_input,
+                              dropout_rate=dropout_rate,
                               datasets_tuple=datasets_tuple, max_steps=max_steps)
     test_task = Masking(batch_size=batch_size, test=True, validation=False, pixel_input=pixel_input,
+                        dropout_rate=dropout_rate,
                         datasets_tuple=datasets_tuple, max_steps=max_steps)
 
     if algo == 'PGPE':

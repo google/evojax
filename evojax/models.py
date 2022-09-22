@@ -19,7 +19,7 @@ class CNN(nn.Module):
                  x: jnp.ndarray,
                  mask: jnp.ndarray = None,
                  task_labels: jnp.ndarray = None,
-                 train: bool = False
+                 train: bool = True
                  ):
 
         x = nn.relu(nn.Conv(features=32, kernel_size=(3, 3), padding="SAME", name="CONV1")(x))
