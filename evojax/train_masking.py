@@ -65,7 +65,7 @@ def parse_args():
     parser.add_argument('--max-iter', type=int, default=1000, help='Max training iterations.')
     parser.add_argument('--max-steps', type=int, default=100, help='Max steps for the tasks.')
     parser.add_argument('--evo-epochs', type=int, default=0, help='Number of epochs for evo process.')
-    parser.add_argument('--test-interval', type=int, default=1000, help='Test interval.')
+    parser.add_argument('--test-interval', type=int, default=100, help='Test interval.')
     parser.add_argument('--log-interval', type=int, default=100, help='Logging interval.')
     parser.add_argument('--center-lr', type=float, default=0.006, help='Center learning rate.')
     parser.add_argument('--std-lr', type=float, default=0.089, help='Std learning rate.')
@@ -239,8 +239,8 @@ def run_train_masking(algo=None,
     trainer = Trainer(
         policy=policy,
         solver=solver,
-        train_task=train_task,
-        # train_task=test_task,
+        # train_task=train_task,
+        train_task=validation_task,
         test_task=test_task,
         max_iter=max_iter,
         log_interval=log_interval,
