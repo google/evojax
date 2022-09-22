@@ -88,6 +88,7 @@ class Masking(VectorizedTask):
                  validation: bool = False,
                  test: bool = False,
                  pixel_input: bool = False,
+                 dropout_rate: float = None,
                  datasets_tuple: Tuple[DatasetUtilClass, DatasetUtilClass, DatasetUtilClass] = None):
 
         self.max_steps = max_steps
@@ -110,7 +111,7 @@ class Masking(VectorizedTask):
             batch_images, batch_class_labels, batch_task_labels = sample_batch(
                 key, image_data, class_labels, task_labels, batch_size)
 
-            cnn_state = create_train_state(key)
+            cnn_state = create_train_state(key, dropout_rate=dropout_rate)
 
             cnn_data = CNNData(obs=batch_images,
                                labels=batch_class_labels,
@@ -133,14 +134,12 @@ class Masking(VectorizedTask):
 
         def step_fn(state: MaskTaskState, action: jnp.ndarray):
 
-            # if test:
-            #     reward = step_accuracy(action, state.labels)
-            # else:
-            #     reward = -step_loss(action, state.labels)
             def train_step(cnn_state: TrainState, state_images, state_masks, state_labels):
 
                 def loss_fn(params):
-                    output_logits = CNN().apply({'params': params}, state_images, state_masks)
+                    output_logits = CNN(dropout_rate=dropout_rate).apply({'params': params},
+                                                                         state_images, state_masks,
+                                                                         not test, rngs={'dropout': state.key})
                     loss = cross_entropy_loss(logits=output_logits, labels=state_labels)
                     return loss, output_logits
 

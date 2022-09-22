@@ -253,9 +253,12 @@ def run_train_masking(algo=None,
         use_for_loop=False,
     )
 
-    best_score = trainer.run(demo_mode=False)
-    best_mask_params = solver.best_params
-    mask_params = policy.external_format_params_fn(best_mask_params)
+    if max_iter:
+        best_score = trainer.run(demo_mode=False)
+        best_mask_params = solver.best_params
+        mask_params = policy.external_format_params_fn(best_mask_params)
+    else:
+        mask_params = None
 
     cnn_state, accuracy_dict = run_mnist_training(logger,
                                                   seed=seed,
@@ -274,7 +277,7 @@ def run_train_masking(algo=None,
                                                   l1_reg_lambda=l1_reg_lambda,
                                                   dropout_rate=dropout_rate)
 
-    if not pixel_input:
+    if not pixel_input and max_iter:
         masks = policy.get_task_label_masks(mask_params)
         mean_masks = np.mean(masks, axis=1)
         for k, v in DATASET_LABELS.items():
