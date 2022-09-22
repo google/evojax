@@ -128,7 +128,7 @@ class MaskPolicy(PolicyNetwork):
     #     return MaskPolicyState(keys=keys,
     #                            cnn_params=flat_params)
 
-    def get_masks(self, params):
+    def get_task_label_masks(self, params):
         masks = self._no_vmap_forward_fn(params, jnp.arange(4))
         if self.mask_threshold is not None:
             masks = jnp.where(masks > self.mask_threshold, 1, 0)

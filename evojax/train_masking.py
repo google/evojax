@@ -141,7 +141,7 @@ def run_train_masking(algo=None,
         datasets_tuple = full_data_loader()
 
     cnn_state = mask_params = None
-    full_accuracy_dict = {}
+    # full_accuracy_dict = {}
     # if not meta_learning:
     cnn_state, full_accuracy_dict = run_mnist_training(logger,
                                                        seed=seed,
@@ -261,7 +261,7 @@ def run_train_masking(algo=None,
         mask_params = policy.external_format_params_fn(best_mask_params)
 
         if not pixel_input:
-            masks = policy.get_masks(mask_params)
+            masks = policy.get_task_label_masks(mask_params)
             mean_masks = np.mean(masks, axis=1)
             for k, v in DATASET_LABELS.items():
                 logger.info(f'Mean mask for {k}: {mean_masks[v]}')
