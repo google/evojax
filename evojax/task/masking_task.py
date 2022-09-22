@@ -138,8 +138,8 @@ class Masking(VectorizedTask):
 
                 def loss_fn(params):
                     output_logits = CNN(dropout_rate=dropout_rate).apply({'params': params},
-                                                                state_images, state_masks,
-                                                                rngs={'dropout': state.key})
+                                                                         state_images, state_masks,
+                                                                         rngs={'dropout': state.key})
                     loss = cross_entropy_loss(logits=output_logits, labels=state_labels)
                     return loss, output_logits
 
