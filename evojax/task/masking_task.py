@@ -149,8 +149,7 @@ class Masking(VectorizedTask):
                 cnn_state = cnn_state.apply_gradients(grads=grads)
                 return cnn_state, logits
 
-            cnn_data = TrainState.cnn_data
-
+            cnn_data = state.cnn_data
             new_cnn_state, step_logits = train_step(cnn_data.cnn_state, cnn_data.obs, action, cnn_data.labels)
 
             next_key, key = random.split(state.key)
