@@ -203,6 +203,8 @@ def run_train_masking(algo=None,
             seed=seed,
             init_stdev=init_std
         )
+    elif not max_iter:
+        pass
     else:
         raise NotImplementedError
 
