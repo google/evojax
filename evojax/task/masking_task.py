@@ -18,10 +18,14 @@ import jax
 import jax.numpy as jnp
 from jax import random
 from flax.struct import dataclass
+from flax.core import FrozenDict
+from flax.training.train_state import TrainState
 
 from evojax.task.base import VectorizedTask
 from evojax.task.base import TaskState
 from evojax.datasets import get_train_val_split, DatasetUtilClass
+from evojax.models import CNN
+from evojax.util import cross_entropy_loss
 
 
 # This will allow training the CNN on the train data and mask on the validation split
@@ -30,6 +34,8 @@ class CNNData(object):
     obs: jnp.ndarray  # This will be the mnist image etc
     labels: jnp.ndarray  # This is the class label
     task_labels: jnp.ndarray  # This will be the label associated with each dataset
+    cnn_params: FrozenDict
+    cnn_state: TrainState
 
 
 @dataclass
@@ -124,32 +130,49 @@ class Masking(VectorizedTask):
 
         def step_fn(state: MaskTaskState, action: jnp.ndarray):
 
-            if test:
-                reward = step_accuracy(action, state.labels)
-            else:
-                reward = -step_loss(action, state.labels)
+            # if test:
+            #     reward = step_accuracy(action, state.labels)
+            # else:
+            #     reward = -step_loss(action, state.labels)
+            def train_step(cnn_state: TrainState, state_images, state_masks, state_labels):
 
-            # next_key, key = random.split(state.key)
-            # steps = state.steps + 1
-            # done = jnp.where(steps >= self.max_steps, 1, 0)
-            # steps = jnp.where(done, jnp.zeros((), jnp.int32), steps)
-            #
-            # batch_images, batch_class_labels, batch_task_labels = sample_batch(
-            #     key, image_data, class_labels, task_labels, batch_size)
-            #
-            # cnn_data = CNNData(obs=batch_images,
-            #                    labels=batch_class_labels,
-            #                    task_labels=batch_task_labels, )
-            #
-            # new_state = MaskTaskState(obs=batch_task_labels,
-            #                           labels=batch_class_labels,
-            #                           task_labels=batch_task_labels,
-            #                           cnn_data=cnn_data,
-            #                           key=next_key,
-            #                           steps=steps)
-            #
-            # return new_state, reward, done
-            return state, reward, jnp.ones(())
+                def loss_fn(params):
+                    output_logits = CNN().apply({'params': params}, state_images, state_masks)
+                    loss = cross_entropy_loss(logits=output_logits, labels=state_labels)
+                    return loss, output_logits
+
+                grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
+                (_, logits), grads = grad_fn(cnn_state.params)
+                cnn_state = cnn_state.apply_gradients(grads=grads)
+                return cnn_state, logits
+
+            cnn_data = TrainState.cnn_data
+
+            new_cnn_state, step_logits = train_step(cnn_data.cnn_state, cnn_data.obs, action, cnn_data.labels)
+
+            next_key, key = random.split(state.key)
+            steps = state.steps + 1
+            reward = jnp.where(steps >= self.max_steps, step_accuracy(step_logits, state.labels), 0)
+            done = jnp.where(steps >= self.max_steps, 1, 0)
+            steps = jnp.where(done, jnp.zeros((), jnp.int32), steps)
+
+            batch_images, batch_class_labels, batch_task_labels = sample_batch(
+                key, image_data, class_labels, task_labels, batch_size)
+
+            cnn_data = CNNData(obs=batch_images,
+                               labels=batch_class_labels,
+                               task_labels=batch_task_labels,
+                               cnn_state=new_cnn_state)
+
+            new_state = MaskTaskState(obs=batch_task_labels,
+                                      labels=batch_class_labels,
+                                      task_labels=batch_task_labels,
+                                      cnn_data=cnn_data,
+                                      key=next_key,
+                                      steps=steps)
+
+            return new_state, reward, done
+            # return state, reward, jnp.ones(())
         self._step_fn = jax.jit(jax.vmap(step_fn))
 
     def reset(self, key: jnp.ndarray) -> MaskTaskState:

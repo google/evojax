@@ -144,14 +144,14 @@ class MaskPolicy(PolicyNetwork):
         if self.mask_threshold is not None:
             masks = jnp.where(masks > self.mask_threshold, 1, 0)
 
-        cnn_data = t_states.cnn_data
-        if self.image_mask:
-            obs = cnn_data.obs * masks
-            masks = None
-        else:
-            obs = cnn_data.obs
-
-        output_logits = self._train_fn_cnn({"params": self.cnn_state.params}, obs, masks)
+        # cnn_data = t_states.cnn_data
+        # if self.image_mask:
+        #     obs = cnn_data.obs * masks
+        #     masks = None
+        # else:
+        #     obs = cnn_data.obs
+        #
+        # output_logits = self._train_fn_cnn({"params": self.cnn_state.params}, obs, masks)
                                            # rngs={'dropout': t_states.key})
         #
         #
@@ -190,4 +190,4 @@ class MaskPolicy(PolicyNetwork):
         #                                cnn_params=flat_params)
         #
         # return output_logits, new_p_states
-        return output_logits, p_states
+        return masks, p_states

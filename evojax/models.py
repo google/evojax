@@ -37,7 +37,6 @@ class CNN(nn.Module):
         # TODO need to change the dropout code in flax to remove ifs for jit compatibility
         if self.dropout_rate is not None:
             x = nn.Dropout(rate=self.dropout_rate)(x, deterministic=not train)
-        # x = nn.Dropout(rate=0.5)(x, deterministic=not train)
 
         if mask is not None:
             x = x * mask
