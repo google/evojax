@@ -143,136 +143,150 @@ def run_train_masking(algo=None,
     cnn_state = mask_params = None
     # full_accuracy_dict = {}
     # if not meta_learning:
-    cnn_state, full_accuracy_dict = run_mnist_training(logger,
-                                                       seed=seed,
-                                                       num_epochs=cnn_epochs,
-                                                       evo_epoch=0,
-                                                       learning_rate=cnn_lr,
-                                                       cnn_batch_size=batch_size,
-                                                       state=cnn_state,
-                                                       mask_params=mask_params,
-                                                       datasets_tuple=datasets_tuple,
-                                                       early_stopping=early_stopping,
-                                                       # These are the parameters for the other
-                                                       # sparsity baseline types
-                                                       use_task_labels=use_task_labels,
-                                                       l1_pruning_proportion=l1_pruning_proportion,
-                                                       l1_reg_lambda=l1_reg_lambda,
-                                                       dropout_rate=dropout_rate,
-                                                       weight_decay=weight_decay)
+    # cnn_state, full_accuracy_dict = run_mnist_training(logger,
+    #                                                    seed=seed,
+    #                                                    num_epochs=cnn_epochs,
+    #                                                    evo_epoch=0,
+    #                                                    learning_rate=cnn_lr,
+    #                                                    cnn_batch_size=batch_size,
+    #                                                    state=cnn_state,
+    #                                                    mask_params=mask_params,
+    #                                                    datasets_tuple=datasets_tuple,
+    #                                                    early_stopping=early_stopping,
+    #                                                    # These are the parameters for the other
+    #                                                    # sparsity baseline types
+    #                                                    use_task_labels=use_task_labels,
+    #                                                    l1_pruning_proportion=l1_pruning_proportion,
+    #                                                    l1_reg_lambda=l1_reg_lambda,
+    #                                                    dropout_rate=dropout_rate,
+    #                                                    weight_decay=weight_decay)
 
-    if evo_epochs:
-        policy = MaskPolicy(logger=logger,
-                            mask_threshold=mask_threshold,
-                            pixel_input=pixel_input,
-                            image_mask=image_mask,
-                            pretrained_cnn_state=cnn_state)
+    policy = MaskPolicy(logger=logger,
+                        mask_threshold=mask_threshold,
+                        pixel_input=pixel_input,
+                        image_mask=image_mask,
+                        pretrained_cnn_state=cnn_state)
 
-        # train_task = Masking(batch_size=batch_size, validation=False, pixel_input=pixel_input,
-        #                      datasets_tuple=datasets_tuple, max_steps=max_steps)
-        validation_task = Masking(batch_size=batch_size, test=False, validation=True, pixel_input=pixel_input,
-                                  datasets_tuple=datasets_tuple, max_steps=max_steps)
-        test_task = Masking(batch_size=batch_size, test=True, validation=False, pixel_input=pixel_input,
-                            datasets_tuple=datasets_tuple, max_steps=max_steps)
+    train_task = Masking(batch_size=batch_size, validation=False, pixel_input=pixel_input,
+                         datasets_tuple=datasets_tuple, max_steps=max_steps)
+    validation_task = Masking(batch_size=batch_size, test=False, validation=True, pixel_input=pixel_input,
+                              datasets_tuple=datasets_tuple, max_steps=max_steps)
+    test_task = Masking(batch_size=batch_size, test=True, validation=False, pixel_input=pixel_input,
+                        datasets_tuple=datasets_tuple, max_steps=max_steps)
 
-        if algo == 'PGPE':
-            solver = PGPE(
-                pop_size=pop_size,
-                param_size=policy.num_params,
-                optimizer='adam',
-                center_learning_rate=center_lr,
-                stdev_learning_rate=std_lr,
-                init_stdev=init_std,
-                logger=logger,
-                seed=seed,
-                init_params=None
-            )
-        elif algo == 'OpenES':
-            solver = OpenES(
-                pop_size=pop_size,
-                param_size=policy.num_params,
-                optimizer='adam',
-                init_stdev=init_std,
-                logger=logger,
-                seed=seed,
-            )
-        elif algo == 'CMA':
-            solver = CMA_ES_JAX(
-                param_size=policy.num_params,
-                pop_size=pop_size,
-                logger=logger,
-                seed=seed,
-                init_stdev=init_std
-            )
-        else:
-            raise NotImplementedError
-    else:
-        policy = solver = train_task = validation_task = test_task = None
-
-    for i in range(evo_epochs):
-        if meta_learning:
-            init_seed = jax.random.PRNGKey(seed=seed+i)
-            cnn_state = create_train_state(rng=init_seed, learning_rate=cnn_lr,
-                                           dropout_rate=dropout_rate, weight_decay=weight_decay)
-
-        if i:
-            cnn_state, accuracy_dict = run_mnist_training(logger,
-                                                          seed=seed,
-                                                          num_epochs=cnn_epochs,
-                                                          evo_epoch=i+1,
-                                                          learning_rate=cnn_lr,
-                                                          cnn_batch_size=batch_size,
-                                                          state=cnn_state,
-                                                          mask_params=mask_params,
-                                                          datasets_tuple=datasets_tuple,
-                                                          early_stopping=early_stopping,
-                                                          # These are the parameters for the other
-                                                          # sparsity baseline types
-                                                          use_task_labels=use_task_labels,
-                                                          l1_pruning_proportion=l1_pruning_proportion,
-                                                          l1_reg_lambda=l1_reg_lambda,
-                                                          dropout_rate=dropout_rate)
-
-            # Update the full accuracy dict for that run
-            full_accuracy_dict = {k: v+accuracy_dict[k] for k, v in full_accuracy_dict.items()}
-
-        policy.cnn_state = cnn_state
-
-        # Train.
-        trainer = Trainer(
-            policy=policy,
-            solver=solver,
-            train_task=validation_task,
-            # train_task=test_task,
-            test_task=test_task,
-            max_iter=max_iter,
-            log_interval=log_interval,
-            test_interval=test_interval,
-            n_repeats=1,
-            n_evaluations=1,
-            seed=seed,
-            log_dir=log_dir,
+    if algo == 'PGPE':
+        solver = PGPE(
+            pop_size=pop_size,
+            param_size=policy.num_params,
+            optimizer='adam',
+            center_learning_rate=center_lr,
+            stdev_learning_rate=std_lr,
+            init_stdev=init_std,
             logger=logger,
-            use_for_loop=False,
+            seed=seed,
+            init_params=None
         )
+    elif algo == 'OpenES':
+        solver = OpenES(
+            pop_size=pop_size,
+            param_size=policy.num_params,
+            optimizer='adam',
+            init_stdev=init_std,
+            logger=logger,
+            seed=seed,
+        )
+    elif algo == 'CMA':
+        solver = CMA_ES_JAX(
+            param_size=policy.num_params,
+            pop_size=pop_size,
+            logger=logger,
+            seed=seed,
+            init_stdev=init_std
+        )
+    else:
+        raise NotImplementedError
 
-        best_score = trainer.run(demo_mode=False)
-        best_mask_params = solver.best_params
-        mask_params = policy.external_format_params_fn(best_mask_params)
+    # for i in range(evo_epochs):
+    #     if meta_learning:
+    #         init_seed = jax.random.PRNGKey(seed=seed+i)
+    #         cnn_state = create_train_state(rng=init_seed, learning_rate=cnn_lr,
+    #                                        dropout_rate=dropout_rate, weight_decay=weight_decay)
+    #
+    #     if i:
+    #         cnn_state, accuracy_dict = run_mnist_training(logger,
+    #                                                       seed=seed,
+    #                                                       num_epochs=cnn_epochs,
+    #                                                       evo_epoch=i+1,
+    #                                                       learning_rate=cnn_lr,
+    #                                                       cnn_batch_size=batch_size,
+    #                                                       state=cnn_state,
+    #                                                       mask_params=mask_params,
+    #                                                       datasets_tuple=datasets_tuple,
+    #                                                       early_stopping=early_stopping,
+    #                                                       # These are the parameters for the other
+    #                                                       # sparsity baseline types
+    #                                                       use_task_labels=use_task_labels,
+    #                                                       l1_pruning_proportion=l1_pruning_proportion,
+    #                                                       l1_reg_lambda=l1_reg_lambda,
+    #                                                       dropout_rate=dropout_rate)
+    #
+    #         # Update the full accuracy dict for that run
+    #         full_accuracy_dict = {k: v+accuracy_dict[k] for k, v in full_accuracy_dict.items()}
+    #
+    #     policy.cnn_state = cnn_state
 
-        if not pixel_input:
-            masks = policy.get_task_label_masks(mask_params)
-            mean_masks = np.mean(masks, axis=1)
-            for k, v in DATASET_LABELS.items():
-                logger.info(f'Mean mask for {k}: {mean_masks[v]}')
+    # Train.
+    trainer = Trainer(
+        policy=policy,
+        solver=solver,
+        train_task=train_task,
+        # train_task=test_task,
+        test_task=test_task,
+        max_iter=max_iter,
+        log_interval=log_interval,
+        test_interval=test_interval,
+        n_repeats=1,
+        n_evaluations=1,
+        seed=seed,
+        log_dir=log_dir,
+        logger=logger,
+        use_for_loop=False,
+    )
 
-        _, eval_accuracy_dict = run_mnist_training(logger,
-                                                   state=cnn_state,
-                                                   eval_only=True,
-                                                   mask_params=mask_params,
-                                                   cnn_batch_size=batch_size,
-                                                   datasets_tuple=datasets_tuple
-                                                   )
+    best_score = trainer.run(demo_mode=False)
+    best_mask_params = solver.best_params
+    mask_params = policy.external_format_params_fn(best_mask_params)
+
+    cnn_state, accuracy_dict = run_mnist_training(logger,
+                                                  seed=seed,
+                                                  num_epochs=cnn_epochs,
+                                                  evo_epoch=0,
+                                                  learning_rate=cnn_lr,
+                                                  cnn_batch_size=batch_size,
+                                                  state=cnn_state,
+                                                  mask_params=mask_params,
+                                                  datasets_tuple=datasets_tuple,
+                                                  early_stopping=early_stopping,
+                                                  # These are the parameters for the other
+                                                  # sparsity baseline types
+                                                  use_task_labels=use_task_labels,
+                                                  l1_pruning_proportion=l1_pruning_proportion,
+                                                  l1_reg_lambda=l1_reg_lambda,
+                                                  dropout_rate=dropout_rate)
+
+    if not pixel_input:
+        masks = policy.get_task_label_masks(mask_params)
+        mean_masks = np.mean(masks, axis=1)
+        for k, v in DATASET_LABELS.items():
+            logger.info(f'Mean mask for {k}: {mean_masks[v]}')
+
+    _, eval_accuracy_dict = run_mnist_training(logger,
+                                               state=cnn_state,
+                                               eval_only=True,
+                                               mask_params=mask_params,
+                                               cnn_batch_size=batch_size,
+                                               datasets_tuple=datasets_tuple
+                                               )
 
     end_time = time.time()
     logger.info(f'Total time taken: {end_time-start_time:.2f}s')
@@ -281,11 +295,11 @@ def run_train_masking(algo=None,
 
     wandb.finish()
 
-    # del train_task
+    del train_task
     del validation_task
     del test_task
 
-    return full_accuracy_dict
+    return accuracy_dict
 
 
 if __name__ == '__main__':
