@@ -204,6 +204,7 @@ def run_train_masking(algo=None,
             init_stdev=init_std
         )
     elif not max_iter:
+        solver = None
         pass
     else:
         raise NotImplementedError
@@ -238,24 +239,24 @@ def run_train_masking(algo=None,
     #     policy.cnn_state = cnn_state
 
     # Train.
-    trainer = Trainer(
-        policy=policy,
-        solver=solver,
-        # train_task=train_task,
-        train_task=validation_task,
-        test_task=test_task,
-        max_iter=max_iter,
-        log_interval=log_interval,
-        test_interval=test_interval,
-        n_repeats=1,
-        n_evaluations=1,
-        seed=seed,
-        log_dir=log_dir,
-        logger=logger,
-        use_for_loop=False,
-    )
 
     if max_iter:
+        trainer = Trainer(
+            policy=policy,
+            solver=solver,
+            # train_task=train_task,
+            train_task=validation_task,
+            test_task=test_task,
+            max_iter=max_iter,
+            log_interval=log_interval,
+            test_interval=test_interval,
+            n_repeats=1,
+            n_evaluations=1,
+            seed=seed,
+            log_dir=log_dir,
+            logger=logger,
+            use_for_loop=False,
+        )
         best_score = trainer.run(demo_mode=False)
         best_mask_params = solver.best_params
         mask_params = policy.external_format_params_fn(best_mask_params)
