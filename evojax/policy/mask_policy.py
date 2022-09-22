@@ -129,8 +129,9 @@ class MaskPolicy(PolicyNetwork):
     #                            cnn_params=flat_params)
 
     def get_masks(self, params):
-        masking_output = self._no_vmap_forward_fn(params, jnp.arange(4))
-        masks = jnp.where(masking_output > self.mask_threshold, 1, 0)
+        masks = self._no_vmap_forward_fn(params, jnp.arange(4))
+        if self.mask_threshold is not None:
+            masks = jnp.where(masks > self.mask_threshold, 1, 0)
         return masks
 
     def get_actions(self,
