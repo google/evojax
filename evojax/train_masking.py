@@ -124,7 +124,7 @@ def run_train_masking(algo=None,
         logger = util.create_logger(name='MASK', log_dir=log_dir, debug=debug)
 
     time_str = time.strftime("%m%d_%H%M")
-    run_name = f'evojax_masking_{algo}_{time_str}'
+    run_name = f'evojax_masking_{algo}_{"dropout_" if dropout_rate else ""}{time_str}'
     wandb.init(name=run_name,
                project="evojax-masking",
                entity="ucl-dark",
