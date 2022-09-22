@@ -2,6 +2,8 @@ import os
 import time
 import optuna
 import argparse
+import numpy as np
+
 from evojax.train_masking import run_train_masking
 from evojax.datasets import full_data_loader
 from evojax.util import create_logger
@@ -45,21 +47,22 @@ if __name__ == "__main__":
     #
     params_dict = dict(
         algo="OpenES",
-        pixel_input=config.pixel_input,
+        # pixel_input=config.pixel_input,
         pop_size=8,
-        batch_size=1024,
+        # batch_size=1024,
         mask_threshold=0.5,
         max_iter=100,
         max_steps=1,
-        evo_epochs=1,
-        test_interval=10,
-        log_interval=10,
+        # evo_epochs=1,
+        # test_interval=10,
+        # log_interval=10,
         center_lr=0.006,
         std_lr=0.089,
         init_std=0.039,
-        cnn_epochs=5,
+        cnn_epochs=20,
         cnn_lr=1e-3,
         early_stopping=False,
+        dropout_rate=0.5,
         datasets_tuple=datasets_tuple
     )
 
@@ -73,9 +76,10 @@ if __name__ == "__main__":
             # algo=trial.suggest_categorical("algo", ["PGPE", "OpenES"]),
             # pop_size=trial.suggest_categorical("pop_size", [16, 32, 64]),
             # mask_threshold=trial.suggest_float("mask_threshold", 0.4, 0.6),
-            max_iter=trial.suggest_int("max_iter", 60, 1000, log=True),
-            evo_epochs=trial.suggest_int("evo_epochs", 0, 10, log=False),
-            cnn_epochs=trial.suggest_int("cnn_epochs", 1, 5, log=False),
+            max_iter=trial.suggest_int("max_iter", 500, 5000, log=True),
+            max_steps=trial.suggest_int("max_steps", 5, 200, log=True),
+            # evo_epochs=trial.suggest_int("evo_epochs", 0, 10, log=False),
+            # cnn_epochs=trial.suggest_int("cnn_epochs", 1, 5, log=False),
             # test_interval=trial.suggest_int("test_interval", 5, 20, log=False),
             center_lr=trial.suggest_float("center_lr", 0, 0.2),
             std_lr=trial.suggest_float("std_lr", 0, 0.2),
@@ -86,14 +90,14 @@ if __name__ == "__main__":
 
         accuracy_dict = run_train_masking(**params_dict, logger=logger, config_dict=params_dict)
         if config.test:
-            opt_value = accuracy_dict['test'][-1]
+            opt_value = np.mean(accuracy_dict['test'][-5:])
         else:
-            opt_value = accuracy_dict['validation'][-1]
+            opt_value = np.mean(accuracy_dict['validation'][-5:])
 
         study.tell(trial, opt_value)
 
     trial = study.best_trial
-    logger.info(f'Best Validation Accuracy: {trial.value:.4}')
+    logger.info(f'Best Final Accuracy: {trial.value:.4}')
     logger.info(f'Best Params:')
     for key, value in trial.params.items():
         logger.info(f'-> {key}: {value}')
