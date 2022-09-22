@@ -142,24 +142,24 @@ def run_train_masking(algo=None,
 
     cnn_state = mask_params = None
     full_accuracy_dict = {}
-    if not meta_learning:
-        cnn_state, full_accuracy_dict = run_mnist_training(logger,
-                                                           seed=seed,
-                                                           num_epochs=cnn_epochs,
-                                                           evo_epoch=0,
-                                                           learning_rate=cnn_lr,
-                                                           cnn_batch_size=batch_size,
-                                                           state=cnn_state,
-                                                           mask_params=mask_params,
-                                                           datasets_tuple=datasets_tuple,
-                                                           early_stopping=early_stopping,
-                                                           # These are the parameters for the other
-                                                           # sparsity baseline types
-                                                           use_task_labels=use_task_labels,
-                                                           l1_pruning_proportion=l1_pruning_proportion,
-                                                           l1_reg_lambda=l1_reg_lambda,
-                                                           dropout_rate=dropout_rate,
-                                                           weight_decay=weight_decay)
+    # if not meta_learning:
+    cnn_state, full_accuracy_dict = run_mnist_training(logger,
+                                                       seed=seed,
+                                                       num_epochs=cnn_epochs,
+                                                       evo_epoch=0,
+                                                       learning_rate=cnn_lr,
+                                                       cnn_batch_size=batch_size,
+                                                       state=cnn_state,
+                                                       mask_params=mask_params,
+                                                       datasets_tuple=datasets_tuple,
+                                                       early_stopping=early_stopping,
+                                                       # These are the parameters for the other
+                                                       # sparsity baseline types
+                                                       use_task_labels=use_task_labels,
+                                                       l1_pruning_proportion=l1_pruning_proportion,
+                                                       l1_reg_lambda=l1_reg_lambda,
+                                                       dropout_rate=dropout_rate,
+                                                       weight_decay=weight_decay)
 
     if evo_epochs:
         policy = MaskPolicy(logger=logger,
