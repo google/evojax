@@ -172,6 +172,8 @@ class Masking(VectorizedTask):
                                       key=next_key,
                                       steps=steps)
 
+            del state
+
             return new_state, reward, done
             # return state, reward, jnp.ones(())
         self._step_fn = jax.jit(jax.vmap(step_fn))
