@@ -24,7 +24,7 @@ from flax.training.train_state import TrainState
 from evojax.task.base import VectorizedTask
 from evojax.task.base import TaskState
 from evojax.datasets import get_train_val_split, DatasetUtilClass
-from evojax.models import CNN
+from evojax.models import CNN, create_train_state
 from evojax.util import cross_entropy_loss
 
 
@@ -34,7 +34,7 @@ class CNNData(object):
     obs: jnp.ndarray  # This will be the mnist image etc
     labels: jnp.ndarray  # This is the class label
     task_labels: jnp.ndarray  # This will be the label associated with each dataset
-    cnn_params: FrozenDict
+    # cnn_params: FrozenDict
     cnn_state: TrainState
 
 
@@ -110,9 +110,12 @@ class Masking(VectorizedTask):
             batch_images, batch_class_labels, batch_task_labels = sample_batch(
                 key, image_data, class_labels, task_labels, batch_size)
 
+            cnn_state = create_train_state(key)
+
             cnn_data = CNNData(obs=batch_images,
                                labels=batch_class_labels,
-                               task_labels=batch_task_labels,)
+                               task_labels=batch_task_labels,
+                               cnn_state=cnn_state)
 
             if pixel_input:
                 mask_obs = batch_images
