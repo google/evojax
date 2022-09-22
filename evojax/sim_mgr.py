@@ -226,8 +226,10 @@ class SimManager(object):
             step_once_fn=partial(step_once, task=train_vec_task),
             max_steps=train_vec_task.max_steps)
         if self._num_device > 1:
-            self._train_rollout_fn = jax.jit(jax.pmap(
-                self._train_rollout_fn, in_axes=(0, 0, 0, None)))
+            # self._train_rollout_fn = jax.jit(jax.pmap(
+            #     self._train_rollout_fn, in_axes=(0, 0, 0, None)))
+            self._train_rollout_fn = jax.pmap(
+                self._train_rollout_fn, in_axes=(0, 0, 0, None))
 
         # Set up validation functions.
         self._valid_reset_fn = valid_vec_task.reset
@@ -238,8 +240,10 @@ class SimManager(object):
             step_once_fn=partial(step_once, task=valid_vec_task),
             max_steps=valid_vec_task.max_steps)
         if self._num_device > 1:
-            self._valid_rollout_fn = jax.jit(jax.pmap(
-                self._valid_rollout_fn, in_axes=(0, 0, 0, None)))
+            # self._valid_rollout_fn = jax.jit(jax.pmap(
+                # self._valid_rollout_fn, in_axes=(0, 0, 0, None)))
+            self._valid_rollout_fn = jax.pmap(
+                self._valid_rollout_fn, in_axes=(0, 0, 0, None))
 
     def eval_params(self,
                     params: jnp.ndarray,
