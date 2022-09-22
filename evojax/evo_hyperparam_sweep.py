@@ -74,7 +74,7 @@ if __name__ == "__main__":
 
         test_params = dict(
             # algo=trial.suggest_categorical("algo", ["PGPE", "OpenES"]),
-            # pop_size=trial.suggest_categorical("pop_size", [16, 32, 64]),
+            pop_size=trial.suggest_categorical("pop_size", [16, 32, 64]),
             # mask_threshold=trial.suggest_float("mask_threshold", 0.4, 0.6),
             max_iter=trial.suggest_int("max_iter", 500, 5000, log=True),
             max_steps=trial.suggest_int("max_steps", 5, 200, log=True),
