@@ -75,8 +75,7 @@ def parse_args():
     parse_cnn_args(parser)
 
     # General params
-    parser.add_argument('--datasets', nargs='*', default=list(DATASET_LABELS.keys()),
-                        help='Which datasets to use.')
+    parser.add_argument('--datasets', nargs='*', help='Which datasets to use.')
     parser.add_argument('--val-fraction', type=float, default=0.2, help='Fraction of data to use for validation.')
     parser.add_argument('--seed', type=int, default=42, help='Random seed for training.')
     parser.add_argument('--gpu-id', type=str, help='GPU(s) to use.')
@@ -121,6 +120,9 @@ def run_train_masking(dataset_names: list,
                       dropout_rate=None,
                       weight_decay=None
                       ) -> dict:
+
+    if not dataset_names:
+        dataset_names = list(DATASET_LABELS.keys())
 
     assert set(dataset_names).issubset(set(DATASET_LABELS.keys()))
 
@@ -176,8 +178,8 @@ def run_train_masking(dataset_names: list,
                         image_mask=image_mask,
                         pretrained_cnn_state=cnn_state)
 
-    train_task = Masking(batch_size=batch_size, validation=False, pixel_input=pixel_input, dropout_rate=dropout_rate,
-                         datasets_tuple=datasets_tuple, max_steps=max_steps)
+    # train_task = Masking(batch_size=batch_size, validation=False, pixel_input=pixel_input, dropout_rate=dropout_rate,
+    #                      datasets_tuple=datasets_tuple, max_steps=max_steps)
     validation_task = Masking(batch_size=batch_size, test=False, validation=True, pixel_input=pixel_input,
                               dropout_rate=dropout_rate,
                               datasets_tuple=datasets_tuple, max_steps=max_steps)
