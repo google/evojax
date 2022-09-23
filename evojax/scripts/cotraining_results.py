@@ -40,7 +40,7 @@ if __name__ == "__main__":
     file_path = os.path.join(log_dir, file_name)
 
     datasets = list(DATASET_LABELS.keys())
-    dataset_choices = chain([combinations(datasets, 1), combinations(datasets, 2)])
+    dataset_choices = chain(combinations(datasets, 1), combinations(datasets, 2))
 
     full_results = {}
     for ds in dataset_choices:
