@@ -151,7 +151,7 @@ def calc_and_log_metrics(dataset_class: DatasetUtilClass, logger: logging.Logger
         total_accuracy = np.mean([i['accuracy'] for i in dataset_class.metrics_holder.values()])
         total_loss = np.mean([i['loss'] for i in dataset_class.metrics_holder.values()])
 
-        for dataset_name in dataset_names:
+        for dataset_name in dataset_class.dataset_names:
             ds_test_accuracy = dataset_class.metrics_holder[dataset_name].get("accuracy")
             logger.debug(f'TEST, {dataset_name} 'f'accuracy={ds_test_accuracy:.2f}')
 
