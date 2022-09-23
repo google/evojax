@@ -56,7 +56,7 @@ if __name__ == "__main__":
                              logger=logger
                              )
 
-        baseline_results = run_and_format_results(config.number_of_seeds, baseline_dict, 'baseline')
+        baseline_results = run_and_format_results(config.number_of_seeds, baseline_dict, '_'.join(ds))
         full_results.update(baseline_results)
 
     try:
