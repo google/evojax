@@ -141,11 +141,13 @@ def run_train_masking(dataset_names: list,
 
     start_time = time.time()
     logger.info('\n\nEvoJAX Masking Tests\n')
+    logger.info(f'Training on the following datasets: {" ".join(dataset_names)}')
+
     logger.info(f'Start Time - {time.strftime("%H:%M")}')
     logger.info('=' * 50)
 
     if not datasets_tuple:
-        datasets_tuple = full_data_loader(dataset_names=dataset_names)
+        datasets_tuple = full_data_loader(dataset_names=dataset_names, val_fraction=val_fraction)
 
     cnn_state = mask_params = None
     # full_accuracy_dict = {}
@@ -348,4 +350,5 @@ if __name__ == '__main__':
                           dropout_rate=config.dropout_rate,
                           weight_decay=config.weight_decay,
                           # Config to pass to wandb
+                          val_fraction=config.val_fraction,
                           config_dict=config)
