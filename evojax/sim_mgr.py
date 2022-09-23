@@ -229,7 +229,7 @@ class SimManager(object):
             # self._train_rollout_fn = jax.jit(jax.pmap(
             #     self._train_rollout_fn, in_axes=(0, 0, 0, None)))
             self._train_rollout_fn = jax.pmap(
-                self._train_rollout_fn, in_axes=(None, 0, 0, None))
+                self._train_rollout_fn, in_axes=(0, 0, 0, None))
 
         # Set up validation functions.
         self._valid_reset_fn = valid_vec_task.reset
@@ -243,7 +243,7 @@ class SimManager(object):
             # self._valid_rollout_fn = jax.jit(jax.pmap(
                 # self._valid_rollout_fn, in_axes=(0, 0, 0, None)))
             self._valid_rollout_fn = jax.pmap(
-                self._valid_rollout_fn, in_axes=(None, 0, 0, None))
+                self._valid_rollout_fn, in_axes=(0, 0, 0, None))
 
     def eval_params(self,
                     params: jnp.ndarray,
@@ -352,7 +352,7 @@ class SimManager(object):
         policy_state = policy_reset_func(task_state)
         if self._num_device > 1:
             params = split_params_for_pmap(params)
-            # task_state = split_states_for_pmap(task_state)
+            task_state = split_states_for_pmap(task_state)
             policy_state = split_states_for_pmap(policy_state)
 
         # Do the rollouts.
@@ -361,7 +361,7 @@ class SimManager(object):
         if self._num_device > 1:
             all_obs = reshape_data_from_pmap(all_obs)
             masks = reshape_data_from_pmap(masks)
-            # final_states = merge_state_from_pmap(final_states)
+            final_states = merge_state_from_pmap(final_states)
 
         if not test and not self.obs_normalizer.is_dummy:
             self.obs_params = self.obs_normalizer.update_normalization_params(
