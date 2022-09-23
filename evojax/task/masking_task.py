@@ -153,8 +153,8 @@ class Masking(VectorizedTask):
 
             next_key, key = random.split(state.key)
             steps = state.steps + 1
-            # reward = jnp.where(steps >= self.max_steps, step_accuracy(step_logits, state.labels), 0)
-            reward = step_accuracy(step_logits, state.labels)
+            reward = jnp.where(steps >= self.max_steps, step_accuracy(step_logits, state.labels), 0)
+            # reward = step_accuracy(step_logits, state.labels)
 
             done = jnp.where(steps >= self.max_steps, 1, 0)
             steps = jnp.where(done, jnp.zeros((), jnp.int32), steps)
