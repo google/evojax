@@ -70,13 +70,13 @@ def step_accuracy(prediction: jnp.ndarray, target: jnp.ndarray) -> jnp.float32:
     return jnp.mean(predicted_class == target)
 
 
-def setup_task_data(test: bool) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
-    image_data, labels = get_train_val_split(test)
-
-    class_labels = labels[:, 0]
-    task_labels = labels[:, 1]
-
-    return image_data, class_labels, task_labels
+# def setup_task_data(test: bool) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
+#     image_data, labels = get_train_val_split(test)
+#
+#     class_labels = labels[:, 0]
+#     task_labels = labels[:, 1]
+#
+#     return image_data, class_labels, task_labels
 
 
 class Masking(VectorizedTask):
@@ -88,6 +88,7 @@ class Masking(VectorizedTask):
                  validation: bool = False,
                  test: bool = False,
                  pixel_input: bool = False,
+                 image_mask: bool = False,
                  dropout_rate: float = None,
                  datasets_tuple: Tuple[DatasetUtilClass, DatasetUtilClass, DatasetUtilClass] = None):
 
@@ -96,6 +97,12 @@ class Masking(VectorizedTask):
             self.obs_shape = tuple([1, 28, 28, 1])
         else:
             self.obs_shape = tuple([1, ])
+
+        if image_mask:
+            self.mask_shape = (-1, 28, 28, 1)
+        else:
+            self.mask_shape = (-1,)
+
         self.act_shape = tuple([10, ])
 
         if not test:
@@ -149,7 +156,8 @@ class Masking(VectorizedTask):
                 return cnn_state, logits
 
             cnn_data = state.cnn_data
-            new_cnn_state, step_logits = train_step(cnn_data.cnn_state, cnn_data.obs, action, cnn_data.labels)
+            masks = action.reshape(self.mask_shape)
+            new_cnn_state, step_logits = train_step(cnn_data.cnn_state, cnn_data.obs, masks, cnn_data.labels)
 
             next_key, key = random.split(state.key)
             steps = state.steps + 1
