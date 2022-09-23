@@ -75,6 +75,9 @@ def parse_args():
     parse_cnn_args(parser)
 
     # General params
+    parser.add_argument('--datasets', nargs='*', default=list(DATASET_LABELS.keys()),
+                        help='Which datasets to use.')
+    parser.add_argument('--val-fraction', type=float, default=0.2, help='Fraction of data to use for validation.')
     parser.add_argument('--seed', type=int, default=42, help='Random seed for training.')
     parser.add_argument('--gpu-id', type=str, help='GPU(s) to use.')
     parser.add_argument('--debug', action='store_true', help='Debug mode.')
@@ -83,7 +86,8 @@ def parse_args():
     return parsed_config
 
 
-def run_train_masking(algo=None,
+def run_train_masking(dataset_names: list,
+                      algo=None,
                       # Different masking setups
                       pixel_input=False,
                       image_mask=False,
@@ -106,6 +110,7 @@ def run_train_masking(algo=None,
                       logger=None,
                       config_dict=None,
                       datasets_tuple=None,
+                      val_fraction=0.2,
                       # Cnn args
                       cnn_epochs=20,
                       cnn_lr=1e-3,
@@ -117,6 +122,8 @@ def run_train_masking(algo=None,
                       weight_decay=None
                       ) -> dict:
 
+    assert set(dataset_names).issubset(set(DATASET_LABELS.keys()))
+
     log_dir = './log/masking'
     if not os.path.exists(log_dir):
         os.makedirs(log_dir, exist_ok=True)
@@ -124,7 +131,7 @@ def run_train_masking(algo=None,
         logger = util.create_logger(name='MASK', log_dir=log_dir, debug=debug)
 
     time_str = time.strftime("%m%d_%H%M")
-    run_name = f'{algo}_{"dropout_" if dropout_rate else ""}{time_str}'
+    run_name = f'{algo}_{"dropout_" if dropout_rate else ""}{"".join([d[0] for d in dataset_names])}_{time_str}'
     wandb.init(name=run_name,
                project="evojax-masking",
                entity="ucl-dark",
@@ -138,7 +145,7 @@ def run_train_masking(algo=None,
     logger.info('=' * 50)
 
     if not datasets_tuple:
-        datasets_tuple = full_data_loader()
+        datasets_tuple = full_data_loader(dataset_names=dataset_names)
 
     cnn_state = mask_params = None
     # full_accuracy_dict = {}
@@ -312,7 +319,8 @@ def run_train_masking(algo=None,
 
 if __name__ == '__main__':
     config = parse_args()
-    _ = run_train_masking(algo=config.algo,
+    _ = run_train_masking(dataset_names=config.datasets,
+                          algo=config.algo,
                           # Masking types
                           pixel_input=config.pixel_input,
                           image_mask=config.image_mask,

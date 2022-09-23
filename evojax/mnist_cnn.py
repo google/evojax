@@ -167,6 +167,7 @@ def calc_and_log_metrics(dataset_class: DatasetUtilClass, logger: logging.Logger
 
 
 def run_mnist_training(
+        datasets_tuple: Tuple[DatasetUtilClass, DatasetUtilClass, DatasetUtilClass],
         logger: logging.Logger = None,
         wandb_logging: bool = True,
         eval_only: bool = False,
@@ -177,7 +178,6 @@ def run_mnist_training(
         cnn_batch_size: int = 1024,
         state: train_state.TrainState = None,
         mask_params: FrozenDict = None,
-        datasets_tuple: Tuple[DatasetUtilClass, DatasetUtilClass, DatasetUtilClass] = None,
         early_stopping: bool = False,
         # These are the parameters for the other sparsity baseline types
         use_task_labels: bool = False,
@@ -197,10 +197,7 @@ def run_mnist_training(
                                    dropout_rate=dropout_rate, weight_decay=weight_decay)
         del init_rng  # Must not be used anymore.
 
-    if datasets_tuple:
-        train_dataset_class, validation_dataset_class, test_dataset_class = datasets_tuple
-    else:
-        train_dataset_class, validation_dataset_class, test_dataset_class = full_data_loader()
+    train_dataset_class, validation_dataset_class, test_dataset_class = datasets_tuple
 
     if eval_only:
         state, test_dataset_class = epoch_step(test=True,

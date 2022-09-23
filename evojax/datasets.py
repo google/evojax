@@ -11,7 +11,7 @@ fashion = 'FMNIST'
 kuzushiji = 'KMNIST'
 cifar = 'CIFAR'
 
-dataset_names = [digit, fashion, kuzushiji, cifar]
+# dataset_names = [digit, fashion, kuzushiji, cifar]
 
 DATASET_LABELS = {digit: 0,
                   fashion: 1,
@@ -58,15 +58,16 @@ class DatasetUtilClass:
     """
     Class to facilitate having separate test sets for the multiple datasets.
     """
-    def __init__(self, split: str, dataset_names_to_use: list, dataset_dicts: list = None):
+    def __init__(self, split: str, dataset_names: list, dataset_dicts: list = None):
         self.split = split
+        self.dataset_names = dataset_names
         self.dataset_holder = {}
         self.metrics_holder = {}
 
         if dataset_dicts:
-            self.dataset_holder = dict(zip(dataset_names_to_use, dataset_dicts))
+            self.dataset_holder = dict(zip(dataset_names, dataset_dicts))
         else:
-            for dataset_name in dataset_names_to_use:
+            for dataset_name in dataset_names:
                 self.setup_dataset(dataset_name)
 
     def setup_dataset(self, dataset_name):
@@ -99,7 +100,7 @@ class DatasetUtilClass:
         return data_count
 
 
-def get_train_val_split(validation: bool) -> Tuple[jnp.ndarray, jnp.ndarray]:
+def get_train_val_split(dataset_names, validation: bool, val_fraction) -> Tuple[jnp.ndarray, jnp.ndarray]:
     x_array_train, y_array_train = [], []
     for dataset_name in dataset_names:
         x_train, y_train = read_data_files(dataset_name, 'train')
@@ -110,7 +111,7 @@ def get_train_val_split(validation: bool) -> Tuple[jnp.ndarray, jnp.ndarray]:
     full_train_labels = jnp.int16(np.concatenate(y_array_train))
 
     number_of_points = full_train_images.shape[0]
-    number_for_validation = number_of_points // 5
+    number_for_validation = int(number_of_points * val_fraction)
 
     ix = random.permutation(key=random.PRNGKey(0), x=number_of_points)
     validation_ix = ix[:number_for_validation]
@@ -127,12 +128,14 @@ def get_train_val_split(validation: bool) -> Tuple[jnp.ndarray, jnp.ndarray]:
     return image_data, labels
 
 
-def full_data_loader() -> Tuple[DatasetUtilClass, DatasetUtilClass, DatasetUtilClass]:
+def full_data_loader(dataset_names, val_fraction=0.2) -> Tuple[DatasetUtilClass, DatasetUtilClass, DatasetUtilClass]:
     """
     Load up DatasetUtilClass for train/val/test splits of the datasets.
     """
-    train_images, train_labels = get_train_val_split(validation=False)
-    val_images, val_labels = get_train_val_split(validation=True)
+    train_images, train_labels = get_train_val_split(dataset_names=dataset_names,
+                                                     validation=False, val_fraction=val_fraction)
+    val_images, val_labels = get_train_val_split(dataset_names=dataset_names,
+                                                 validation=True, val_fraction=val_fraction)
 
     train_dataset = {'image': train_images,
                      'label': train_labels}
@@ -140,8 +143,10 @@ def full_data_loader() -> Tuple[DatasetUtilClass, DatasetUtilClass, DatasetUtilC
     validation_dataset = {'image': val_images,
                           'label': val_labels}
 
-    train_dataset_class = DatasetUtilClass('train', [combined_dataset_key], [train_dataset])
-    validation_dataset_class = DatasetUtilClass('validation', [combined_dataset_key], [validation_dataset])
+    train_dataset_class = DatasetUtilClass(split='train', dataset_names=[combined_dataset_key],
+                                           dataset_dicts=[train_dataset])
+    validation_dataset_class = DatasetUtilClass(split='validation', dataset_names=[combined_dataset_key],
+                                                dataset_dicts=[validation_dataset])
 
     # Sets up a separate test set for each of the datasets
     test_dataset_class = DatasetUtilClass('test', dataset_names)
