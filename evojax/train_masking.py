@@ -29,8 +29,8 @@ from evojax import Trainer
 from evojax.task.masking_task import Masking
 from evojax.policy.mask_policy import MaskPolicy
 from evojax.algo import PGPE, OpenES, CMA_ES_JAX, CMA_ES
-from evojax.mnist_cnn import run_mnist_training, full_data_loader
-from evojax.datasets import DATASET_LABELS
+from evojax.mnist_cnn import run_mnist_training
+from evojax.datasets import DATASET_LABELS, full_data_loader
 from evojax.models import create_train_state
 
 
