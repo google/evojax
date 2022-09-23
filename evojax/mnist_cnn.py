@@ -11,7 +11,7 @@ from flax.training import train_state
 from flax.core import FrozenDict
 
 from evojax.models import CNN, Mask, cnn_final_layer_name, create_train_state
-from evojax.datasets import dataset_names, DatasetUtilClass, full_data_loader, combined_dataset_key
+from evojax.datasets import DatasetUtilClass, combined_dataset_key
 from evojax.util import cross_entropy_loss, compute_metrics
 
 
