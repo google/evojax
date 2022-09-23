@@ -314,7 +314,7 @@ def run_train_masking(dataset_names: list,
 
     wandb.finish()
 
-    del train_task
+    # del train_task
     del validation_task
     del test_task
 
