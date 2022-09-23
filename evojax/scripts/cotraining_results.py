@@ -46,15 +46,15 @@ if __name__ == "__main__":
     for ds in dataset_choices:
         datasets_tuple = full_data_loader(dataset_names=ds)
 
-        baseline_dict = dict(
-            batch_size=1024,
-            cnn_epochs=config.epochs,
-            max_iter=0,
-            cnn_lr=1e-3,
-            early_stopping=True,
-            datasets_tuple=datasets_tuple,
-            logger=logger
-        )
+        baseline_dict = dict(dataset_names=ds,
+                             batch_size=1024,
+                             cnn_epochs=config.epochs,
+                             max_iter=0,
+                             cnn_lr=1e-3,
+                             early_stopping=True,
+                             datasets_tuple=datasets_tuple,
+                             logger=logger
+                             )
 
         baseline_results = run_and_format_results(config.number_of_seeds, baseline_dict, 'baseline')
         full_results.update(baseline_results)
