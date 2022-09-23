@@ -274,7 +274,8 @@ def run_train_masking(dataset_names: list,
     else:
         mask_params = None
 
-    cnn_state, accuracy_dict = run_mnist_training(logger,
+    cnn_state, accuracy_dict = run_mnist_training(datasets_tuple=datasets_tuple,
+                                                  logger=logger,
                                                   seed=seed,
                                                   num_epochs=cnn_epochs,
                                                   evo_epoch=0,
@@ -282,7 +283,6 @@ def run_train_masking(dataset_names: list,
                                                   cnn_batch_size=batch_size,
                                                   state=cnn_state,
                                                   mask_params=mask_params,
-                                                  datasets_tuple=datasets_tuple,
                                                   early_stopping=early_stopping,
                                                   # These are the parameters for the other
                                                   # sparsity baseline types
@@ -297,12 +297,12 @@ def run_train_masking(dataset_names: list,
         for k, v in DATASET_LABELS.items():
             logger.info(f'Mean mask for {k}: {mean_masks[v]}')
 
-    _, eval_accuracy_dict = run_mnist_training(logger,
+    _, eval_accuracy_dict = run_mnist_training(datasets_tuple=datasets_tuple,
+                                               logger=logger,
                                                state=cnn_state,
                                                eval_only=True,
                                                mask_params=mask_params,
                                                cnn_batch_size=batch_size,
-                                               datasets_tuple=datasets_tuple
                                                )
 
     end_time = time.time()
