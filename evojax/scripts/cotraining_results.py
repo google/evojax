@@ -13,7 +13,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--number-of-seeds', type=int, default=5, help='How many seeds to test.')
-    parser.add_argument('--epochs', type=int, default=40, help='Number of epochs.')
+    parser.add_argument('--epochs', type=int, default=20, help='Number of epochs.')
 
     parsed_config, _ = parser.parse_known_args()
     return parsed_config
