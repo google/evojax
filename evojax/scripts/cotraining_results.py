@@ -51,7 +51,7 @@ if __name__ == "__main__":
                              cnn_epochs=config.epochs,
                              max_iter=0,
                              cnn_lr=1e-3,
-                             early_stopping=True,
+                             early_stopping=False,
                              datasets_tuple=datasets_tuple,
                              logger=logger
                              )
