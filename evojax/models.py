@@ -45,11 +45,12 @@ class CNN(nn.Module):
         return x
 
 
-def create_train_state(rng, learning_rate=1e-3, task_labels: jnp.ndarray = None,
+def create_train_state(rng, learning_rate=1e-3, use_task_labels: jnp.ndarray = None,
                        dropout_rate: float = None, weight_decay: float = None):
     """Creates initial `TrainState`."""
     p_rng, d_rng = random.split(rng)
     init_rngs = {'params': p_rng, 'dropout': d_rng}
+    task_labels = jnp.ones([1, ]) if use_task_labels else None
     params = CNN(dropout_rate=dropout_rate).init(init_rngs,
                                                  jnp.ones([1, 28, 28, 1]),
                                                  None,  # No need to provide mask as will not change model trace

@@ -55,10 +55,11 @@ if __name__ == "__main__":
 
     masking_params = dict(algo="OpenES",
                           pop_size=16,
-                          mask_threshold=0.51,
-                          max_iter=72,
-                          test_interval=16,
-                          log_interval=1000,
+                          mask_threshold=0.5,
+                          max_iter=720,
+                          max_steps=100,
+                          test_interval=160,
+                          log_interval=100,
                           center_lr=0.0825,
                           std_lr=0.08,
                           init_std=0.045)
