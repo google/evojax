@@ -98,10 +98,10 @@ class Masking(VectorizedTask):
         else:
             self.obs_shape = tuple([1, ])
 
-        if image_mask:
-            self.mask_shape = (-1, 28, 28, 1)
-        else:
-            self.mask_shape = (-1,)
+        # if image_mask:
+        #     self.mask_shape = (-1, 28, 28, 1)
+        # else:
+        #     self.mask_shape = (-1,)
 
         self.act_shape = tuple([10, ])
 
@@ -156,7 +156,7 @@ class Masking(VectorizedTask):
                 return cnn_state, logits
 
             cnn_data = state.cnn_data
-            masks = action.reshape(self.mask_shape)
+            # masks = action.reshape(self.mask_shape)
             new_cnn_state, step_logits = train_step(cnn_data.cnn_state, cnn_data.obs, masks, cnn_data.labels)
 
             next_key, key = random.split(state.key)
