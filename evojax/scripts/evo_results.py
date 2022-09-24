@@ -15,6 +15,9 @@ def parse_args():
     parser.add_argument('--epochs', type=int, default=20, help='Number of epochs.')
     parser.add_argument('--early-stopping-count', type=int, help='Number of epochs.')
 
+    parser.add_argument('--dropout-rate', type=float, help='The rate for dropout layers in CNN.')
+    parser.add_argument('--mask-threshold', type=float, help='The threshold for hard masking.')
+
     parsed_config, _ = parser.parse_known_args()
     return parsed_config
 
@@ -36,7 +39,8 @@ if __name__ == "__main__":
 
     client = storage.Client()
     bucket = client.get_bucket("evojax-bucket")
-    file_name = f'baselines{"_early_stopping" if config.early_stopping_count else ""}_{time.strftime("%m%d_%H%M")}.csv'
+    file_name = f'evo{"_hard" if config.mask_threshold else "_soft"}' \
+                f'{"_dropout" if config.dropout_rate else ""}_{time.strftime("%m%d_%H%M")}.csv'
     file_path = os.path.join(log_dir, file_name)
 
     number_of_seeds = config.number_of_seeds
@@ -44,34 +48,31 @@ if __name__ == "__main__":
     datasets_tuple = full_data_loader(dataset_names=datasets)
 
     baseline_dict = dict(dataset_names=datasets,
-        batch_size=1024,
-        cnn_epochs=config.epochs,
-        cnn_lr=1e-3,
-        early_stopping_count=config.early_stopping_count,
-        datasets_tuple=datasets_tuple,
-        logger=logger
-    )
+                         batch_size=1024,
+                         cnn_epochs=config.epochs,
+                         cnn_lr=1e-3,
+                         dropout_rate=config.dropout_rate,
+                         early_stopping_count=config.early_stopping_count,
+                         datasets_tuple=datasets_tuple,
+                         logger=logger
+                         )
     full_results = {}
 
     masking_params = dict(algo="OpenES",
-                          pop_size=16,
-                          mask_threshold=0.5,
+                          pop_size=8,
+                          mask_threshold=config.mask_threshold,
                           max_iter=720,
-                          max_steps=100,
+                          max_steps=50,
                           test_interval=160,
                           log_interval=100,
                           center_lr=0.0825,
                           std_lr=0.08,
                           init_std=0.045)
-    masking_dict = dict(**baseline_dict, **masking_params)
-    masking_dict["cnn_epochs"] = 5
-    masking_dict["evo_epochs"] = 8
-    masking_results = run_and_format_results(masking_dict, 'masking')
-    full_results.update(masking_results)
 
-    masking_dict["dropout_rate"] = 0.55
-    masking_with_dropout_results = run_and_format_results(masking_dict, 'masking_with_dropout')
-    full_results.update(masking_with_dropout_results)
+    masking_dict = dict(**baseline_dict, **masking_params)
+    masking_results = run_and_format_results(masking_dict, f'masking{"_hard" if config.mask_threshold else "_soft"}'
+                                                           f'{"_dropout" if config.dropout_rate else ""}')
+    full_results.update(masking_results)
 
     try:
         series_dict = {k: pd.Series(v) for k, v in full_results.items()}
