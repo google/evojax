@@ -298,13 +298,13 @@ def run_train_masking(dataset_names: list,
         for k, v in DATASET_LABELS.items():
             logger.info(f'Mean mask for {k}: {mean_masks[v]}')
 
-    _, eval_accuracy_dict = run_mnist_training(datasets_tuple=datasets_tuple,
-                                               logger=logger,
-                                               state=cnn_state,
-                                               eval_only=True,
-                                               mask_params=mask_params,
-                                               cnn_batch_size=batch_size,
-                                               )
+    # _, eval_accuracy_dict = run_mnist_training(datasets_tuple=datasets_tuple,
+    #                                            logger=logger,
+    #                                            state=cnn_state,
+    #                                            eval_only=True,
+    #                                            mask_params=mask_params,
+    #                                            cnn_batch_size=batch_size,
+    #                                            )
 
     end_time = time.time()
     logger.info(f'Total time taken: {end_time-start_time:.2f}s')

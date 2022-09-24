@@ -23,18 +23,16 @@ class CNN(nn.Module):
                  ):
 
         x = nn.relu(nn.Conv(features=32, kernel_size=(3, 3), padding="SAME", name="CONV1")(x))
-        # x = nn.BatchNorm()(x, use_running_average=not train)
         x = nn.relu(nn.Conv(features=16, kernel_size=(3, 3), padding="SAME", name="CONV2")(x))
-        x = x.reshape((x.shape[0], -1))
 
+        x = x.reshape((x.shape[0], -1))
         x = nn.relu(nn.Dense(features=512, name="DENSE1")(x))
-        # x = nn.relu(nn.Dense(features=256, name="DENSE2")(x))
 
         if task_labels is not None:
             label_input = nn.one_hot(task_labels, self.dataset_number)
             x = jnp.concatenate([x, label_input], axis=1)
 
-        # TODO need to change the dropout code in flax to remove ifs for jit compatibility
+        # TODO N.B. need to change the dropout code in flax to remove ifs for jit compatibility
         if self.dropout_rate is not None:
             x = nn.Dropout(rate=self.dropout_rate)(x, deterministic=not train)
 
