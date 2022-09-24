@@ -45,7 +45,7 @@ class CNN(nn.Module):
         return x
 
 
-def create_train_state(rng, learning_rate=1e-3, use_task_labels: jnp.ndarray = None,
+def create_train_state(rng, learning_rate=1e-3, use_task_labels: bool = None,
                        dropout_rate: float = None, weight_decay: float = None):
     """Creates initial `TrainState`."""
     p_rng, d_rng = random.split(rng)

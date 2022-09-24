@@ -192,8 +192,7 @@ def run_mnist_training(
     # Allow passing of a state, so only init if this is none
     if state is None:
         rng, init_rng = random.split(rng)
-        task_labels = jnp.ones([1, ]) if use_task_labels else None
-        state = create_train_state(init_rng, learning_rate, task_labels,
+        state = create_train_state(init_rng, learning_rate, use_task_labels=use_task_labels,
                                    dropout_rate=dropout_rate, weight_decay=weight_decay)
         del init_rng  # Must not be used anymore.
 

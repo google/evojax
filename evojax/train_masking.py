@@ -22,16 +22,14 @@ import time
 import argparse
 import wandb
 import numpy as np
-import jax
 
 from evojax import util
 from evojax import Trainer
 from evojax.task.masking_task import Masking
 from evojax.policy.mask_policy import MaskPolicy
-from evojax.algo import PGPE, OpenES, CMA_ES_JAX, CMA_ES
+from evojax.algo import PGPE, OpenES, CMA_ES_JAX
 from evojax.mnist_cnn import run_mnist_training
 from evojax.datasets import DATASET_LABELS, full_data_loader
-from evojax.models import create_train_state
 
 
 def parse_cnn_args(arg_parser: argparse.ArgumentParser):
