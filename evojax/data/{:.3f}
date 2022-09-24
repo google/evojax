@@ -1,0 +1,8 @@
+\begin{tabular}{lrrrr}
+Trained With & MNIST & FMNIST & KMNIST & CIFAR \\
+Dataset Test Accuracy &  &  &  &  \\
+MNIST & 1.000000 & 0.996000 & 1.000000 & 0.997000 \\
+FMNIST & 1.000000 & 1.000000 & 1.001000 & 0.991000 \\
+KMNIST & 0.997000 & 0.985000 & 1.000000 & 0.986000 \\
+CIFAR & 1.017000 & 1.005000 & 1.006000 & 1.000000 \\
+\end{tabular}

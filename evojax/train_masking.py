@@ -43,7 +43,8 @@ def parse_cnn_args(arg_parser: argparse.ArgumentParser):
     arg_parser.add_argument('--l1-reg-lambda', type=float, help='The lambda to use with L1 regularisation.')
     arg_parser.add_argument('--weight-decay', type=float, help='The lambda to use with weight decay.')
     arg_parser.add_argument('--dropout-rate', type=float, help='The rate for dropout layers in CNN.')
-    arg_parser.add_argument('--early-stopping', action='store_true', help='Stop on decrease in val accuracy.')
+    arg_parser.add_argument('--early-stopping-count', type=int,
+                            help='Stop on decrease in val accuracy.')
 
 
 def parse_args():
@@ -113,7 +114,7 @@ def run_train_masking(dataset_names: list,
                       # Cnn args
                       cnn_epochs=20,
                       cnn_lr=1e-3,
-                      early_stopping=False,
+                      early_stopping_count=None,
                       use_task_labels=False,
                       l1_pruning_proportion=None,
                       l1_reg_lambda=None,
@@ -285,7 +286,7 @@ def run_train_masking(dataset_names: list,
                                                   cnn_batch_size=batch_size,
                                                   state=cnn_state,
                                                   mask_params=mask_params,
-                                                  early_stopping=early_stopping,
+                                                  early_stopping_count=early_stopping_count,
                                                   # These are the parameters for the other
                                                   # sparsity baseline types
                                                   use_task_labels=use_task_labels,
@@ -345,7 +346,7 @@ if __name__ == '__main__':
                           cnn_lr=config.cnn_lr,
                           # These are the parameters for the other
                           # sparsity baseline types
-                          early_stopping=config.early_stopping,
+                          early_stopping_count=config.early_stopping,
                           use_task_labels=config.use_task_labels,
                           l1_pruning_proportion=config.l1_pruning_proportion,
                           l1_reg_lambda=config.l1_reg_lambda,

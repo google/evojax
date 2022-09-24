@@ -178,7 +178,7 @@ def run_mnist_training(
         cnn_batch_size: int = 1024,
         state: train_state.TrainState = None,
         mask_params: FrozenDict = None,
-        early_stopping: bool = False,
+        early_stopping_count: int = None,
         # These are the parameters for the other sparsity baseline types
         use_task_labels: bool = False,
         l1_pruning_proportion: float = None,
@@ -217,9 +217,10 @@ def run_mnist_training(
 
     logger.info('Starting training MNIST CNN')
 
-    previous_state = None
+    best_state = best_validation_accuracy = best_accuracy_dict = None
+    early_stopping_counter = 0
     accuracy_dict = {'train': [], 'validation': [], 'test': [], **{n: [] for n in test_dataset_class.dataset_names}}
-    current_test_accuracy = previous_validation_accuracy = 0.
+    current_test_accuracy = 0.
     for epoch in range(1, num_epochs + 1):
         # Since there can be multiple evo epochs count from the start of them
         relative_epoch = evo_epoch * num_epochs + epoch - 1
@@ -255,17 +256,6 @@ def run_mnist_training(
 
         current_validation_accuracy = validation_dataset_class.metrics_holder[combined_dataset_key]['accuracy']
 
-        # If the validation accuracy decreases will want to end if doing early stopping
-        if current_validation_accuracy > previous_validation_accuracy and early_stopping:
-            previous_validation_accuracy = current_validation_accuracy
-            previous_state = state
-        elif early_stopping:
-            logger.info(f'Validation accuracy decreased on epoch {epoch}, stopping early')
-            logger.info(f'Final Test Accuracy: {current_test_accuracy}')
-            return previous_state, accuracy_dict
-        else:
-            pass
-
         # Evaluate on the test set after each training epoch
         state, test_dataset_class = epoch_step(test=True,
                                                state=state,
@@ -294,6 +284,21 @@ def run_mnist_training(
             wandb.log({'Combined Train Accuracy': current_train_accuracy,
                        'Combined Validation Accuracy': current_validation_accuracy,
                        'Combined Test Accuracy': current_test_accuracy})
+
+        best_validation_accuracy = max(current_validation_accuracy, best_validation_accuracy)
+        if current_validation_accuracy < best_validation_accuracy:
+            early_stopping_counter += 1
+        else:
+            best_state = state
+            best_accuracy_dict = accuracy_dict
+            early_stopping_counter = 0
+
+        if early_stopping_count is not None and early_stopping_counter == early_stopping_count:
+            logger.info(f'Validation accuracy decreased {early_stopping_count} times by epoch {epoch}, stopping early')
+            logger.info(f'Final Test Accuracy: {current_test_accuracy}')
+            return best_state, best_accuracy_dict
+        else:
+            pass
 
     logger.info(f'Final Test Accuracy: {current_test_accuracy}')
 
