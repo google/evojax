@@ -217,8 +217,8 @@ def run_mnist_training(
 
     logger.info('Starting training MNIST CNN')
 
-    best_state = best_validation_accuracy = best_accuracy_dict = None
-    early_stopping_counter = 0
+    best_state = best_accuracy_dict = None
+    best_validation_accuracy = early_stopping_counter = 0
     accuracy_dict = {'train': [], 'validation': [], 'test': [], **{n: [] for n in test_dataset_class.dataset_names}}
     current_test_accuracy = 0.
     for epoch in range(1, num_epochs + 1):
