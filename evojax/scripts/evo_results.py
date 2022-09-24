@@ -46,7 +46,6 @@ if __name__ == "__main__":
     baseline_dict = dict(dataset_names=datasets,
         batch_size=1024,
         cnn_epochs=config.epochs,
-        max_iter=0,
         cnn_lr=1e-3,
         early_stopping_count=config.early_stopping_count,
         datasets_tuple=datasets_tuple,
@@ -54,43 +53,24 @@ if __name__ == "__main__":
     )
     full_results = {}
 
-    baseline_results = run_and_format_results(baseline_dict, 'baseline')
-    full_results.update(baseline_results)
+    masking_params = dict(algo="OpenES",
+                          pop_size=16,
+                          mask_threshold=0.51,
+                          max_iter=72,
+                          test_interval=16,
+                          log_interval=1000,
+                          center_lr=0.0825,
+                          std_lr=0.08,
+                          init_std=0.045)
+    masking_dict = dict(**baseline_dict, **masking_params)
+    masking_dict["cnn_epochs"] = 5
+    masking_dict["evo_epochs"] = 8
+    masking_results = run_and_format_results(masking_dict, 'masking')
+    full_results.update(masking_results)
 
-    task_labels_dict = dict(**baseline_dict, use_task_labels=True)
-    task_labels_results = run_and_format_results(task_labels_dict, 'task_labels')
-    full_results = {**full_results, **task_labels_results}
-
-    dropout_dict = dict(**baseline_dict, dropout_rate=0.5)
-    dropout_results = run_and_format_results(dropout_dict, 'dropout')
-    full_results.update(dropout_results)
-
-    l1_reg_dict = dict(**baseline_dict, l1_reg_lambda=3e-5)
-    l1_reg_results = run_and_format_results(l1_reg_dict, 'l1_reg')
-    full_results = {**full_results, **l1_reg_results}
-
-    l1_pruning_dict = dict(**baseline_dict, l1_pruning_proportion=0.05)
-    l1_pruning_results = run_and_format_results(l1_pruning_dict, 'l1_pruning')
-    full_results = {**full_results, **l1_pruning_results}
-
-    # masking_params = dict(algo="OpenES",
-    #                       pop_size=16,
-    #                       mask_threshold=0.51,
-    #                       max_iter=72,
-    #                       test_interval=16,
-    #                       log_interval=1000,
-    #                       center_lr=0.0825,
-    #                       std_lr=0.08,
-    #                       init_std=0.045)
-    # masking_dict = dict(**baseline_dict, **masking_params)
-    # masking_dict["cnn_epochs"] = 5
-    # masking_dict["evo_epochs"] = 8
-    # masking_results = run_and_format_results(masking_dict, 'masking')
-    # full_results.update(masking_results)
-    #
-    # masking_dict["dropout_rate"] = 0.55
-    # masking_with_dropout_results = run_and_format_results(masking_dict, 'masking_with_dropout')
-    # full_results.update(masking_with_dropout_results)
+    masking_dict["dropout_rate"] = 0.55
+    masking_with_dropout_results = run_and_format_results(masking_dict, 'masking_with_dropout')
+    full_results.update(masking_with_dropout_results)
 
     try:
         series_dict = {k: pd.Series(v) for k, v in full_results.items()}
