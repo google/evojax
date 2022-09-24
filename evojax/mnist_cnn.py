@@ -218,7 +218,7 @@ def run_mnist_training(
     logger.info('Starting training MNIST CNN')
 
     previous_state = None
-    accuracy_dict = {'train': [], 'validation': [], 'test': []}
+    accuracy_dict = {'train': [], 'validation': [], 'test': [], **{n: [] for n in test_dataset_class.dataset_names}}
     current_test_accuracy = previous_validation_accuracy = 0.
     for epoch in range(1, num_epochs + 1):
         # Since there can be multiple evo epochs count from the start of them
@@ -279,12 +279,16 @@ def run_mnist_training(
                                                dropout_rate=dropout_rate)
 
         current_train_accuracy = calc_and_log_metrics(train_dataset_class, logger, epoch, wandb_logging)
-        _ = calc_and_log_metrics(validation_dataset_class, logger, epoch,wandb_logging)
+        _ = calc_and_log_metrics(validation_dataset_class, logger, epoch, wandb_logging)
         current_test_accuracy = calc_and_log_metrics(test_dataset_class, logger, epoch, wandb_logging)
 
         accuracy_dict['train'].append(current_train_accuracy)
         accuracy_dict['validation'].append(current_validation_accuracy)
         accuracy_dict['test'].append(current_test_accuracy)
+
+        for dataset_name in test_dataset_class.dataset_names:
+            ds_test_accuracy = test_dataset_class.metrics_holder[dataset_name].get("accuracy")
+            accuracy_dict[dataset_name].append(ds_test_accuracy)
 
         if wandb_logging:
             wandb.log({'Combined Train Accuracy': current_train_accuracy,
