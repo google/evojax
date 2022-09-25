@@ -273,6 +273,10 @@ def run_train_masking(dataset_names: list,
         for k, v in DATASET_LABELS.items():
             logger.info(f'Mean mask for {k}: {mean_masks[v]}')
 
+        if image_mask:
+            import ipdb
+            ipdb.set_trace()
+
     end_time = time.time()
     logger.info(f'Total time taken: {end_time-start_time:.2f}s')
     logger.info('RUN COMPLETE\n')
