@@ -259,6 +259,7 @@ def run_train_masking(dataset_names: list,
                                                   cnn_batch_size=batch_size,
                                                   state=cnn_state,
                                                   mask_params=mask_params,
+                                                  image_mask=image_mask,
                                                   early_stopping_count=early_stopping_count,
                                                   # These are the parameters for the other
                                                   # sparsity baseline types
