@@ -310,7 +310,7 @@ if __name__ == '__main__':
                           cnn_lr=config.cnn_lr,
                           # These are the parameters for the other
                           # sparsity baseline types
-                          early_stopping_count=config.early_stopping,
+                          early_stopping_count=config.early_stopping_count,
                           use_task_labels=config.use_task_labels,
                           l1_pruning_proportion=config.l1_pruning_proportion,
                           l1_reg_lambda=config.l1_reg_lambda,
