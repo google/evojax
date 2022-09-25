@@ -25,7 +25,7 @@ import numpy as np
 
 from evojax import util
 from evojax import Trainer
-from evojax.task.masking_task import Masking
+from evojax.task.masking_task import Masking, ImageMasking
 from evojax.policy.mask_policy import MaskPolicy
 from evojax.algo import PGPE, OpenES, CMA_ES_JAX
 from evojax.mnist_cnn import run_mnist_training
@@ -132,7 +132,8 @@ def run_train_masking(dataset_names: list,
         logger = util.create_logger(name='MASK', log_dir=log_dir, debug=debug)
 
     time_str = time.strftime("%m%d_%H%M")
-    run_name = f'{algo}_{"dropout_" if dropout_rate else ""}{"".join([d[0] for d in dataset_names])}_{time_str}'
+    run_name = f'{algo}{"_image" if image_mask else ""}' \
+               f'_{"dropout_" if dropout_rate else ""}{"".join([d[0] for d in dataset_names])}_{time_str}'
     wandb.init(name=run_name,
                project="evojax-masking",
                entity="ucl-dark",
@@ -150,7 +151,7 @@ def run_train_masking(dataset_names: list,
     if not datasets_tuple:
         datasets_tuple = full_data_loader(dataset_names=dataset_names, val_fraction=val_fraction)
 
-    cnn_state = mask_params = None
+    cnn_state = None
     # full_accuracy_dict = {}
     # if not meta_learning:
     # cnn_state, full_accuracy_dict = run_mnist_training(logger,
@@ -177,14 +178,20 @@ def run_train_masking(dataset_names: list,
                         image_mask=image_mask,
                         pretrained_cnn_state=cnn_state)
 
-    # train_task = Masking(batch_size=batch_size, validation=False, pixel_input=pixel_input, dropout_rate=dropout_rate,
-    #                      datasets_tuple=datasets_tuple, max_steps=max_steps)
-    validation_task = Masking(batch_size=batch_size, test=False, validation=True, pixel_input=pixel_input,
-                              image_mask=image_mask, dropout_rate=dropout_rate,
-                              datasets_tuple=datasets_tuple, max_steps=max_steps)
-    test_task = Masking(batch_size=batch_size, test=True, validation=False, pixel_input=pixel_input,
-                        image_mask=image_mask, dropout_rate=dropout_rate,
-                        datasets_tuple=datasets_tuple, max_steps=max_steps)
+    if image_mask:
+        validation_task = ImageMasking(batch_size=batch_size, test=False, validation=True, pixel_input=pixel_input,
+                                       dropout_rate=dropout_rate,
+                                       datasets_tuple=datasets_tuple, max_steps=max_steps)
+        test_task = ImageMasking(batch_size=batch_size, test=True, validation=False, pixel_input=pixel_input,
+                                 dropout_rate=dropout_rate,
+                                 datasets_tuple=datasets_tuple, max_steps=max_steps)
+    else:
+        validation_task = Masking(batch_size=batch_size, test=False, validation=True, pixel_input=pixel_input,
+                                  dropout_rate=dropout_rate,
+                                  datasets_tuple=datasets_tuple, max_steps=max_steps)
+        test_task = Masking(batch_size=batch_size, test=True, validation=False, pixel_input=pixel_input,
+                            dropout_rate=dropout_rate,
+                            datasets_tuple=datasets_tuple, max_steps=max_steps)
 
     if algo == 'PGPE':
         solver = PGPE(
@@ -221,42 +228,10 @@ def run_train_masking(dataset_names: list,
     else:
         raise NotImplementedError
 
-    # for i in range(evo_epochs):
-    #     if meta_learning:
-    #         init_seed = jax.random.PRNGKey(seed=seed+i)
-    #         cnn_state = create_train_state(rng=init_seed, learning_rate=cnn_lr,
-    #                                        dropout_rate=dropout_rate, weight_decay=weight_decay)
-    #
-    #     if i:
-    #         cnn_state, accuracy_dict = run_mnist_training(logger,
-    #                                                       seed=seed,
-    #                                                       num_epochs=cnn_epochs,
-    #                                                       evo_epoch=i+1,
-    #                                                       learning_rate=cnn_lr,
-    #                                                       cnn_batch_size=batch_size,
-    #                                                       state=cnn_state,
-    #                                                       mask_params=mask_params,
-    #                                                       datasets_tuple=datasets_tuple,
-    #                                                       early_stopping=early_stopping,
-    #                                                       # These are the parameters for the other
-    #                                                       # sparsity baseline types
-    #                                                       use_task_labels=use_task_labels,
-    #                                                       l1_pruning_proportion=l1_pruning_proportion,
-    #                                                       l1_reg_lambda=l1_reg_lambda,
-    #                                                       dropout_rate=dropout_rate)
-    #
-    #         # Update the full accuracy dict for that run
-    #         full_accuracy_dict = {k: v+accuracy_dict[k] for k, v in full_accuracy_dict.items()}
-    #
-    #     policy.cnn_state = cnn_state
-
-    # Train.
-
     if max_iter:
         trainer = Trainer(
             policy=policy,
             solver=solver,
-            # train_task=test_task,
             train_task=validation_task,
             test_task=test_task,
             max_iter=max_iter,
@@ -298,14 +273,6 @@ def run_train_masking(dataset_names: list,
         for k, v in DATASET_LABELS.items():
             logger.info(f'Mean mask for {k}: {mean_masks[v]}')
 
-    # _, eval_accuracy_dict = run_mnist_training(datasets_tuple=datasets_tuple,
-    #                                            logger=logger,
-    #                                            state=cnn_state,
-    #                                            eval_only=True,
-    #                                            mask_params=mask_params,
-    #                                            cnn_batch_size=batch_size,
-    #                                            )
-
     end_time = time.time()
     logger.info(f'Total time taken: {end_time-start_time:.2f}s')
     logger.info('RUN COMPLETE\n')
@@ -313,7 +280,6 @@ def run_train_masking(dataset_names: list,
 
     wandb.finish()
 
-    # del train_task
     del validation_task
     del test_task
 

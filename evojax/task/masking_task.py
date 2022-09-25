@@ -88,7 +88,6 @@ class Masking(VectorizedTask):
                  validation: bool = False,
                  test: bool = False,
                  pixel_input: bool = False,
-                 image_mask: bool = False,
                  dropout_rate: float = None,
                  datasets_tuple: Tuple[DatasetUtilClass, DatasetUtilClass, DatasetUtilClass] = None):
 
@@ -97,11 +96,6 @@ class Masking(VectorizedTask):
             self.obs_shape = tuple([1, 28, 28, 1])
         else:
             self.obs_shape = tuple([1, ])
-
-        # if image_mask:
-        #     self.mask_shape = (-1, 28, 28, 1)
-        # else:
-        #     self.mask_shape = (-1,)
 
         self.act_shape = tuple([10, ])
 
@@ -163,6 +157,115 @@ class Masking(VectorizedTask):
             steps = state.steps + 1
             reward = jnp.where(steps >= self.max_steps, step_accuracy(step_logits, state.labels), 0)
             # reward = step_accuracy(step_logits, state.labels)
+
+            done = jnp.where(steps >= self.max_steps, 1, 0)
+            steps = jnp.where(done, jnp.zeros((), jnp.int32), steps)
+
+            batch_images, batch_class_labels, batch_task_labels = sample_batch(
+                key, image_data, class_labels, task_labels, batch_size)
+
+            cnn_data = CNNData(obs=batch_images,
+                               labels=batch_class_labels,
+                               task_labels=batch_task_labels,
+                               cnn_state=new_cnn_state)
+
+            new_state = MaskTaskState(obs=batch_task_labels,
+                                      labels=batch_class_labels,
+                                      task_labels=batch_task_labels,
+                                      cnn_data=cnn_data,
+                                      key=next_key,
+                                      steps=steps)
+
+            del state
+
+            return new_state, reward, done
+            # return state, reward, jnp.ones(())
+        self._step_fn = jax.jit(jax.vmap(step_fn))
+
+    def reset(self, key: jnp.ndarray) -> MaskTaskState:
+        return self._reset_fn(key)
+
+    def step(self,
+             state: MaskTaskState,
+             action: jnp.ndarray) -> Tuple[MaskTaskState, jnp.ndarray, jnp.ndarray]:
+        return self._step_fn(state, action)
+
+
+class ImageMasking(VectorizedTask):
+
+    def __init__(self,
+                 batch_size: int = 1024,
+                 max_steps: int = 1,
+                 validation: bool = False,
+                 test: bool = False,
+                 pixel_input: bool = False,
+                 dropout_rate: float = None,
+                 datasets_tuple: Tuple[DatasetUtilClass, DatasetUtilClass, DatasetUtilClass] = None):
+        self.max_steps = max_steps
+        if pixel_input:
+            self.obs_shape = tuple([1, 28, 28, 1])
+        else:
+            self.obs_shape = tuple([1, ])
+
+        self.act_shape = tuple([10, ])
+
+        if not test:
+            dataset_class = datasets_tuple[int(validation)]
+            image_data, class_labels, task_labels = dataset_class.return_data_arrays()
+        else:
+            dataset_class = datasets_tuple[-1]
+            image_data, class_labels, task_labels = dataset_class.return_data_arrays()
+
+        def reset_fn(key):
+            next_key, key = random.split(key)
+
+            batch_images, batch_class_labels, batch_task_labels = sample_batch(
+                key, image_data, class_labels, task_labels, batch_size)
+
+            cnn_state = create_train_state(key, dropout_rate=dropout_rate)
+
+            cnn_data = CNNData(obs=batch_images,
+                               labels=batch_class_labels,
+                               task_labels=batch_task_labels,
+                               cnn_state=cnn_state)
+
+            if pixel_input:
+                mask_obs = batch_images
+            else:
+                mask_obs = batch_task_labels
+
+            return MaskTaskState(obs=mask_obs,
+                                 labels=batch_class_labels,
+                                 task_labels=batch_task_labels,
+                                 cnn_data=cnn_data,
+                                 key=next_key,
+                                 steps=jnp.zeros((), dtype=int))
+
+        self._reset_fn = jax.jit(jax.vmap(reset_fn))
+
+        def step_fn(state: MaskTaskState, action: jnp.ndarray):
+
+            def train_step(cnn_state: TrainState, state_images, state_masks, state_labels):
+
+                def loss_fn(params):
+                    output_logits = CNN(dropout_rate=dropout_rate).apply({'params': params},
+                                                                         state_images, state_masks,
+                                                                         rngs={'dropout': state.key})
+                    loss = cross_entropy_loss(logits=output_logits, labels=state_labels)
+                    return loss, output_logits
+
+                grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
+                (_, logits), grads = grad_fn(cnn_state.params)
+                cnn_state = cnn_state.apply_gradients(grads=grads)
+                return cnn_state, logits
+
+            cnn_data = state.cnn_data
+            masked_images = action.reshape((batch_size, 28, 28, 1)) * cnn_data.obs
+            new_cnn_state, step_logits = train_step(cnn_data.cnn_state, masked_images, None, cnn_data.labels)
+
+            next_key, key = random.split(state.key)
+            steps = state.steps + 1
+            reward = jnp.where(steps >= self.max_steps, step_accuracy(step_logits, state.labels), 0)
 
             done = jnp.where(steps >= self.max_steps, 1, 0)
             steps = jnp.where(done, jnp.zeros((), jnp.int32), steps)
