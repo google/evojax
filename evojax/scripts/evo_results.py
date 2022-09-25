@@ -25,6 +25,7 @@ def parse_args():
 def run_and_format_results(config_dict, run_name):
     results = {}
     for s in range(number_of_seeds):
+        print(f'\nStarting seed: {s}\n')
         results[s] = run_train_masking(**config_dict, config_dict=config_dict, seed=s)
     return {(run_name, k2, k1): v2 for k1, v1 in results.items() for k2, v2 in v1.items()}
 
@@ -40,8 +41,11 @@ if __name__ == "__main__":
     client = storage.Client()
     bucket = client.get_bucket("evojax-bucket")
     file_name = f'evo{"_hard" if config.mask_threshold else "_soft"}' \
-                f'{"_dropout" if config.dropout_rate else ""}_{time.strftime("%m%d_%H%M")}.csv'
+                f'{"_dropout" if config.dropout_rate else ""}' \
+                f'{"_es" if config.early_stopping_count else ""}_{time.strftime("%m%d_%H%M")}.csv'
     file_path = os.path.join(log_dir, file_name)
+
+    logger.info(f"Running results file: {file_name}")
 
     number_of_seeds = config.number_of_seeds
     datasets = list(DATASET_LABELS.keys())
