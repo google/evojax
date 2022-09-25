@@ -19,6 +19,9 @@ def get_batch_masks(state, batch, mask_params=None, image_mask=None, l1_pruning_
     task_labels = batch['label'][:, 1]
     batch_images = batch['image']
 
+    import ipdb
+    ipdb.set_trace()
+
     if mask_params is not None and image_mask is not None:
         mask_size = 28*28
         image_masks = Mask(mask_size=mask_size).apply(mask_params, task_labels)
