@@ -19,9 +19,6 @@ def get_batch_masks(state, batch, mask_params=None, image_mask=None, l1_pruning_
     task_labels = batch['label'][:, 1]
     batch_images = batch['image']
 
-    import ipdb
-    ipdb.set_trace()
-
     if mask_params is not None and image_mask is not None:
         mask_size = 28*28
         image_masks = Mask(mask_size=mask_size).apply(mask_params, task_labels)
@@ -57,10 +54,14 @@ def train_step(state: train_state.TrainState,
                ):
 
     class_labels = batch['label'][:, 0]
-    batch_masks, batch_images = get_batch_masks(state, batch,
+    try:
+        batch_masks, batch_images = get_batch_masks(state, batch,
                                                 mask_params=mask_params,
                                                 image_mask=image_mask_signal,
                                                 l1_pruning_proportion=l1_pruning_proportion)
+    except:
+        import ipdb
+        ipdb.set_trace()
 
     def loss_fn(params):
         output_logits = CNN(dropout_rate=dropout_rate).apply({'params': params},
