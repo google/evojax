@@ -41,7 +41,7 @@ def get_batch_masks(state, batch, mask_params=None, image_mask=None, l1_pruning_
     return batch_masks, batch_images
 
 
-# @jax.jit
+@jax.jit
 def train_step(state: train_state.TrainState,
                batch: dict,
                rng: jnp.ndarray,
@@ -80,7 +80,7 @@ def train_step(state: train_state.TrainState,
     return state, metrics
 
 
-# @jax.jit
+@jax.jit
 def eval_step(state: train_state.TrainState,
               batch: dict,
               rng: jnp.ndarray,
