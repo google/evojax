@@ -19,9 +19,11 @@ def get_batch_masks(state, batch, mask_params=None, image_mask=None, l1_pruning_
     task_labels = batch['label'][:, 1]
     batch_images = batch['image']
 
+    import ipdb
+    ipdb.set_trace()
+
     if mask_params is not None and image_mask is not None:
-        import ipdb
-        ipdb.set_trace()
+
         mask_size = 28*28
         image_masks = Mask(mask_size=mask_size).apply(mask_params, task_labels)
         image_masks = image_masks.reshape((batch_images.shape[0], 28, 28, 1))
@@ -43,7 +45,7 @@ def get_batch_masks(state, batch, mask_params=None, image_mask=None, l1_pruning_
     return batch_masks, batch_images
 
 
-@jax.jit
+# @jax.jit
 def train_step(state: train_state.TrainState,
                batch: dict,
                rng: jnp.ndarray,
@@ -82,7 +84,7 @@ def train_step(state: train_state.TrainState,
     return state, metrics
 
 
-@jax.jit
+# @jax.jit
 def eval_step(state: train_state.TrainState,
               batch: dict,
               rng: jnp.ndarray,
