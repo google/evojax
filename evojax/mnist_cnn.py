@@ -19,11 +19,7 @@ def get_batch_masks(state, batch, mask_params=None, image_mask=None, l1_pruning_
     task_labels = batch['label'][:, 1]
     batch_images = batch['image']
 
-    import ipdb
-    ipdb.set_trace()
-
     if mask_params is not None and image_mask is not None:
-
         mask_size = 28*28
         image_masks = Mask(mask_size=mask_size).apply(mask_params, task_labels)
         image_masks = image_masks.reshape((batch_images.shape[0], 28, 28, 1))
@@ -260,6 +256,7 @@ def run_mnist_training(
                                                 batch_size=cnn_batch_size,
                                                 rng=input_rng,
                                                 mask_params=mask_params,
+                                                image_mask=image_mask,
                                                 use_task_labels=use_task_labels,
                                                 l1_pruning_proportion=l1_pruning_proportion,
                                                 l1_reg_lambda=l1_reg_lambda,
