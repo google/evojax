@@ -49,6 +49,7 @@ class FCRFMC(NEAlgorithm):
 
         try:
             from scipy.optimize import Bounds
+            from numpy.random import MT19937, Generator
             from fcmaes import crfmnescpp
 
         except ModuleNotFoundError:
@@ -57,7 +58,7 @@ class FCRFMC(NEAlgorithm):
             sys.exit(1)
                  
         self.fcrfm = crfmnescpp.CRFMNES_C(param_size, None, [0.]*param_size,
-                init_stdev, pop_size)    
+                init_stdev, pop_size, Generator(MT19937(seed)))    
 
         self.params = None
         self._best_params = None
