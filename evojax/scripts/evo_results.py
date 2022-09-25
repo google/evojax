@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     client = storage.Client()
     bucket = client.get_bucket("evojax-bucket")
-    file_name = f'2_layer_evo{"_hard" if config.mask_threshold else "_soft"}' \
+    file_name = f'evo{"_hard" if config.mask_threshold else "_soft"}' \
                 f'{"_dropout" if config.dropout_rate else ""}' \
                 f'{"_es" if config.early_stopping_count else ""}_{time.strftime("%m%d_%H%M")}.csv'
     file_path = os.path.join(log_dir, file_name)
