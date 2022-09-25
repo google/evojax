@@ -54,14 +54,10 @@ def train_step(state: train_state.TrainState,
                ):
 
     class_labels = batch['label'][:, 0]
-    try:
-        batch_masks, batch_images = get_batch_masks(state, batch,
+    batch_masks, batch_images = get_batch_masks(state, batch,
                                                 mask_params=mask_params,
                                                 image_mask=image_mask_signal,
                                                 l1_pruning_proportion=l1_pruning_proportion)
-    except:
-        import ipdb
-        ipdb.set_trace()
 
     def loss_fn(params):
         output_logits = CNN(dropout_rate=dropout_rate).apply({'params': params},
@@ -273,6 +269,7 @@ def run_mnist_training(
                                                      batch_size=cnn_batch_size,
                                                      rng=input_rng,
                                                      mask_params=mask_params,
+                                                     image_mask=image_mask,
                                                      use_task_labels=use_task_labels,
                                                      l1_pruning_proportion=l1_pruning_proportion,
                                                      l1_reg_lambda=l1_reg_lambda,
@@ -287,6 +284,7 @@ def run_mnist_training(
                                                batch_size=cnn_batch_size,
                                                rng=input_rng,
                                                mask_params=mask_params,
+                                               image_mask=image_mask,
                                                use_task_labels=use_task_labels,
                                                l1_pruning_proportion=l1_pruning_proportion,
                                                l1_reg_lambda=l1_reg_lambda,
