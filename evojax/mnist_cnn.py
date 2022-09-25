@@ -15,11 +15,20 @@ from evojax.datasets import DatasetUtilClass, combined_dataset_key
 from evojax.util import cross_entropy_loss, compute_metrics
 
 
-def get_batch_masks(state, task_labels, mask_params=None, l1_pruning_proportion=None):
-    if mask_params is not None:
+def get_batch_masks(state, batch, mask_params=None, image_mask=None, l1_pruning_proportion=None):
+    task_labels = batch['label'][:, 1]
+    batch_images = batch['image']
+
+    if mask_params is not None and image_mask is None:
         linear_weights = state.params[cnn_final_layer_name]["kernel"]
         mask_size = linear_weights.shape[0]
         batch_masks = Mask(mask_size=mask_size).apply(mask_params, task_labels)
+    elif mask_params is not None and image_mask is not None:
+        mask_size = 28*28
+        image_masks = Mask(mask_size=mask_size).apply(mask_params, task_labels)
+        image_masks = image_masks.reshape((batch_images.shape[0], 28, 28, 1))
+        batch_images = jnp.where(image_masks > 0.5, 1, 0) * batch_images
+        batch_masks = None
     elif l1_pruning_proportion is not None:
         linear_weights = state.params[cnn_final_layer_name]["kernel"]
         avg_weight = jnp.sum(linear_weights, axis=1)
@@ -29,7 +38,7 @@ def get_batch_masks(state, task_labels, mask_params=None, l1_pruning_proportion=
     else:
         batch_masks = None
 
-    return batch_masks
+    return batch_masks, batch_images
 
 
 @jax.jit
@@ -37,6 +46,7 @@ def train_step(state: train_state.TrainState,
                batch: dict,
                rng: jnp.ndarray,
                mask_params: FrozenDict = None,
+               image_mask_signal: jnp.ndarray = None,
                task_labels: jnp.ndarray = None,
                l1_pruning_proportion: float = None,
                l1_reg_lambda: float = None,
@@ -44,11 +54,14 @@ def train_step(state: train_state.TrainState,
                ):
 
     class_labels = batch['label'][:, 0]
-    batch_masks = get_batch_masks(state, task_labels, mask_params, l1_pruning_proportion)
+    batch_masks, batch_images = get_batch_masks(state, batch,
+                                                mask_params=mask_params,
+                                                image_mask=image_mask_signal,
+                                                l1_pruning_proportion=l1_pruning_proportion)
 
     def loss_fn(params):
         output_logits = CNN(dropout_rate=dropout_rate).apply({'params': params},
-                                                             batch['image'],
+                                                             batch_images,
                                                              batch_masks,
                                                              task_labels,
                                                              train=True,
@@ -72,6 +85,7 @@ def eval_step(state: train_state.TrainState,
               batch: dict,
               rng: jnp.ndarray,
               mask_params: FrozenDict = None,
+              image_mask_signal: jnp.ndarray = None,
               task_labels: jnp.ndarray = None,
               l1_pruning_proportion: float = None,
               l1_reg_lambda: float = None,
@@ -80,10 +94,13 @@ def eval_step(state: train_state.TrainState,
 
     params = state.params
     class_labels = batch['label'][:, 0]
-    batch_masks = get_batch_masks(state, task_labels, mask_params, l1_pruning_proportion)
+    batch_masks, batch_images = get_batch_masks(state, batch,
+                                                mask_params=mask_params,
+                                                image_mask=image_mask_signal,
+                                                l1_pruning_proportion=l1_pruning_proportion)
 
     logits = CNN(dropout_rate=dropout_rate).apply({'params': params},
-                                                  batch['image'],
+                                                  batch_images,
                                                   batch_masks,
                                                   task_labels,
                                                   train=False,
@@ -98,6 +115,7 @@ def epoch_step(test: bool,
                batch_size: int,
                rng,
                mask_params: FrozenDict = None,
+               image_mask: bool = False,
                use_task_labels: bool = False,
                l1_pruning_proportion: float = None,
                l1_reg_lambda: float = None,
@@ -125,6 +143,7 @@ def epoch_step(test: bool,
                                        batch,
                                        rng,
                                        mask_params,
+                                       jnp.ones(()) if image_mask else None,
                                        task_labels=task_labels,
                                        l1_pruning_proportion=l1_pruning_proportion,
                                        l1_reg_lambda=l1_reg_lambda,
@@ -178,6 +197,7 @@ def run_mnist_training(
         cnn_batch_size: int = 1024,
         state: train_state.TrainState = None,
         mask_params: FrozenDict = None,
+        image_mask: bool = False,
         early_stopping_count: int = None,
         # These are the parameters for the other sparsity baseline types
         use_task_labels: bool = False,
