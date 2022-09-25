@@ -20,13 +20,13 @@ def get_batch_masks(state, batch, mask_params=None, image_mask=None, l1_pruning_
     batch_images = batch['image']
 
     if mask_params is not None and image_mask is not None:
+        import ipdb
+        ipdb.set_trace()
         mask_size = 28*28
         image_masks = Mask(mask_size=mask_size).apply(mask_params, task_labels)
         image_masks = image_masks.reshape((batch_images.shape[0], 28, 28, 1))
         batch_images = jnp.where(image_masks > 0.5, 1, 0) * batch_images
         batch_masks = None
-        import ipdb
-        ipdb.set_trace()
     elif mask_params is not None:
         linear_weights = state.params[cnn_final_layer_name]["kernel"]
         mask_size = linear_weights.shape[0]

@@ -56,7 +56,7 @@ class MaskPolicy(PolicyNetwork):
     """A dense neural network for masking the MNIST classification task."""
 
     def __init__(self, logger: logging.Logger = None, learning_rate: float = 1e-3,
-                 mask_threshold: float = 0.5, pixel_input: bool = False, image_mask: bool = None,
+                 mask_threshold: float = 0.5, pixel_input: bool = False, image_mask: bool = False,
                  pretrained_cnn_state: train_state.TrainState = None):
         if logger is None:
             self._logger = create_logger('MaskNetPolicy')
