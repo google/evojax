@@ -4,7 +4,7 @@ import optuna
 import argparse
 
 from evojax.mnist_cnn import run_mnist_training
-from evojax.datasets import full_data_loader
+from evojax.datasets import full_data_loader, DATASET_LABELS
 from evojax.util import create_logger
 
 
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     assert sum([config.use_task_labels, config.l1_reg, config.l1_pruning, config.dropout]) < 2
 
     seed = 0
-    datasets_tuple = full_data_loader()
+    datasets_tuple = full_data_loader(list(DATASET_LABELS.keys()))
     study = optuna.create_study(direction="maximize",
                                 study_name=f"mnist_baselines_{baseline_type}_seed_{seed}",
                                 storage=f'sqlite:///{log_dir}/optuna_hparam_search.db',

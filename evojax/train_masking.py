@@ -39,7 +39,6 @@ def parse_cnn_args(arg_parser: argparse.ArgumentParser):
     arg_parser.add_argument('--l1-pruning-proportion', type=float,
                             help='The proportion of weights to remove with L1 pruning.')
     arg_parser.add_argument('--l1-reg-lambda', type=float, help='The lambda to use with L1 regularisation.')
-    arg_parser.add_argument('--weight-decay', type=float, help='The lambda to use with weight decay.')
     arg_parser.add_argument('--dropout-rate', type=float, help='The rate for dropout layers in CNN.')
     arg_parser.add_argument('--early-stopping-count', type=int,
                             help='Stop on decrease in val accuracy.')
@@ -56,14 +55,12 @@ def parse_args():
     parser.add_argument('--pixel-input', action='store_true',
                         help='Generate the mask based on pixels rather than task labels.')
     parser.add_argument('--image-mask', action='store_true', help='Mask the image rather than the internal features.')
-    parser.add_argument('--meta-learning', action='store_true', help='Perform meta learning.')
 
     parser.add_argument('--pop-size', type=int, default=8, help='NE population size.')
     parser.add_argument('--batch-size', type=int, default=1024, help='Batch size for training.')
     parser.add_argument('--mask-threshold', type=float, help='Threshold for setting binary mask.')
     parser.add_argument('--max-iter', type=int, default=1000, help='Max training iterations.')
     parser.add_argument('--max-steps', type=int, default=100, help='Max steps for the tasks.')
-    parser.add_argument('--evo-epochs', type=int, default=0, help='Number of epochs for evo process.')
     parser.add_argument('--test-interval', type=int, default=100, help='Test interval.')
     parser.add_argument('--log-interval', type=int, default=100, help='Logging interval.')
     parser.add_argument('--center-lr', type=float, default=0.006, help='Center learning rate.')
@@ -89,7 +86,6 @@ def run_train_masking(dataset_names: list,
                       # Different masking setups
                       pixel_input=False,
                       image_mask=False,
-                      meta_learning=False,
                       # General params
                       seed=0,
                       pop_size=8,
@@ -97,7 +93,6 @@ def run_train_masking(dataset_names: list,
                       mask_threshold=None,
                       max_iter=100,
                       max_steps=1,
-                      evo_epochs=1,
                       test_interval=10,
                       log_interval=10,
                       center_lr=0.006,
@@ -117,7 +112,6 @@ def run_train_masking(dataset_names: list,
                       l1_pruning_proportion=None,
                       l1_reg_lambda=None,
                       dropout_rate=None,
-                      weight_decay=None
                       ) -> dict:
 
     if not dataset_names:
@@ -152,25 +146,6 @@ def run_train_masking(dataset_names: list,
         datasets_tuple = full_data_loader(dataset_names=dataset_names, val_fraction=val_fraction)
 
     cnn_state = None
-    # full_accuracy_dict = {}
-    # if not meta_learning:
-    # cnn_state, full_accuracy_dict = run_mnist_training(logger,
-    #                                                    seed=seed,
-    #                                                    num_epochs=cnn_epochs,
-    #                                                    evo_epoch=0,
-    #                                                    learning_rate=cnn_lr,
-    #                                                    cnn_batch_size=batch_size,
-    #                                                    state=cnn_state,
-    #                                                    mask_params=mask_params,
-    #                                                    datasets_tuple=datasets_tuple,
-    #                                                    early_stopping=early_stopping,
-    #                                                    # These are the parameters for the other
-    #                                                    # sparsity baseline types
-    #                                                    use_task_labels=use_task_labels,
-    #                                                    l1_pruning_proportion=l1_pruning_proportion,
-    #                                                    l1_reg_lambda=l1_reg_lambda,
-    #                                                    dropout_rate=dropout_rate,
-    #                                                    weight_decay=weight_decay)
 
     policy = MaskPolicy(logger=logger,
                         mask_threshold=mask_threshold,
@@ -244,7 +219,7 @@ def run_train_masking(dataset_names: list,
             logger=logger,
             use_for_loop=False,
         )
-        best_score = trainer.run(demo_mode=False)
+        _ = trainer.run(demo_mode=False)
         best_mask_params = solver.best_params
         mask_params = policy.external_format_params_fn(best_mask_params)
     else:
@@ -274,10 +249,6 @@ def run_train_masking(dataset_names: list,
         for k, v in DATASET_LABELS.items():
             logger.info(f'Mean mask for {k}: {mean_masks[v]}')
 
-        if image_mask:
-            import ipdb
-            ipdb.set_trace()
-
     end_time = time.time()
     logger.info(f'Total time taken: {end_time-start_time:.2f}s')
     logger.info('RUN COMPLETE\n')
@@ -298,14 +269,12 @@ if __name__ == '__main__':
                           # Masking types
                           pixel_input=config.pixel_input,
                           image_mask=config.image_mask,
-                          meta_learning=config.meta_learning,
                           # General params
                           pop_size=config.pop_size,
                           batch_size=config.batch_size,
                           mask_threshold=config.mask_threshold,
                           max_iter=config.max_iter,
                           max_steps=config.max_steps,
-                          evo_epochs=config.evo_epochs,
                           test_interval=config.test_interval,
                           log_interval=config.log_interval,
                           center_lr=config.center_lr,
@@ -320,7 +289,6 @@ if __name__ == '__main__':
                           l1_pruning_proportion=config.l1_pruning_proportion,
                           l1_reg_lambda=config.l1_reg_lambda,
                           dropout_rate=config.dropout_rate,
-                          weight_decay=config.weight_decay,
                           # Config to pass to wandb
                           val_fraction=config.val_fraction,
                           config_dict=config)

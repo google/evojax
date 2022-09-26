@@ -34,7 +34,6 @@ class CNNData(object):
     obs: jnp.ndarray  # This will be the mnist image etc
     labels: jnp.ndarray  # This is the class label
     task_labels: jnp.ndarray  # This will be the label associated with each dataset
-    # cnn_params: FrozenDict
     cnn_state: TrainState
 
 
@@ -68,15 +67,6 @@ def step_loss(prediction: jnp.ndarray, target: jnp.ndarray) -> jnp.float32:
 def step_accuracy(prediction: jnp.ndarray, target: jnp.ndarray) -> jnp.float32:
     predicted_class = jnp.argmax(prediction, axis=1)
     return jnp.mean(predicted_class == target)
-
-
-# def setup_task_data(test: bool) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
-#     image_data, labels = get_train_val_split(test)
-#
-#     class_labels = labels[:, 0]
-#     task_labels = labels[:, 1]
-#
-#     return image_data, class_labels, task_labels
 
 
 class Masking(VectorizedTask):
@@ -156,7 +146,6 @@ class Masking(VectorizedTask):
             next_key, key = random.split(state.key)
             steps = state.steps + 1
             reward = jnp.where(steps >= self.max_steps, step_accuracy(step_logits, state.labels), 0)
-            # reward = step_accuracy(step_logits, state.labels)
 
             done = jnp.where(steps >= self.max_steps, 1, 0)
             steps = jnp.where(done, jnp.zeros((), jnp.int32), steps)
@@ -179,7 +168,6 @@ class Masking(VectorizedTask):
             del state
 
             return new_state, reward, done
-            # return state, reward, jnp.ones(())
         self._step_fn = jax.jit(jax.vmap(step_fn))
 
     def reset(self, key: jnp.ndarray) -> MaskTaskState:
@@ -288,7 +276,6 @@ class ImageMasking(VectorizedTask):
             del state
 
             return new_state, reward, done
-            # return state, reward, jnp.ones(())
         self._step_fn = jax.jit(jax.vmap(step_fn))
 
     def reset(self, key: jnp.ndarray) -> MaskTaskState:

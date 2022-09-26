@@ -5,7 +5,7 @@ import argparse
 import numpy as np
 
 from evojax.train_masking import run_train_masking
-from evojax.datasets import full_data_loader
+from evojax.datasets import full_data_loader, DATASET_LABELS
 from evojax.util import create_logger
 
 
@@ -15,7 +15,6 @@ def parse_args():
     parser.add_argument('--seed', type=int, default=0, help='Random seed for training.')
     parser.add_argument('--dropout', action='store_true', help='Use dropout and masking.')
     parser.add_argument('--pixel-input', action='store_true', help='Use pixel input for the mask.')
-    parser.add_argument('--test', action='store_true', help='Check test acc.')
     parsed_config, _ = parser.parse_known_args()
     return parsed_config
 
@@ -29,11 +28,11 @@ if __name__ == "__main__":
     logger = create_logger(name='SWEEP', log_dir=log_dir, debug=False)
 
     seed = config.seed
-    datasets_tuple = full_data_loader()
+    datasets_tuple = full_data_loader(list(DATASET_LABELS.keys()))
     for ds in datasets_tuple:
         logger.info(f'Split {ds.split} has {ds.get_data_count()} entries.')
 
-    prefix = f"using_{'test_' if config.test else ''}" \
+    prefix = f"using_" \
              f"{'dropout_' if config.dropout else ''}" \
              f"{'pixel_input_' if config.pixel_input else ''}"
     study = optuna.create_study(direction="maximize",
@@ -89,10 +88,7 @@ if __name__ == "__main__":
         params_dict.update(test_params)
 
         accuracy_dict = run_train_masking(**params_dict, logger=logger, config_dict=params_dict)
-        if config.test:
-            opt_value = np.mean(accuracy_dict['test'][-5:])
-        else:
-            opt_value = np.mean(accuracy_dict['validation'][-5:])
+        opt_value = np.mean(accuracy_dict['validation'][-5:])
 
         study.tell(trial, opt_value)
 
