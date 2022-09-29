@@ -25,6 +25,7 @@ from .cma_jax import CMA_ES_JAX
 from .map_elites import MAPElites
 from .iamalgam import iAMaLGaM
 from .fcrfmc import FCRFMC
+from .crfmnes import CRFMNES
 
 Strategies = {
     "CMA": CMA,
@@ -38,6 +39,7 @@ Strategies = {
     "MAPElites": MAPElites,
     "iAMaLGaM": iAMaLGaM,
     "FCRFMC": FCRFMC,
+    "CRFMNES": CRFMNES,
 }
 
 __all__ = [
@@ -54,5 +56,6 @@ __all__ = [
     "MAPElites",
     "iAMaLGaM",
     "FCRFMC",
+    "CRFMNES",
     "Strategies",
 ]

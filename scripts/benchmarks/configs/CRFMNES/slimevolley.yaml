@@ -1,13 +1,14 @@
-es_name: "FCRFMC"
-problem_type: "brax"
+es_name: "CRFMNES"
+problem_type: "slimevolley"
 env_name: "ant"
 normalize: true
 es_config:
   pop_size: 128
-  init_stdev: 0.05
+  init_stdev: 0.3
+hidden_size: 100
 num_tests: 128
 n_repeats: 16
-max_iter: 2000
+max_iter: 6000
 test_interval: 100
 log_interval: 20
 seed: 42
