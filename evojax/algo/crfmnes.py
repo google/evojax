@@ -215,13 +215,13 @@ def exp(a: float) -> float:
 
 def sort_indices_by(evals: np.ndarray, z: jnp.ndarray) -> jnp.ndarray:
     lam = len(evals)
-    sorted_indices = jnp.argsort(evals)
+    sorted_indices = np.argsort(evals)
     sorted_evals = evals[sorted_indices]
-    no_of_feasible_solutions = jnp.where(sorted_evals != jnp.inf)[0].size
+    no_of_feasible_solutions = np.where(sorted_evals != jnp.inf)[0].size
     if no_of_feasible_solutions != lam:
-        infeasible_z = z[:, jnp.where(evals == jnp.inf)[0]]
-        distances = jnp.sum(infeasible_z ** 2, axis=0)
+        infeasible_z = z[:, np.where(evals == jnp.inf)[0]]
+        distances = np.sum(infeasible_z ** 2, axis=0)
         infeasible_indices = sorted_indices[no_of_feasible_solutions:]
-        indices_sorted_by_distance = jnp.argsort(distances)
+        indices_sorted_by_distance = np.argsort(distances)
         sorted_indices = sorted_indices.at[no_of_feasible_solutions:].set(infeasible_indices[indices_sorted_by_distance])
     return sorted_indices
