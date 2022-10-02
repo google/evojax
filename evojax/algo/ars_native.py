@@ -3,7 +3,10 @@ import jax.numpy as jnp
 import numpy as np
 from evojax.algo.base import NEAlgorithm
 from typing import Union
-from jax.example_libraries import optimizers
+try:
+    from jax.example_libraries import optimizers
+except ModuleNotFoundError:
+    from jax.experimental import optimizers
 import logging
 from evojax.util import create_logger
 
