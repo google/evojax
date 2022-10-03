@@ -150,3 +150,16 @@ MNIST	| 0.90 (max_iter=2000)	| [Link](configs/ARS/mnist.yaml)| 0.9610 |
 | Cartpole-Easy  | Cartpole-Hard | MNIST | 
 |---|---|---|
 <img src="figures/ARS/cartpole_easy.png?raw=true" alt="drawing" width="200" />|<img src="figures/ARS/cartpole_hard.png?raw=true" alt="drawing" width="200" />| <img src="figures/ARS/mnist.png?raw=true" alt="drawing" width="200" /> |
+
+
+
+### Augmented Random Search (jax native)
+
+|                          | Benchmark                   | Params   | Results (avg.) |
+| ----------------|-----------------------|----------|------------- |
+| CartPole (easy) | 900 (max_iter=1000)  | [Link](configs/ARS_native/cartpole_easy.yaml)| 910        |
+| CartPole (hard) | 600 (max_iter=2000)  | [Link](configs/ARS_native/cartpole_hard.yaml) | 558.02       |
+| MNIST | 0.90 (max_iter=4000)  | [Link](configs/ARS_native/minst.yaml) | 0.92       |
+| Brax Ant | 3000 (max_iter=700)  | [Link](configs/ARS_native/brax_ant.yaml) | 4129.83        |
+| Waterworld |  6 (max_iter=2000) |[Link](configs/ARS_native/waterworld.yaml) | 7.29 | 
+| Waterworld (MA) |  2 (max_iter=2000) | [Link](configs/ARS_native/waterworld_ma.yaml) | 1.68 | 
