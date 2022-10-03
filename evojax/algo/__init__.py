@@ -26,6 +26,7 @@ from .map_elites import MAPElites
 from .iamalgam import iAMaLGaM
 from .fcrfmc import FCRFMC
 from .crfmnes import CRFMNES
+from .ars_native import ARS_native
 
 Strategies = {
     "CMA": CMA,
@@ -40,6 +41,7 @@ Strategies = {
     "iAMaLGaM": iAMaLGaM,
     "FCRFMC": FCRFMC,
     "CRFMNES": CRFMNES,
+    "ARS_native": ARS_native,
 }
 
 __all__ = [
@@ -58,4 +60,5 @@ __all__ = [
     "FCRFMC",
     "CRFMNES",
     "Strategies",
+    "ARS_native"
 ]
