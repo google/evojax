@@ -23,6 +23,8 @@ import logging
 import math
 from typing import Optional
 
+import numpy as np
+
 import jax
 from jax import numpy as jnp
 
@@ -327,6 +329,23 @@ class CMA_ES_JAX(NEAlgorithm):
                                 state=self.state, fitness=fitness, solutions=solutions)
 
         self.state = next_state
+
+    def save_state(self) -> dict:
+        fn = lambda x: np.array(x) if isinstance(x, jnp.ndarray) else x
+
+        state = {
+            key: fn(value)
+            for key, value in self.state._asdict().items()
+        }
+        return state
+
+    def load_state(self, saved_state: dict):
+        fn = lambda x: jnp.array(x) if isinstance(x, np.ndarray) else x
+
+        self.state = _State(**{
+            key: fn(value)
+            for key, value in saved_state.items()
+        })
 
     @property
     def best_params(self) -> jnp.ndarray:
