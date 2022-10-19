@@ -78,8 +78,7 @@ class FCRFMC(NEAlgorithm):
         maxy = np.max(y)
         if self.maxy < maxy:
             self.maxy = maxy
-            xi = np.argsort(y)        
-            self._best_params = self.params[xi[0]]
+            self._best_params = self.params[np.argmax(y)]
 
     @property
     def best_params(self) -> jnp.ndarray:
