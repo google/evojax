@@ -27,6 +27,7 @@ from .iamalgam import iAMaLGaM
 from .fcrfmc import FCRFMC
 from .crfmnes import CRFMNES
 from .ars_native import ARS_native
+from .fpgpec import FPGPEC
 
 Strategies = {
     "CMA": CMA,
@@ -42,6 +43,7 @@ Strategies = {
     "FCRFMC": FCRFMC,
     "CRFMNES": CRFMNES,
     "ARS_native": ARS_native,
+    "FPGPEC": FPGPEC,
 }
 
 __all__ = [
@@ -60,5 +62,6 @@ __all__ = [
     "FCRFMC",
     "CRFMNES",
     "Strategies",
-    "ARS_native"
+    "ARS_native",
+    "FPGPEC",
 ]
