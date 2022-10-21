@@ -74,7 +74,11 @@ class CRFMNES(NEAlgorithm):
         self.crfm.set_m(self._best_params.copy())
 
 class CRFM():
-    def __init__(self, num_dims: int, popsize: int, mean: float, input_sigma: float, rng: jax.random.PRNGKey):
+    def __init__(self, num_dims: 
+                 int, popsize: int, 
+                 mean: Optional[Union[jnp.ndarray, np.ndarray]], 
+                 input_sigma: float, 
+                 rng: jax.random.PRNGKey):
         """Fast Moving Natural Evolution Strategy 
         for High-Dimensional Problems (CR-FM-NES), see https://arxiv.org/abs/2201.11422 .
         Derived from https://github.com/nomuramasahir0/crfmnes"""        
