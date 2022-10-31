@@ -377,7 +377,7 @@ class SimManager(object):
 
         # Note: QD methods do not support ma_training for now.
         if not self._ma_training:
-            final_states = jax.tree_map(
+            final_states = tree_map(
                 lambda x: x.reshape((scores.shape[0], n_repeats, *x.shape[1:])),
                 final_states)
 

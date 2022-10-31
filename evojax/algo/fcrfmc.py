@@ -25,6 +25,7 @@ import logging
 import numpy as np
 import math
 from typing import Union
+from typing import Optional
 
 import jax
 import jax.numpy as jnp
@@ -38,6 +39,7 @@ class FCRFMC(NEAlgorithm):
     def __init__(self,
                  param_size: int,
                  pop_size: int,
+                 init_params: Optional[Union[jnp.ndarray, np.ndarray]] = None,
                  init_stdev: float = 0.1,
                  seed: int = 0,
                  logger: logging.Logger = None):
@@ -46,9 +48,13 @@ class FCRFMC(NEAlgorithm):
         else:
             self.logger = logger
         self.pop_size = pop_size
-
+        
+        if init_params is None:
+            center = np.zeros(abs(param_size))
+        else:
+            center = init_params
+        
         try:
-            from scipy.optimize import Bounds
             from numpy.random import MT19937, Generator
             from fcmaes import crfmnescpp
 
@@ -57,7 +63,7 @@ class FCRFMC(NEAlgorithm):
             print("  pip install fcmaes --upgrade")
             sys.exit(1)
                  
-        self.fcrfm = crfmnescpp.CRFMNES_C(param_size, None, [0.]*param_size,
+        self.fcrfm = crfmnescpp.CRFMNES_C(param_size, None, center,
                 init_stdev, pop_size, Generator(MT19937(seed)))    
 
         self.params = None
@@ -73,14 +79,13 @@ class FCRFMC(NEAlgorithm):
 
     def tell(self, fitness: Union[np.ndarray, jnp.ndarray]) -> None:
         y = np.array(fitness)
-        self.fcrfm.tell(-y)#, self.params)
+        self.fcrfm.tell(-y)
 
         maxy = np.max(y)
         if self.maxy < maxy:
             self.maxy = maxy
-            xi = np.argsort(y)        
-            self._best_params = self.params[xi[0]]
-
+            self._best_params = self.params[np.argmax(y)]
+            
     @property
     def best_params(self) -> jnp.ndarray:
         return self.jnp_array(self._best_params)

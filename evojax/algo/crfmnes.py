@@ -19,6 +19,7 @@
 import math
 import numpy as np
 from typing import Union
+from typing import Optional
 import logging
 import jax
 import jax.numpy as jnp
@@ -32,6 +33,7 @@ class CRFMNES(NEAlgorithm):
     def __init__(self,
                  param_size: int,
                  pop_size: int,
+                 init_params: Optional[Union[jnp.ndarray, np.ndarray]] = None,                 
                  init_stdev: float = 0.1,
                  seed: int = 0,
                  logger: logging.Logger = None):
@@ -41,7 +43,12 @@ class CRFMNES(NEAlgorithm):
             self.logger = logger
         self.pop_size = pop_size
 
-        self.crfm = CRFM(param_size, pop_size, init_stdev, jax.random.PRNGKey(seed))    
+        if init_params is None:
+            center = np.zeros(abs(param_size))
+        else:
+            center = init_params
+            
+        self.crfm = CRFM(param_size, pop_size, center, init_stdev, jax.random.PRNGKey(seed))    
 
         self.params = None
         self._best_params = None
@@ -67,7 +74,11 @@ class CRFMNES(NEAlgorithm):
         self.crfm.set_m(self._best_params.copy())
 
 class CRFM():
-    def __init__(self, num_dims: int, popsize: int, input_sigma: float, rng: jax.random.PRNGKey):
+    def __init__(self, num_dims: 
+                 int, popsize: int, 
+                 mean: Optional[Union[jnp.ndarray, np.ndarray]], 
+                 input_sigma: float, 
+                 rng: jax.random.PRNGKey):
         """Fast Moving Natural Evolution Strategy 
         for High-Dimensional Problems (CR-FM-NES), see https://arxiv.org/abs/2201.11422 .
         Derived from https://github.com/nomuramasahir0/crfmnes"""        
@@ -77,7 +88,7 @@ class CRFM():
         self.dim = num_dims
         self.sigma = input_sigma 
         self.rng = rng       
-        self.m = jnp.full((self.dim, 1), 0)
+        self.m = jnp.array([mean]).T
         self.v = jax.random.normal(rng, (self.dim, 1)) / jnp.sqrt(self.dim)       
         self.D = jnp.ones([self.dim, 1])
 
@@ -145,7 +156,8 @@ class CRFM():
         self.g += 1
         if f_best < self.f_best:
             self.f_best = f_best
-            self.x_best = x_best           
+            self.x_best = x_best   
+                    
         # This operation assumes that if the solution is infeasible, infinity comes in as input.
         lambF = jnp.sum(evals_no_sort < jnp.finfo(float).max)
         # evolution path p_sigma
