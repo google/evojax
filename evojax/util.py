@@ -67,6 +67,8 @@ def create_logger(name: str,
         formatter = logging.Formatter(fmt=log_format)
         file_hdl.setFormatter(formatter)
         logger.addHandler(file_hdl)
+    # Set level explicitly, otherwise the logger does not output.
+    logger.setLevel(logging.DEBUG if debug else logging.INFO)
     return logger
 
 
