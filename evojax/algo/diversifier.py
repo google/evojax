@@ -113,6 +113,16 @@ class Diversifier(QualityDiversityMethod):
         self._update_lattices = jax.jit(jax.vmap(
             update_fitness_and_param,
             in_axes=(0, None, None, None, None, None)))
+        
+        def get_to_tell(
+            fitness, lattice_fitness, fitness_weight):
+            min_fitness = jnp.amin(fitness)-1E-9
+            lattice_fitness = jnp.where(lattice_fitness == -np.inf, min_fitness, lattice_fitness)
+            improvement = fitness - lattice_fitness
+            to_tell = jnp.where(fitness_weight <= 0, improvement, 
+                      improvement + fitness_weight * fitness)
+            return to_tell
+        self._get_to_tell = jax.jit(get_to_tell)
 
     def ask(self) -> jnp.ndarray:
         self.population = self.solver.ask()
@@ -123,12 +133,7 @@ class Diversifier(QualityDiversityMethod):
 
     def tell(self, fitness: Union[np.ndarray, jnp.ndarray]) -> None:              
         lattice_fitness = self.fitness_lattice[self.bin_idx]
-        is_empty = (lattice_fitness == -np.inf)
-        # change -np.inf to minimal fitness to encourage visiting empty niches
-        lattice_fitness = lattice_fitness.at[is_empty].set(jnp.amin(fitness)-1E-9)
-        improvement = fitness - lattice_fitness
-        to_tell = improvement if self.fitness_weight <= 0 else \
-                  improvement + self.fitness_weight * fitness
+        to_tell = self._get_to_tell(fitness, lattice_fitness, self.fitness_weight)
         # tell the wrapped solver the modified fitness including improvement relative to the lattice
         self.solver.tell(to_tell)
         # update lattice  
