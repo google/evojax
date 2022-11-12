@@ -53,7 +53,7 @@ def parse_args():
     parser.add_argument(
         '--seed', type=int, default=42, help='Random seed for training.')
     parser.add_argument(
-        '--init-std', type=float, default=0.15, help='Initial std.')
+        '--init-std', type=float, default=0.16, help='Initial std.')
     parser.add_argument(
         '--fitness-weight', type=float, default=0, help='Fitness weight.')
     parser.add_argument(
