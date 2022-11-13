@@ -61,7 +61,7 @@ class CRFMNES(NEAlgorithm):
         return self.jnp_stack(self.params)
 
     def tell(self, fitness: jnp.ndarray) -> None:
-        self.crfm.tell(-np.array(fitness))
+        self.crfm.tell(-jnp.array(fitness))
         self._best_params = self.crfm.x_best
 
     @property
@@ -76,9 +76,9 @@ class CRFMNES(NEAlgorithm):
 class CRFM():
     def __init__(self, num_dims: 
                  int, popsize: int, 
-                 mean: Optional[Union[jnp.ndarray, np.ndarray]], 
+                 mean: Union[jnp.ndarray, np.ndarray], 
                  input_sigma: float, 
-                 rng: jax.random.PRNGKey):
+                 key: jax.random.PRNGKey):
         """Fast Moving Natural Evolution Strategy 
         for High-Dimensional Problems (CR-FM-NES), see https://arxiv.org/abs/2201.11422 .
         Derived from https://github.com/nomuramasahir0/crfmnes"""        
@@ -87,9 +87,9 @@ class CRFM():
         self.lamb = popsize
         self.dim = num_dims
         self.sigma = input_sigma 
-        self.rng = rng       
+        self.key, key = jax.random.split(key)   
         self.m = jnp.array([mean]).T
-        self.v = jax.random.normal(rng, (self.dim, 1)) / jnp.sqrt(self.dim)       
+        self.v = jax.random.normal(key, (self.dim, 1)) / jnp.sqrt(self.dim)       
         self.D = jnp.ones([self.dim, 1])
 
         self.w_rank_hat = (jnp.log(self.lamb / 2 + 1) - jnp.log(jnp.arange(1, self.lamb + 1))).reshape(self.lamb, 1)
@@ -129,23 +129,30 @@ class CRFM():
         self.f_best = float('inf')
         self.x_best = jnp.empty(self.dim)
 
+        hshape = (self.dim, self.lamb // 2)
+        
+        def generate_population(v, m, sigma, D, key) -> jnp.ndarray:
+            zkey, key = jax.random.split(key)
+            zhalf = jax.random.normal(zkey, hshape)
+            z = jnp.hstack((zhalf, -zhalf))
+            normv = jnp.linalg.norm(v)
+            normv2 = normv * normv
+            vbar = v / normv
+            y = z + ((jnp.sqrt(1 + normv2) - 1) * jnp.dot(vbar, jnp.dot(vbar.T, z)))
+            x = m + (sigma * y) * D
+            return x, y, z, vbar, normv, normv2, key    
+        self._generate_population = jax.jit(generate_population)
+
     def set_m(self, params: jnp.ndarray):
         self.m = jnp.array(params).reshape((self.dim, 1))
 
     def ask(self) -> jnp.ndarray:
-        key, self.rng = jax.random.split(self.rng)
-        zhalf = jax.random.normal(key, (self.dim, int(self.lamb / 2)))
-        self.z = self.z.at[:, self.idxp].set(zhalf)
-        self.z = self.z.at[:, self.idxm].set(-zhalf)
-        self.normv = jnp.linalg.norm(self.v)
-        self.normv2 = self.normv ** 2
-        self.vbar = self.v / self.normv
-        self.y = self.z + ((jnp.sqrt(1 + self.normv2) - 1) * jnp.dot(self.vbar, jnp.dot(self.vbar.T, self.z)))
-        self.x = self.m + (self.sigma * self.y) * self.D
+        self.x, self.y, self.z, self.vbar, self.normv, self.normv2, self.key = \
+            self._generate_population(self.v, self.m, self.sigma, self.D, self.key)
         return self.x.T
 
-    def tell(self, evals_no_sort: np.ndarray) -> None:
-        sorted_indices = sort_indices_by(evals_no_sort, self.z)
+    def tell(self, evals_no_sort: jnp.ndarray) -> None:
+        sorted_indices = jnp.argsort(evals_no_sort)
         best_eval_id = sorted_indices[0]       
         f_best = evals_no_sort[best_eval_id]
         x_best = self.x[:, best_eval_id]
@@ -156,8 +163,7 @@ class CRFM():
         self.g += 1
         if f_best < self.f_best:
             self.f_best = f_best
-            self.x_best = x_best   
-                    
+            self.x_best = x_best           
         # This operation assumes that if the solution is infeasible, infinity comes in as input.
         lambF = jnp.sum(evals_no_sort < jnp.finfo(float).max)
         # evolution path p_sigma
@@ -224,16 +230,3 @@ def get_h_inv(dim: int) -> float:
 
 def exp(a: float) -> float:
     return math.exp(min(100, a)) # avoid overflow
-
-def sort_indices_by(evals: np.ndarray, z: jnp.ndarray) -> jnp.ndarray:
-    lam = len(evals)
-    sorted_indices = np.argsort(evals)
-    sorted_evals = evals[sorted_indices]
-    no_of_feasible_solutions = np.where(sorted_evals != jnp.inf)[0].size
-    if no_of_feasible_solutions != lam:
-        infeasible_z = z[:, np.where(evals == jnp.inf)[0]]
-        distances = np.sum(infeasible_z ** 2, axis=0)
-        infeasible_indices = sorted_indices[no_of_feasible_solutions:]
-        indices_sorted_by_distance = np.argsort(distances)
-        sorted_indices = sorted_indices.at[no_of_feasible_solutions:].set(infeasible_indices[indices_sorted_by_distance])
-    return sorted_indices
