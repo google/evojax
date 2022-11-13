@@ -61,7 +61,7 @@ class CRFMNES(NEAlgorithm):
         return self.jnp_stack(self.params)
 
     def tell(self, fitness: jnp.ndarray) -> None:
-        self.crfm.tell(-jnp.array(fitness))
+        self.crfm.tell(-fitness)
         self._best_params = self.crfm.x_best
 
     @property
