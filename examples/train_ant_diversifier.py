@@ -39,7 +39,7 @@ from evojax import util
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--pop-size', type=int, default=512, help='population size.')
+        '--pop-size', type=int, default=640, help='population size.')
     parser.add_argument(
         '--num-tests', type=int, default=128, help='Number of test rollouts.')
     parser.add_argument(
@@ -53,7 +53,7 @@ def parse_args():
     parser.add_argument(
         '--seed', type=int, default=42, help='Random seed for training.')
     parser.add_argument(
-        '--init-std', type=float, default=0.16, help='Initial std.')
+        '--init-std', type=float, default=0.155, help='Initial std.')
     parser.add_argument(
         '--fitness-weight', type=float, default=0, help='Fitness weight.')
     parser.add_argument(

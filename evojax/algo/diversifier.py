@@ -116,9 +116,10 @@ class Diversifier(QualityDiversityMethod):
         
         def get_to_tell(
             fitness, lattice_fitness, fitness_weight):
-            min_fitness = jnp.amin(fitness)-1E-9
-            lattice_fitness = jnp.where(lattice_fitness == -np.inf, min_fitness, lattice_fitness)
             improvement = fitness - lattice_fitness
+            max_valid = jnp.amax(jnp.where(improvement == np.inf, -np.inf, improvement))
+            norm_fitness = fitness - jnp.amin(fitness) + 1E-9
+            improvement = jnp.where(improvement == np.inf, max_valid + norm_fitness, improvement)
             to_tell = jnp.where(fitness_weight <= 0, improvement, 
                       improvement + fitness_weight * fitness)
             return to_tell
