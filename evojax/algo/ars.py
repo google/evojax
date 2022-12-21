@@ -1,7 +1,7 @@
 import sys
 
 import logging
-from typing import Union
+from typing import Union, Optional
 import numpy as np
 import jax
 import jax.numpy as jnp
@@ -37,7 +37,7 @@ class ARS(NEAlgorithm):
         limit_stdev: float = 0.001,
         w_decay: float = 0.0,
         seed: int = 0,
-        logger: logging.Logger = None,
+        logger: Optional[logging.Logger] = None,
     ):
         """Initialization function.
 

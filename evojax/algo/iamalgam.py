@@ -29,7 +29,7 @@ class iAMaLGaM(NEAlgorithm):
         limit_stdev: float = 0.001,
         w_decay: float = 0.0,
         seed: int = 0,
-        logger: logging.Logger = None,
+        logger: Optional[logging.Logger] = None,
     ):
         """Initialization function.
 
@@ -51,10 +51,7 @@ class iAMaLGaM(NEAlgorithm):
         # Delayed importing of evosax
 
         if sys.version_info.minor < 7:
-            print(
-                "evosax, which is needed by iAMaLGaM, requires"
-                " python>=3.7"
-            )
+            print("evosax, which is needed by iAMaLGaM, requires python>=3.7")
             print("  please consider upgrading your Python version.")
             sys.exit(1)
 

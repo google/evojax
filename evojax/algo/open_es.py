@@ -108,7 +108,7 @@ class OpenES(NEAlgorithm):
         # By default evojax assumes maximization of fitness score!
         # Evosax, on the other hand, minimizes!
         self.fit_shaper = evosax.FitnessShaper(
-            centered_rank=True, z_score=True, w_decay=w_decay, maximize=True
+            centered_rank=True, w_decay=w_decay, maximize=True
         )
 
     def ask(self) -> jnp.ndarray:
