@@ -46,7 +46,7 @@ def read_data_files(dataset_name, split):
         ys = np.array(np.frombuffer(f.read(), np.uint8, offset=8))
 
     xs = np.reshape(xs, (-1, 28, 28, 1)).astype(np.float32)
-    ys = ys.astype(np.int)
+    ys = ys.astype(np.int16)
 
     # Stack the dataset label with the ys
     ys_with_label = np.full_like(ys, DATASET_LABELS[dataset_name])

@@ -14,7 +14,7 @@
 
 """Train an agent for masking MNIST classification.
 
-Example command to run this script: `python old_train_masking.py`
+Example command to run this script: `python train_masking.py`
 """
 
 import os
