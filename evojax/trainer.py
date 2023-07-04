@@ -175,7 +175,7 @@ class Trainer(object):
                     test_scores, _ = self.sim_mgr.eval_params(
                         params=best_params, test=True)
                     self._logger.info(
-                        '[TEST] Iter={0}, #tests={1}, max={2:.4f} avg={3:.4f}, '
+                        '[TEST] Iter={0}, #tests={1}, max={2:.4f}, avg={3:.4f}, '
                         'min={4:.4f}, std={5:.4f}'.format(
                             i, test_scores.size, test_scores.max(),
                             test_scores.mean(), test_scores.min(),
