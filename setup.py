@@ -39,7 +39,9 @@ setup(
     ],
     zip_safe=False,
     install_requires=[
-        "flax",
+        "flax<0.7.0",
+        # Upgrade flax dependency after migrating RNN (a change introduced in 0.7.0):
+        # https://flax.readthedocs.io/en/latest/guides/rnncell_upgrade_guide.html
         "jax>=0.2.17",
         "jaxlib>=0.1.65",
         "Pillow",

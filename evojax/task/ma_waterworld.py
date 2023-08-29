@@ -196,7 +196,7 @@ def get_line_seg_intersection(x1: jnp.float32,
                               x3: jnp.float32,
                               y3: jnp.float32,
                               x4: jnp.float32,
-                              y4: jnp.float32) -> Tuple[np.bool, jnp.ndarray]:
+                              y4: jnp.float32) -> Tuple[np.bool_, jnp.ndarray]:
     """Determine if line segment (x1, y1, x2, y2) intersects with line
     segment (x3, y3, x4, y4), and return the intersection coordinate.
     """
@@ -224,7 +224,7 @@ def get_line_dot_intersection(x1: jnp.float32,
                               x2: jnp.float32,
                               y2: jnp.float32,
                               x3: jnp.float32,
-                              y3: jnp.float32) -> Tuple[np.bool, jnp.ndarray]:
+                              y3: jnp.float32) -> Tuple[np.bool_, jnp.ndarray]:
     """Determine if a line segment (x1, y1, x2, y2) intersects with a dot at
     (x3, y3) with radius BUBBLE_RADIUS, if so return the point of intersection.
     """
