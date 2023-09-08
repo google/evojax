@@ -33,6 +33,8 @@ from evojax.task.base import TaskState
 class State(TaskState):
     obs: jnp.ndarray
     labels: jnp.ndarray
+    test_obs: jnp.ndarray
+    test_labels: jnp.ndarray
 
 def loss(prediction: jnp.ndarray, labels: jnp.ndarray) -> jnp.float32:
     # target = jax.nn.one_hot(target, ways)
@@ -40,7 +42,7 @@ def loss(prediction: jnp.ndarray, labels: jnp.ndarray) -> jnp.float32:
     return -jnp.take_along_axis(prediction, labels, axis=-1).mean()
 
 def accuracy(prediction: jnp.ndarray, target: jnp.ndarray) -> jnp.float32:
-    predicted_class = jnp.argmax(prediction, axis=1)
+    predicted_class = jnp.argmax(prediction, axis=-1, keepdims=True)
     return jnp.mean(predicted_class == target)
 
 
@@ -76,11 +78,12 @@ class Omniglot(VectorizedTask):
         iterator = iter(dataloader)
 
         def reset_fn(key):
-            try:
-                batch = iterator.next()
-            except StopIteration:
-                iterator = iter(dataloader)
-                batch = iterator.next()
+            # try:
+            #     batch = iterator.next()
+            # except StopIteration:
+            #     iterator = iter(dataloader)
+            #     batch = iterator.next()
+            batch = iterator.next()
             # train_inputs shape: (batch_size, ways x shots, 1, 28, 28)
             # train_labels shape: (batch_size, ways x shots)
             train_inputs, train_labels = batch['train']
@@ -90,7 +93,7 @@ class Omniglot(VectorizedTask):
             test_inputs = jnp.transpose(jnp.array(test_inputs), (0,1,3,4,2))
             test_labels = jnp.array(test_labels.unsqueeze(-1))
             # the shape of this State is meant for ___one___ of the members of the population
-            return State(obs=(train_inputs, train_labels), test_inputs=test_inputs, test_labels=test_labels)
+            return State(obs=train_inputs, labels=train_labels, test_obs=test_inputs, test_labels=test_labels)
         
         # this vmap is for pop_size (so all members see the same state)
         self._reset_fn = jax.jit(jax.vmap(reset_fn)) 
