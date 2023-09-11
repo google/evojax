@@ -35,6 +35,8 @@ def parse_args():
     parser.add_argument(
         '--batch-size', type=int, default=16, help='Batch size for training. (# of sets in few-shot learning, each member sees the same data)')
     parser.add_argument(
+        '--num-grad-steps', type=int, default=4, help='# of gradient steps')
+    parser.add_argument(
         '--max-iter', type=int, default=10000, help='Max training iterations.')
     parser.add_argument(
         '--test-interval', type=int, default=1000, help='Test interval.')
@@ -66,7 +68,8 @@ def main(config):
     logger.info('=' * 30)
 
     ways = n_classes = 5
-    policy = FastLearner(n_classes=n_classes, logger=logger)
+
+    policy = FastLearner(n_classes=n_classes, num_grad_steps=config.num_grad_steps, logger=logger)
     train_task = Omniglot(batch_size=config.batch_size, test=False)
     test_task = Omniglot(batch_size=config.batch_size, test=True)
     solver = PGPE(
