@@ -20,12 +20,20 @@ class CNN(nn.Module):
 
     @nn.compact
     def __call__(self, x):
-        x = nn.Conv(features=8, kernel_size=(5, 5), padding='SAME')(x)
+        x = nn.Conv(features=8, kernel_size=(3, 3), padding='SAME')(x)
         x = nn.relu(x)
         x = nn.max_pool(x, window_shape=(2, 2), strides=(2, 2))
-        x = nn.Conv(features=16, kernel_size=(5, 5), padding='SAME')(x)
+        x = nn.Conv(features=16, kernel_size=(3, 3), padding='SAME')(x)
         x = nn.relu(x)
         x = nn.max_pool(x, window_shape=(2, 2), strides=(2, 2))
+        x = nn.Conv(features=32, kernel_size=(3, 3), padding='SAME')(x)
+        x = nn.relu(x)
+        x = nn.max_pool(x, window_shape=(2, 2), strides=(2, 2))
+
+        x = nn.Conv(features=64, kernel_size=(3, 3), padding='SAME')(x)
+        x = nn.relu(x)
+        x = nn.max_pool(x, window_shape=(2, 2), strides=(2, 2))
+
         x = x.reshape((*x.shape[:-3], -1))  # flatten
         x = nn.Dense(features=5)(x)
         x = nn.log_softmax(x)
@@ -66,7 +74,8 @@ class FastLearner(PolicyNetwork):
             self._logger = create_logger('FastLearner')
         else:
             self._logger = logger
-        assert self.num_grad_steps > 0
+        assert num_grad_steps > 0
+        self.num_grad_steps = num_grad_steps
         model = CNN()
         params = model.init(random.PRNGKey(0), jnp.zeros([1, 28, 28, 1]))
         self.num_params, format_params_fn = get_params_format_fn(params)
@@ -98,7 +107,7 @@ class FastLearner(PolicyNetwork):
         # updated_params = update_params(self._model_apply, params, x, y)
         updated_params = self._update_fn(params, x, y)
         # updated_params shape: [pop_size, batch_size, ...]
-        for _ in range(self.num_grad_step-1):
+        for _ in range(self.num_grad_steps-1):
             updated_params = self._subsequent_update_fn(updated_params, x, y)
 
         apply_batched_params = jax.vmap(jax.vmap(self._model_apply))

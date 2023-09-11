@@ -31,11 +31,11 @@ from evojax import util
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--pop-size', type=int, default=64, help='NE population size.')
+        '--pop-size', type=int, default=32, help='NE population size.')
     parser.add_argument(
-        '--batch-size', type=int, default=16, help='Batch size for training. (# of sets in few-shot learning, each member sees the same data)')
+        '--batch-size', type=int, default=32, help='Batch size for training. (# of sets in few-shot learning, each member sees the same data)')
     parser.add_argument(
-        '--num-grad-steps', type=int, default=4, help='# of gradient steps')
+        '--num-grad-steps', type=int, default=3, help='# of gradient steps')
     parser.add_argument(
         '--max-iter', type=int, default=10000, help='Max training iterations.')
     parser.add_argument(
@@ -45,7 +45,7 @@ def parse_args():
     parser.add_argument(
         '--seed', type=int, default=42, help='Random seed for training.')
     parser.add_argument(
-        '--center-lr', type=float, default=0.006, help='Center learning rate.')
+        '--center-lr', type=float, default=0.003, help='Center learning rate.')
     parser.add_argument(
         '--std-lr', type=float, default=0.089, help='Std learning rate.')
     parser.add_argument(
