@@ -88,9 +88,11 @@ class Omniglot(VectorizedTask):
             # train_labels shape: (batch_size, ways x shots)
             train_inputs, train_labels = batch['train']
             train_inputs = jnp.transpose(jnp.array(train_inputs), (0,1,3,4,2))
+            train_inputs = (train_inputs - train_inputs.mean(axis=1, keepdims=True)) / (train_inputs.std(axis=1, keepdims=True) + 1e-8)
             train_labels = jnp.array(train_labels.unsqueeze(-1))
             test_inputs, test_labels = batch['test']
             test_inputs = jnp.transpose(jnp.array(test_inputs), (0,1,3,4,2))
+            test_inputs = (test_inputs - test_inputs.mean(axis=1, keepdims=True)) / (test_inputs.std(axis=1, keepdims=True) + 1e-8)
             test_labels = jnp.array(test_labels.unsqueeze(-1))
             # the shape of this State is meant for ___one___ of the members of the population
             return State(obs=train_inputs, labels=train_labels, test_obs=test_inputs, test_labels=test_labels)
