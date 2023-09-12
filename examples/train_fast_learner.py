@@ -37,7 +37,7 @@ def parse_args():
     parser.add_argument(
         '--num-grad-steps', type=int, default=3, help='# of gradient steps')
     parser.add_argument(
-        '--max-iter', type=int, default=10000, help='Max training iterations.')
+        '--max-iter', type=int, default=20000, help='Max training iterations.')
     parser.add_argument(
         '--test-interval', type=int, default=1000, help='Test interval.')
     parser.add_argument(

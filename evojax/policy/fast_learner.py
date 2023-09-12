@@ -35,6 +35,7 @@ class CNN(nn.Module):
         x = nn.max_pool(x, window_shape=(2, 2), strides=(2, 2))
 
         x = x.reshape((*x.shape[:-3], -1))  # flatten
+        x = nn.Dense(features=32)(x)
         x = nn.Dense(features=5)(x)
         x = nn.log_softmax(x)
         return x
