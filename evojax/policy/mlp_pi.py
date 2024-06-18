@@ -78,7 +78,8 @@ class AttentionNeuronMLP(nn.Module):
         q = nn.Dense(self.msg_dim)(self.pos_em)
 
         # x_key.shape: (obs_dim, pos_em_dim)
-        new_lstm_h, x_key = nn.LSTMCell()(lstm_h, x_aug)
+        pos_em_dim = lstm_h[0].shape[-1]
+        new_lstm_h, x_key = nn.LSTMCell(features=pos_em_dim)(lstm_h, x_aug)
         # k.shape: (obs_dim, msg_dim)
         k = nn.Dense(self.msg_dim)(x_key)
 
