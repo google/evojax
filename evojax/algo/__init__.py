@@ -28,6 +28,7 @@ from .fcrfmc import FCRFMC
 from .crfmnes import CRFMNES
 from .ars_native import ARS_native
 from .fpgpec import FPGPEC
+from .diversifier import Diversifier
 
 Strategies = {
     "CMA": CMA,
@@ -44,6 +45,7 @@ Strategies = {
     "CRFMNES": CRFMNES,
     "ARS_native": ARS_native,
     "FPGPEC": FPGPEC,
+    "Diversifier": Diversifier,
 }
 
 __all__ = [
@@ -64,4 +66,5 @@ __all__ = [
     "Strategies",
     "ARS_native",
     "FPGPEC",
+    "Diversifier",
 ]
