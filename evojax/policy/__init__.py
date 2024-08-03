@@ -17,7 +17,7 @@ from .mlp import MLPPolicy
 from .mlp_pi import PermutationInvariantPolicy
 from .convnet import ConvNetPolicy
 from .seq2seq import Seq2seqPolicy
-
+from .fast_learner import FastLearner
 
 __all__ = ['PolicyNetwork', 'MLPPolicy', 'PermutationInvariantPolicy',
-           'ConvNetPolicy', 'Seq2seqPolicy']
+           'ConvNetPolicy', 'Seq2seqPolicy', 'FastLearner']
