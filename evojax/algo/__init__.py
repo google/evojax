@@ -15,6 +15,7 @@
 from .base import NEAlgorithm
 from .base import QualityDiversityMethod
 from .cma_wrapper import CMA
+from .cosyne import CoSyNE
 from .pgpe import PGPE
 from .ars import ARS
 from .simple_ga import SimpleGA
@@ -30,6 +31,7 @@ from .ars_native import ARS_native
 from .fpgpec import FPGPEC
 
 Strategies = {
+    "CoSyNE": CoSyNE,
     "CMA": CMA,
     "PGPE": PGPE,
     "SimpleGA": SimpleGA,

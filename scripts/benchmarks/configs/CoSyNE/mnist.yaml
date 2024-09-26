@@ -1,0 +1,18 @@
+es_name: "CoSyNE"
+problem_type: "mnist"
+normalize: false
+es_config:
+  pop_size: 64
+  alpha: 0.000085
+  prob_mutate: 1.0
+  segment_size: 1879
+hidden_size: 50
+batch_size: 1024
+max_iter: 2000
+test_interval: 500
+log_interval: 100
+num_tests: 1
+n_repeats: 1
+seed: 42
+gpu_id: [0, 1, 2, 3]
+debug: false

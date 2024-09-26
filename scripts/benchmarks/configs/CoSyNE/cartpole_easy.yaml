@@ -1,0 +1,17 @@
+es_name: "CoSyNE"
+problem_type: "cartpole_easy"
+normalize: false
+es_config:
+  pop_size: 64
+  alpha: 0.3
+  prob_mutate: 1.0
+  segment_size: 411
+hidden_size: 64
+num_tests: 100
+n_repeats: 16
+max_iter: 1000
+test_interval: 100
+log_interval: 20
+seed: 42
+gpu_id: [0, 1, 2, 3]
+debug: false

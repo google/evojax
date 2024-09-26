@@ -105,6 +105,19 @@ Brax Ant |	3000 (max_iter=1200) |[Link](configs/PGPE/brax_ant.yaml)| 6054.3887 |
 Waterworld	| 6 (max_iter=1000)	 | [Link](configs/PGPE/waterworld.yaml)| 11.6400 |
 Waterworld (MA)	| 2 (max_iter=2000)	| [Link](configs/PGPE/waterworld_ma.yaml) | 2.0625 |
 
+
+### CoSyNE
+
+|                  | Benchmarks            | Parameters                                | Results (Avg) |
+|------------------|-----------------------|-------------------------------------------|--------------|
+| CartPole (easy)  | 	900 (max_iter=1000)  | [Link](configs/CoSyNE/cartpole_easy.yaml) | 935.5311             |
+| CartPole (hard)	 | 600 (max_iter=1000)   | [Link](configs/CoSyNE/cartpole_hard.yaml) | 687.4745            |
+| MNIST	           | 0.90 (max_iter=2000)	 | [Link](configs/CoSyNE/mnist.yaml)         | 0.9522            |
+| Waterworld	      | 6 (max_iter=1000)	    | [Link](configs/CoSyNE/waterworld.yaml)    | 7.54         |
+| Brax Ant         | 	3000 (max_iter=1200) | -                                         | -            |
+| Waterworld (MA)	 | 2 (max_iter=2000)	    | -                                         | -            |
+
+
 ### CMA-ES-JAX
 
 |   | Benchmarks | Parameters | Results (Avg) |
