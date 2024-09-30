@@ -793,8 +793,8 @@ def newMatch(prevGameState: GameState, ball_vx, ball_vy) -> GameState:
 
 def get_random_ball_v(key: jnp.ndarray):
     result = random.uniform(key, shape=(2,)) * 2 - 1
-    ball_vx = result[1]*20
-    ball_vy = result[2]*7.5+17.5
+    ball_vx = result[0]*20
+    ball_vy = result[1]*7.5+17.5
     return ball_vx, ball_vy
 
 
