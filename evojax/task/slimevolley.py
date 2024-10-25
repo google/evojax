@@ -269,7 +269,18 @@ class AgentState(object):
 
 
 def initAgentState(direction, x, y):
-    return AgentState(direction, x, y, 1.5, 0, 0, 0, 0, MAXLIVES)
+    return AgentState(
+        direction=jnp.int32(direction),
+        x=jnp.float32(x),
+        y=jnp.float32(y),
+        r=jnp.float32(1.5),
+        vx=jnp.float32(0),
+        vy=jnp.float32(0),
+        desired_vx=jnp.float32(0),
+        desired_vy=jnp.float32(0),
+        life=jnp.int32(MAXLIVES)
+    )
+
 
 
 @dataclass
@@ -335,8 +346,10 @@ class Particle:
         self.c = c
 
     def display(self, canvas):
-        return circle(canvas, toX(float(self.p.x)), toY(float(self.p.y)),
-                      toP(float(self.p.r)), color=self.c)
+        x = float(self.p.x.item())
+        y = float(self.p.y.item())
+        r = float(self.p.r.item())
+        return circle(canvas, toX(x), toY(y), toP(r), color=self.c) 
 
     def move(self):
         self.p = ParticleState(self.p.x+self.p.vx*TIMESTEP,
@@ -558,12 +571,22 @@ class Agent:
                             p.life)
 
     def updateLife(self, result):
-        """ updates the life based on result and internal direction """
+        """Updates the life based on result and internal direction."""
         p = self.p
-        updateAmount = p.direction*result  # only update if this value is -1
-        new_life = jnp.where(updateAmount < 0, p.life-1, p.life)
-        self.p = AgentState(p.direction, p.x, p.y, p.r, p.vx, p.vy,
-                            p.desired_vx, p.desired_vy, new_life)
+        updateAmount = p.direction * result  # This should be a scalar
+        new_life = jnp.where(updateAmount < 0, p.life - 1, p.life)
+        self.p = AgentState(
+            direction=p.direction,
+            x=p.x,
+            y=p.y,
+            r=p.r,
+            vx=p.vx,
+            vy=p.vy,
+            desired_vx=p.desired_vx,
+            desired_vy=p.desired_vy,
+            life=new_life
+        )
+
 
     def updateState(self, ball: ParticleState, opponent: AgentState):
         """ normalized to side, customized for each agent's perspective"""
@@ -591,13 +614,13 @@ class Agent:
         return getObsArray(self.state)
 
     def display(self, canvas, ball_x, ball_y):
-        bx = float(ball_x)
-        by = float(ball_y)
+        bx = float(ball_x.item())
+        by = float(ball_y.item())
         p = self.p
-        x = float(p.x)
-        y = float(p.y)
-        r = float(p.r)
-        direction = int(p.direction)
+        x = float(p.x.item())
+        y = float(p.y.item())
+        r = float(p.r.item())
+        direction = int(p.direction.item())
 
         angle = math.pi * 60 / 180
         if direction == 1:
@@ -608,29 +631,43 @@ class Agent:
         canvas = half_circle(canvas, toX(x), toY(y), toP(r), color=self.c)
 
         # track ball with eyes (replace with observed info later):
-        c = math.cos(angle)
-        s = math.sin(angle)
-        ballX = bx-(x+(0.6)*r*c)
-        ballY = by-(y+(0.6)*r*s)
+        c_angle = math.cos(angle)
+        s_angle = math.sin(angle)
+        ballX = bx - (x + 0.6 * r * c_angle)
+        ballY = by - (y + 0.6 * r * s_angle)
 
-        dist = math.sqrt(ballX*ballX+ballY*ballY)
-        eyeX = ballX/dist
-        eyeY = ballY/dist
+        dist = math.sqrt(ballX * ballX + ballY * ballY)
+        eyeX = ballX / dist
+        eyeY = ballY / dist
 
-        canvas = circle(canvas, toX(x+(0.6)*r*c), toY(y+(0.6)*r*s),
-                        toP(r)*0.3, color=(255, 255, 255))
-        canvas = circle(canvas, toX(x+(0.6)*r*c+eyeX*0.15*r),
-                        toY(y+(0.6)*r*s+eyeY*0.15*r), toP(r)*0.1,
-                        color=(0, 0, 0))
+        canvas = circle(
+            canvas,
+            toX(x + 0.6 * r * c_angle),
+            toY(y + 0.6 * r * s_angle),
+            toP(r) * 0.3,
+            color=(255, 255, 255)
+        )
+        canvas = circle(
+            canvas,
+            toX(x + 0.6 * r * c_angle + eyeX * 0.15 * r),
+            toY(y + 0.6 * r * s_angle + eyeY * 0.15 * r),
+            toP(r) * 0.1,
+            color=(0, 0, 0)
+        )
 
         # draw coins (lives) left
-        num_lives = int(p.life)
+        num_lives = int(p.life.item())
         for i in range(1, num_lives):
-            canvas = circle(canvas, toX(direction*(REF_W/2+0.5-i*2.)),
-                            WINDOW_HEIGHT-toY(1.5), toP(0.5),
-                            color=COIN_COLOR)
+            canvas = circle(
+                canvas,
+                toX(direction * (REF_W / 2 + 0.5 - i * 2.0)),
+                WINDOW_HEIGHT - toY(1.5),
+                toP(0.5),
+                color=COIN_COLOR
+            )
 
         return canvas
+
 
 
 class Wall:

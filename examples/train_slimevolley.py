@@ -125,7 +125,7 @@ def main(config):
     trainer.model_dir = log_dir
     trainer.run(demo_mode=True)
 
-    # Visualize the policy.
+    # Visualize the policy
     task_reset_fn = jax.jit(test_task.reset)
     policy_reset_fn = jax.jit(policy.reset)
     step_fn = jax.jit(test_task.step)
@@ -136,15 +136,30 @@ def main(config):
     task_state = task_reset_fn(key)
     policy_state = policy_reset_fn(task_state)
     screens = []
+    
     for _ in range(max_steps):
         action, policy_state = action_fn(task_state, best_params, policy_state)
         task_state, reward, done = step_fn(task_state, action)
-        screens.append(SlimeVolley.render(task_state))
+        
+        # Extract scalar values from the batched state
+        state_numpy = jax.device_get(task_state)
+        # Assuming the first element of the batch is what we want to visualize
+        unbatched_state = jax.tree.map(lambda x: x[0], state_numpy)
+        
+        try:
+            screen = SlimeVolley.render(unbatched_state)
+            screens.append(screen)
+        except Exception as e:
+            logger.error(f"Error during rendering: {e}")
+            break
 
-    gif_file = os.path.join(log_dir, 'slimevolley.gif')
-    screens[0].save(gif_file, save_all=True, append_images=screens[1:],
-                    duration=40, loop=0)
-    logger.info('GIF saved to {}.'.format(gif_file))
+    if screens:
+        gif_file = os.path.join(log_dir, 'slimevolley.gif')
+        screens[0].save(gif_file, save_all=True, append_images=screens[1:],
+                      duration=40, loop=0)
+        logger.info('GIF saved to {}.'.format(gif_file))
+    else:
+        logger.error('No frames were rendered successfully.')
 
 
 if __name__ == '__main__':
