@@ -897,7 +897,8 @@ class SlimeVolley(VectorizedTask):
     @staticmethod
     def render(state: State, task_id: int = 0) -> Image:
         """Render a specified task."""
-        game = Game(state.game_state)
+        task_game_state = jax.tree.map(lambda x: x[task_id], state.game_state)
+        game = Game(task_game_state)
         canvas = game.display()
         img = Image.fromarray(canvas)
         return img
